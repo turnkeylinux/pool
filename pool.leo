@@ -3,7 +3,7 @@
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
 <globals body_outline_ratio="0.377524143986">
-	<global_window_position top="-3" left="369" height="966" width="901"/>
+	<global_window_position top="0" left="369" height="966" width="901"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -16,8 +16,8 @@
 </v>
 <v t="zaril.20100828055849"><vh>terminology</vh></v>
 <v t="loni.20100827184947.4" a="E"><vh>file/data structure</vh></v>
-<v t="loni.20100827184947.5" a="E"><vh>cli syntax</vh></v>
-<v t="loni.20100827184947.6" a="TV"><vh>usage examples</vh></v>
+<v t="loni.20100827184947.5" a="ETV"><vh>cli syntax</vh></v>
+<v t="loni.20100827184947.6"><vh>usage examples</vh></v>
 </v>
 <v t="loni.20100827184947.7" a="E"><vh>implementation</vh></v>
 </v>
@@ -93,55 +93,58 @@ info
 
 get [-options] /path/to/output/dir [ package[=version] ... ]
 
-function
-    retrieve requested packages to output dir
-        if a specific package version is requested, get that
-        if a specific version is not requested, retrieve the newest version
-
-    if no packages are requested, output all the newest packages
-
-psuedo-logic for getting a single package=version
-    update binary cache 
-        scan all container deltas for new binary packages to put into our cache
-    if lookup package in binary cache:
-        return package
+    function
+        retrieve requested packages to output dir
+            if a specific package version is requested, get that
+            if a specific version is not requested, retrieve the newest version
     
-    update source versions
-        scan all container deltas for new debian source packages
-            a debian package cannot be inside another debian package
-        scan control file to get package name list and generate new auto-versions
-        output new auto-versions into pool's versions cache
+        if no packages are requested, output all the newest packages
+    
+    psuedo-logic for getting a single package=version
+        update binary cache 
+            scan all container deltas for new binary packages to put into our cache
+        if lookup package in binary cache:
+            return package
+        
+        update source versions
+            scan all container deltas for new debian source packages
+                a debian package cannot be inside another debian package
+            scan control file to get package name list and generate new auto-versions
+            output new auto-versions into pool's versions cache
+    
+        lookup container, relative_path for requested package=version in version cache
+        recalculate commit-id for container, check that version is legal
+        seek to commit, extract source for debian package
+        build source for debian package in build environment
+        insert built packages into binary cache
+    
+    options
+        -t --tree
+            output dir is in package tree format (like an automatic repository)
+                $outputdir/n/neverland/neverland-&lt;version&gt;.&lt;arch&gt;.deb
+    
+            instead of
+                $outputdir/neverland-&lt;version&gt;.&lt;arch&gt;.deb
+    
+        -s --strict
+            fatal error on missing packages 
+                by default we just issue warnings (which can be suppressed with -q)
+                the reason this is the default is that:
+                a) this what analogous tools such as mv and cp do when given multiple broken sources to copy/move
+                b) easy things should be easy, hard things should be possible
+                    given a manifest of packages from multiple pools (e.g., private world), 
+                    we can ask each pool to give us the portion of packages it holds for that manifest
+                    without having to first determine in which pool a package is located
+    
+        -q --quiet
+            suppress warnings about missing packages
+    
+        -i &lt;file&gt; | -
+            file from which we read the list of packages to retrieve
 
-    lookup container, relative_path for requested package=version in version cache
-    recalculate commit-id for container, check that version is legal
-    seek to commit, extract source for debian package
-    build source for debian package in build environment
-    insert built packages into binary cache
-
-options
-    -t --tree
-        output dir is in package tree format (like an automatic repository)
-            $outputdir/n/neverland/neverland-&lt;version&gt;.&lt;arch&gt;.deb
-
-        instead of
-            $outputdir/neverland-&lt;version&gt;.&lt;arch&gt;.deb
-
-    -s --strict
-        fatal error on missing packages 
-            by default we just issue warnings (which can be suppressed with -q)
-            the reason this is the default is that:
-            a) this what analogous tools such as mv and cp do when given multiple broken sources to copy/move
-            b) easy things should be easy, hard things should be possible
-                given a manifest of packages from multiple pools (e.g., private world), 
-                we can ask each pool to give us the portion of packages it holds for that manifest
-                without having to first determine in which pool a package is located
-
-    -q --quiet
-        suppress warnings about missing packages
-
-    -i &lt;file&gt; | -
-        file from which we read the list of packages to retrieve
-
+        IDEA: --symbolic get? copy as links instead of real files?
+            will that still work?
+    
 list [ &lt;package-glob&gt; ]
     if &lt;package-glob&gt; is provided, print only those packages whose names match the glob
     otherwise, by default, print a list of the newest packages
