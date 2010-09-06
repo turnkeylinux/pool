@@ -15,6 +15,9 @@ def fatal(s):
 def main():
     args = sys.argv[1:]
     
+    if not args:
+        usage()
+
     if len(args) != 1:
         usage("bad number of arguments")
 
