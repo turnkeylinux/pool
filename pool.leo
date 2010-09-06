@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.377524143986">
-	<global_window_position top="0" left="369" height="966" width="901"/>
+<globals body_outline_ratio="0.316770186335">
+	<global_window_position top="0" left="507" height="966" width="758"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -16,10 +16,19 @@
 </v>
 <v t="zaril.20100828055849"><vh>terminology</vh></v>
 <v t="loni.20100827184947.4" a="E"><vh>file/data structure</vh></v>
-<v t="loni.20100827184947.5" a="ETV"><vh>cli syntax</vh></v>
+<v t="loni.20100827184947.5" a="E"><vh>cli syntax</vh></v>
 <v t="loni.20100827184947.6"><vh>usage examples</vh></v>
 </v>
-<v t="loni.20100827184947.7" a="E"><vh>implementation</vh></v>
+<v t="loni.20100827184947.7" a="E"><vh>implementation</vh>
+<v t="zaril.20100906050211" a="E"><vh>implement full command set for binaries in regular directories</vh>
+<v t="zaril.20100906050211.1" a="ETV"><vh>init /path/to/build-chroot</vh></v>
+<v t="zaril.20100906050211.2"><vh>register # regular directories</vh></v>
+<v t="zaril.20100906050211.3"><vh>unregister</vh></v>
+<v t="zaril.20100906050211.4"><vh>exists</vh></v>
+<v t="zaril.20100906050211.5"><vh>list</vh></v>
+<v t="zaril.20100906050211.6"><vh>get</vh></v>
+</v>
+</v>
 </v>
 </vnodes>
 <tnodes>
@@ -46,11 +55,30 @@ ideal solution - figure out how to store the information directly in the filesys
 ---
 INSIGHT: debian package can not contain another debian package so scanning containers is a shallow, quick
 operation
+---
+Q: how does auto-versioning for Sumo arena work?
+GOTCHA: sumo auto-versioning is tricky
+	is the number of commits the same on different fat branches?
+	
+	GOTCHA: fat thin commits don't actually include directory modifications
 
-</t>
+    IDEAS:
+        maybe we only count commits on thin branch?
+        maybe only count overlays as revisions?
+            logic would then be very similar to Git repo logic
+    
+            what happens if we apply a patch to the fat?
+                shouldn't that auto-increment?
+        manual incrementation of auto-version?
+    
+---
+Q: how does auto-versioning work for multi-debian packagse in a regular Git repository?
+---
+Q: do we support different versioning for single-debian package and multi-debian packages?
+    </t>
 <t tx="loni.20100827184947.4">FILE/DATA STRUCTURE
 
-plumbing/? 
+.pool/
     build/
         root -&gt; /path/to/buildroot # symbolic link
         logs/
@@ -64,10 +92,10 @@ plumbing/?
         &lt;container&gt;#&lt;branch&gt;/
             path -&gt; /path/to/container # symbolic link to the container
             HEAD # contains the last HEAD we've we handled
-
+    
             &lt;relative-path&gt;/&lt;package&gt;.versions
                 contains cached list of versions
-
+    
     
 
 
@@ -75,24 +103,25 @@ plumbing/?
     </t>
 <t tx="loni.20100827184947.5">CLI SYNTAX
 
-init /path/to/build-chroot
+* init /path/to/build-chroot
     initialize a new pool
 
-register container
+* register container
     register a package container with the pool
     container can be:
+        another pool
+            (need to watch out for circular dependencies)
         /path/to/sumo_arena[#branch]
         /path/to/git_repository[#branch]
         /path/to/regular_directory
 
-unregister container
+* unregister container
     unregister a package container from the pool
 
-info
+* info
     show pool information (registered containers, etc.)
 
-get [-options] /path/to/output/dir [ package[=version] ... ]
-
+* get [-options] /path/to/output/dir [ package[=version] ... ]
     function
         retrieve requested packages to output dir
             if a specific package version is requested, get that
@@ -145,7 +174,7 @@ get [-options] /path/to/output/dir [ package[=version] ... ]
         IDEA: --symbolic get? copy as links instead of real files?
             will that still work?
     
-list [ &lt;package-glob&gt; ]
+* list [ &lt;package-glob&gt; ]
     if &lt;package-glob&gt; is provided, print only those packages whose names match the glob
     otherwise, by default, print a list of the newest packages
 
@@ -156,7 +185,7 @@ list [ &lt;package-glob&gt; ]
         print only the names of packages in the pool (without the list)
             incompatible with -a option
 
-exists package[=version]
+* exists package[=version]
     prints true/false if the package exists in the pool
     if true exitcode = 0, false = 1
 
@@ -243,7 +272,11 @@ for package in $(cat /path/to/versioned-product-manifest); do
         get /tmp/product-repo --tree -s $package
     fi
 done</t>
-<t tx="loni.20100827184947.7"></t>
+<t tx="loni.20100827184947.7">ROADMAP
+support regular sources in regular directories
+support Git repositories
+    scan deltas since last scan
+support Sumo arenas</t>
 <t tx="zaril.20100828055849">binpool
     a system for which maintains a pool of binary packages built on-demand from registered source containers
 
@@ -311,5 +344,43 @@ latest?
 
 
 A: the action is to generate, the outcome is an instance.</t>
+<t tx="zaril.20100906050211"></t>
+<t tx="zaril.20100906050211.1">initialize a new pool
+
+* init /path/to/build-chroot
+    initialize a new pool
+
+* file format
+.pool/
+    build/
+        root -&gt; /path/to/buildroot # symbolic link
+        logs/
+            &lt;package&gt;-&lt;version&gt;.build
+                log of the build process
+       
+    binaries/
+        &lt;package&gt;-&lt;version&gt;.&lt;arch&gt;.deb # maybe in a pool-like tree
+    
+    sources/
+        &lt;container&gt;#&lt;branch&gt;/
+            path -&gt; /path/to/container # symbolic link to the container
+            HEAD # contains the last HEAD we've we handled
+    
+            &lt;relative-path&gt;/&lt;package&gt;.versions
+                contains cached list of versions
+
+* logic
+    mkdir .pool/{build,binaries,sources}
+    mkdir .pool/build/logs
+    link .pool/build to buildroot
+
+</t>
+<t tx="zaril.20100906050211.2">rescanned every time
+    we can't tell if they've changed
+no auto-versioning</t>
+<t tx="zaril.20100906050211.3"></t>
+<t tx="zaril.20100906050211.4"></t>
+<t tx="zaril.20100906050211.5"></t>
+<t tx="zaril.20100906050211.6"></t>
 </tnodes>
 </leo_file>
