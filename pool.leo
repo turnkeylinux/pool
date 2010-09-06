@@ -21,9 +21,9 @@
 </v>
 <v t="loni.20100827184947.7" a="E"><vh>implementation</vh>
 <v t="zaril.20100906050211" a="E"><vh>implement full command set for binaries in regular directories</vh>
-<v t="zaril.20100906050211.1" a="ETV"><vh>init /path/to/build-chroot</vh></v>
-<v t="zaril.20100906050211.2"><vh>register # regular directories</vh></v>
-<v t="zaril.20100906050211.3"><vh>unregister</vh></v>
+<v t="zaril.20100906050211.1"><vh>init /path/to/build-chroot</vh></v>
+<v t="zaril.20100906050211.2"><vh>register / unregister # regular directories</vh></v>
+<v t="zaril.20100906230204" a="TV"><vh>info</vh></v>
 <v t="zaril.20100906050211.4"><vh>exists</vh></v>
 <v t="zaril.20100906050211.5"><vh>list</vh></v>
 <v t="zaril.20100906050211.6"><vh>get</vh></v>
@@ -35,7 +35,17 @@
 <t tx="loni.20100827184947">@nocolor
 </t>
 <t tx="loni.20100827184947.1"></t>
-<t tx="loni.20100827184947.2">Q: what should we call the system?
+<t tx="loni.20100827184947.2">* IDEAS
+auto-versioning a separate program?
+    this way we could re-use the code for pyproject's auto-versioning
+
+leave failed builds in temporary directory
+    so we can diagnose problem manually
+
+    $TMPDIR/pool/&lt;poolname&gt;/&lt;package&gt;
+
+* QUESTIONS
+Q: what should we call the system?
 A:
     binpool
         pool of binaries
@@ -85,12 +95,12 @@ Q: do we support different versioning for single-debian package and multi-debian
             &lt;package&gt;-&lt;version&gt;.build
                 log of the build process
        
-    binaries/
+    pkgcache/
         &lt;package&gt;-&lt;version&gt;.&lt;arch&gt;.deb # maybe in a pool-like tree
     
-    sources/
-        &lt;container&gt;#&lt;branch&gt;/
-            path -&gt; /path/to/container # symbolic link to the container
+    stock/
+        &lt;name&gt;#&lt;branch&gt;/
+            path -&gt; /path/to/stock # symbolic link to the stock
             HEAD # contains the last HEAD we've we handled
     
             &lt;relative-path&gt;/&lt;package&gt;.versions
@@ -101,25 +111,30 @@ Q: do we support different versioning for single-debian package and multi-debian
 
 
     </t>
-<t tx="loni.20100827184947.5">CLI SYNTAX
+<t tx="loni.20100827184947.5">=== ENVIRONMENT
+
+    POOL_DIR        defaults to cwd
+    POOL_TMPDIR     defaults to TMPDIR or /var/tmp
+
+=== CLI SYNTAX
 
 * init /path/to/build-chroot
     initialize a new pool
 
-* register container
-    register a package container with the pool
-    container can be:
+* register /path/to/stock
+    register a package stock with the pool
+    stock type can be:
         another pool
             (need to watch out for circular dependencies)
         /path/to/sumo_arena[#branch]
         /path/to/git_repository[#branch]
         /path/to/regular_directory
 
-* unregister container
-    unregister a package container from the pool
+* unregister stock
+    unregister a stock from the pool
 
 * info
-    show pool information (registered containers, etc.)
+    show pool information (registered stock, etc.)
 
 * get [-options] /path/to/output/dir [ package[=version] ... ]
     function
@@ -131,18 +146,18 @@ Q: do we support different versioning for single-debian package and multi-debian
     
     psuedo-logic for getting a single package=version
         update binary cache 
-            scan all container deltas for new binary packages to put into our cache
+            scan all stock deltas for new binary packages to put into our cache
         if lookup package in binary cache:
             return package
         
         update source versions
-            scan all container deltas for new debian source packages
+            scan all stock deltas for new debian source packages
                 a debian package cannot be inside another debian package
             scan control file to get package name list and generate new auto-versions
             output new auto-versions into pool's versions cache
     
-        lookup container, relative_path for requested package=version in version cache
-        recalculate commit-id for container, check that version is legal
+        lookup stock, relative_path for requested package=version in version cache
+        recalculate commit-id for stock, check that version is legal
         seek to commit, extract source for debian package
         build source for debian package in build environment
         insert built packages into binary cache
@@ -190,11 +205,11 @@ Q: do we support different versioning for single-debian package and multi-debian
     if true exitcode = 0, false = 1
 
 FUTURE
-    register-block /path/to/container package[=version]
-        register a block on a specific package inside a specific container
+    register-block /path/to/stock package[=version]
+        register a block on a specific package inside a specific stock
             this blocks the package from being included in the pool
 
-    unregister-block /path/to/container package[=version]
+    unregister-block /path/to/stock package[=version]
         unregister the block
 
     open
@@ -214,7 +229,7 @@ init /chroots/rocky-build
     initialize a new pool
 
 register /turnkey/projects/*
-    auto identifies the type of the source container we register
+    auto identifies the type of the stock we register
     e.g., if its a 
         /path/to/sumo_arena[#branch]
         /path/to/git_repository[#branch]
@@ -277,10 +292,10 @@ support regular sources in regular directories
 support Git repositories
     scan deltas since last scan
 support Sumo arenas</t>
-<t tx="zaril.20100828055849">binpool
-    a system for which maintains a pool of binary packages built on-demand from registered source containers
+<t tx="zaril.20100828055849">pool
+    a system for which maintains a pool of binary packages built on-demand from registered stock
 
-source container
+stock
     a container for packages in binary or source form
 
 build root
@@ -350,37 +365,53 @@ A: the action is to generate, the outcome is an instance.</t>
 * init /path/to/build-chroot
     initialize a new pool
 
-* file format
-.pool/
-    build/
-        root -&gt; /path/to/buildroot # symbolic link
-        logs/
-            &lt;package&gt;-&lt;version&gt;.build
-                log of the build process
-       
-    binaries/
-        &lt;package&gt;-&lt;version&gt;.&lt;arch&gt;.deb # maybe in a pool-like tree
-    
-    sources/
-        &lt;container&gt;#&lt;branch&gt;/
-            path -&gt; /path/to/container # symbolic link to the container
-            HEAD # contains the last HEAD we've we handled
-    
-            &lt;relative-path&gt;/&lt;package&gt;.versions
-                contains cached list of versions
-
 * logic
     mkdir .pool/{build,binaries,sources}
     mkdir .pool/build/logs
     link .pool/build to buildroot
 
 </t>
-<t tx="zaril.20100906050211.2">rescanned every time
+<t tx="zaril.20100906050211.2">* register /path/to/stock
+    register a package stock with the pool
+    stock type can be:
+        another pool
+            (need to watch out for circular dependencies)
+        /path/to/sumo_arena[#branch]
+        /path/to/git_repository[#branch]
+        /path/to/regular_directory
+
+
+rescanned every time
     we can't tell if they've changed
-no auto-versioning</t>
-<t tx="zaril.20100906050211.3"></t>
+no auto-versioning
+
+* file structure
+    stock/
+        &lt;name&gt;#&lt;branch&gt;/
+            path -&gt; /path/to/stock # symbolic link to the stock
+            HEAD # contains the last HEAD we've we handled
+    
+            &lt;relative-path&gt;/&lt;package&gt;.versions
+                contains cached list of versions
+
+* register logic
+    raise exception if stock is already registered
+    if it isn't, register stock by
+        creating stock/&lt;stock_name&gt;
+        creating symbolic link
+            ln -s &lt;dir&gt; stock/&lt;stock_name&gt;/path
+
+* unregister logic
+    raise "stock not registered" exception if  dir doesn't match stock/path
+    rmdir stock
+    </t>
 <t tx="zaril.20100906050211.4"></t>
 <t tx="zaril.20100906050211.5"></t>
 <t tx="zaril.20100906050211.6"></t>
+<t tx="zaril.20100906230204">* logic
+    list .pool/stock subdirectories
+    for each stock:
+        print its path
+</t>
 </tnodes>
 </leo_file>

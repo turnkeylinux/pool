@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # Copyright (c) 2010 TurnKey Linux - all rights reserved
-"""Python project skeleton
+"""
+Environment variables:
+    POOL_DIR	Location of pool (defaults to `.')
 """
 
 import re
@@ -20,7 +22,11 @@ PATH_LIBEXEC="libexec"
 
 # this variable allows you to optionally specify the order commands
 # are printed in Commands.usage()
-COMMANDS_USAGE_ORDER = []
+COMMANDS_USAGE_ORDER = ['init',
+                        '',
+                        'register',
+                        'unregister',
+                        'info']
 
 def get_copyright():
     return COPYRIGHT % version.get_version()
