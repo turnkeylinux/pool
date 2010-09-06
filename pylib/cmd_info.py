@@ -1,5 +1,5 @@
+#!/usr/bin/python
 """Prints list of registered stocks"""
-
 import pool
 
 def main():
