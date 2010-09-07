@@ -27,6 +27,16 @@ class PoolPaths(Paths):
 def mkdir(p):
     os.makedirs(str(p))
 
+def parse_deb_filename(filename):
+    """Parses package filename -> (name, version)"""
+
+    if not filename.endswith(".deb"):
+        raise Error("not a package `%s'" % filename)
+    
+    name, version = filename.split("_")[:2]
+
+    return name, version
+    
 class PackageCache:
     """Class representing the pool's package cache"""
     def __init__(self, path):
@@ -51,7 +61,7 @@ class PackageCache:
             if not isfile(filename) or not filename.endswith(".deb"):
                 continue
 
-            cached_name, cached_version = filename.split("_")[:2]
+            cached_name, cached_version = parse_deb_filename(filename)
             if name == cached_name and (version is None or version == cached_version):
                 return True
 
@@ -67,6 +77,14 @@ class PackageCache:
             if e[0] != errno.EXDEV:
                 raise
             shutil.copyfile(path, cached_path)
+
+    def list(self):
+        """List packages in package cache -> list of (package, version)"""
+        arr = []
+        for filename in os.listdir(self.path):
+            name, version = parse_deb_filename(filename)
+            arr.append((name, version))
+        return arr
 
 class Stocks:
     class Stock:
@@ -183,3 +201,34 @@ class Pool:
     def exists(self, package):
         """Check if package exists in pool -> Returns bool"""
         return self.pkgcache.exists(package)
+
+    @sync
+    def list(self, globs=[], all_versions=False, name_only=False):
+        """List packages in pool -> list of packages"""
+        if not isinstance(globs, (list, tuple)):
+            globs = [ globs ]
+            
+        if all_versions and name_only:
+            raise Error("conflicting otions")
+
+        retarr = []
+        if all_versions:
+            for name, version in self.pkgcache.list():
+                retarr.append("%s=%s" % (name, version))
+        elif name_only:
+            names = set()
+            for name, version in self.pkgcache.list():
+                names.add(name)
+
+            for name in names:
+                retarr.append(name)
+        else:
+            newest = {}
+            for name, version in self.pkgcache.list():
+                if not newest.has_key(name) or newest[name] < version:
+                    newest[name] = version
+
+            for name, version in newest.items():
+                retarr.append("%s=%s" % (name, version))
+
+        return retarr

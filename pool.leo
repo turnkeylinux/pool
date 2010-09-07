@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.316770186335">
+<globals body_outline_ratio="0.542443064182">
 	<global_window_position top="0" left="507" height="966" width="758"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -11,12 +11,12 @@
 <vnodes>
 <v t="loni.20100827184947" a="E"><vh>Project</vh>
 <v t="loni.20100827184947.1" a="E"><vh>design</vh>
-<v t="loni.20100827184947.2" a="E"><vh>brainstorming</vh>
+<v t="loni.20100827184947.2" a="ETV"><vh>brainstorming</vh>
 <v t="zaril.20100828060043"><vh>first draft</vh></v>
 </v>
 <v t="zaril.20100828055849"><vh>terminology</vh></v>
 <v t="loni.20100827184947.4" a="E"><vh>file/data structure</vh></v>
-<v t="loni.20100827184947.5" a="ETV"><vh>cli syntax</vh></v>
+<v t="loni.20100827184947.5" a="E"><vh>cli syntax</vh></v>
 <v t="loni.20100827184947.6"><vh>usage examples</vh></v>
 </v>
 <v t="loni.20100827184947.7" a="E"><vh>implementation</vh>
@@ -38,6 +38,8 @@
 </t>
 <t tx="loni.20100827184947.1"></t>
 <t tx="loni.20100827184947.2">* IDEAS
+change untagged auto-versioning to always be smaller than tagged autoversioning
+
 auto-versioning a separate program?
     this way we could re-use the code for pyproject's auto-versioning
 
@@ -421,7 +423,16 @@ sync logic
     
 
     </t>
-<t tx="zaril.20100906050211.5"></t>
+<t tx="zaril.20100906050211.5">* list [ &lt;package-glob&gt; ]
+    if &lt;package-glob&gt; is provided, print only those packages whose names match the glob
+    otherwise, by default, print a list of the newest packages
+
+    -a --all-versions
+        print all available versions of a package in the pool
+
+    -n --name-only
+        print only the names of packages in the pool (without the version)
+            incompatible with -a option</t>
 <t tx="zaril.20100906050211.6"></t>
 <t tx="zaril.20100906230204">* logic
     list .pool/stock subdirectories
