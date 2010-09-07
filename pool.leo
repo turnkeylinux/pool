@@ -16,15 +16,17 @@
 </v>
 <v t="zaril.20100828055849"><vh>terminology</vh></v>
 <v t="loni.20100827184947.4" a="E"><vh>file/data structure</vh></v>
-<v t="loni.20100827184947.5" a="E"><vh>cli syntax</vh></v>
+<v t="loni.20100827184947.5" a="ETV"><vh>cli syntax</vh></v>
 <v t="loni.20100827184947.6"><vh>usage examples</vh></v>
 </v>
 <v t="loni.20100827184947.7" a="E"><vh>implementation</vh>
 <v t="zaril.20100906050211" a="E"><vh>implement full command set for binaries in regular directories</vh>
 <v t="zaril.20100906050211.1"><vh>init /path/to/build-chroot</vh></v>
 <v t="zaril.20100906050211.2"><vh>register / unregister # regular directories</vh></v>
-<v t="zaril.20100906230204" a="TV"><vh>info</vh></v>
-<v t="zaril.20100906050211.4"><vh>exists</vh></v>
+<v t="zaril.20100906230204"><vh>info</vh></v>
+<v t="zaril.20100906050211.4"><vh>exists</vh>
+<v t="zaril.20100907030232"><vh>refactor away stock</vh></v>
+</v>
 <v t="zaril.20100906050211.5"><vh>list</vh></v>
 <v t="zaril.20100906050211.6"><vh>get</vh></v>
 </v>
@@ -43,6 +45,9 @@ leave failed builds in temporary directory
     so we can diagnose problem manually
 
     $TMPDIR/pool/&lt;poolname&gt;/&lt;package&gt;
+
+figure out how to allow packages to be built manually
+    unversioned - for testing?
 
 * QUESTIONS
 Q: what should we call the system?
@@ -100,7 +105,7 @@ Q: do we support different versioning for single-debian package and multi-debian
     
     stock/
         &lt;name&gt;#&lt;branch&gt;/
-            path -&gt; /path/to/stock # symbolic link to the stock
+            link -&gt; /path/to/stock # symbolic link to the stock
             HEAD # contains the last HEAD we've we handled
     
             &lt;relative-path&gt;/&lt;package&gt;.versions
@@ -385,15 +390,6 @@ rescanned every time
     we can't tell if they've changed
 no auto-versioning
 
-* file structure
-    stock/
-        &lt;name&gt;#&lt;branch&gt;/
-            path -&gt; /path/to/stock # symbolic link to the stock
-            HEAD # contains the last HEAD we've we handled
-    
-            &lt;relative-path&gt;/&lt;package&gt;.versions
-                contains cached list of versions
-
 * register logic
     raise exception if stock is already registered
     if it isn't, register stock by
@@ -403,15 +399,39 @@ no auto-versioning
 
 * unregister logic
     raise "stock not registered" exception if  dir doesn't match stock/path
-    rmdir stock
+    rmdir .pool/stock/name
     </t>
-<t tx="zaril.20100906050211.4"></t>
+<t tx="zaril.20100906050211.4">TESTS: 
+    register a directory with one binary package
+    register another directory with two more packages
+
+cli syntax
+    exists package[=version]
+        prints true/false if the package exists in the pool
+        if true exitcode = 0, false = 1
+    
+logic
+    sync pool with the registered stocks
+    check if any binaries exist
+
+sync logic
+    search all registered stocks recursively for binary packages
+    if we find a new package (that we don't already have)
+        hardlink/copy into cache
+    
+
+    </t>
 <t tx="zaril.20100906050211.5"></t>
 <t tx="zaril.20100906050211.6"></t>
 <t tx="zaril.20100906230204">* logic
     list .pool/stock subdirectories
     for each stock:
         print its path
+</t>
+<t tx="zaril.20100907030232">class PoolStocks:
+    def __init__(self):
+        pass
+
 </t>
 </tnodes>
 </leo_file>
