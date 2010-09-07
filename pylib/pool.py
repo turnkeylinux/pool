@@ -126,7 +126,13 @@ class Stocks:
 
     def __len__(self):
         return len(self.stocks)
-    
+
+def sync(method):
+    def wrapper(self, *args, **kws):
+        self._sync()
+        return method(self, *args, **kws)
+    return wrapper
+
 class Pool:
     @classmethod
     def init_create(cls, buildroot, path=None):
@@ -165,6 +171,7 @@ class Pool:
             print stock.link
             
     def _sync(self):
+        """synchronise pool with registered stocks"""
         for stock in self.stocks:
             for binary in stock.get_binaries():
                 if self.pkgcache.exists(basename(binary)):
@@ -172,10 +179,7 @@ class Pool:
 
                 self.pkgcache.add(binary)
     
+    @sync
     def exists(self, package):
-        self._sync()
+        """Check if package exists in pool -> Returns bool"""
         return self.pkgcache.exists(package)
-
-            
-            
-
