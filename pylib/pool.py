@@ -10,6 +10,9 @@ import utils
 class Error(Exception):
     pass
 
+class CircularDependency(Error):
+    pass
+
 class PoolPaths(Paths):
     def __init__(self, path=None):
         if path is None:
@@ -109,7 +112,7 @@ class Stocks:
             if not isdir(self.link):
                 raise Error("stock link to non-directory `%s'" % stock.link)
             
-    def __init__(self, path):
+    def __init__(self, path, recursed_paths=[]):
         self.path = path
 
         self.stocks = {}
@@ -120,8 +123,14 @@ class Stocks:
                 continue
 
             stock = self.Stock(path_stock)
+            if stock.link in recursed_paths:
+                raise CircularDependency("circular dependency detected `%s' is in recursed paths %s" %
+                                         (stock.link, recursed_paths))
+            
             try:
-                self.subpools[stock_name] = Pool(stock.link)
+                self.subpools[stock_name] = Pool(stock.link, recursed_paths)
+            except CircularDependency:
+                raise
             except Error:
                 pass
             self.stocks[stock_name] = stock
@@ -185,18 +194,22 @@ class Pool:
 
         return cls(path)
     
-    def __init__(self, path=None):
+    def __init__(self, path=None, recursed_paths=[]):
         self.paths = PoolPaths(path)
         if not exists(self.paths.path):
             raise Error("no pool found (POOL_DIR=%s)" % dirname(self.paths.path))
 
-        self.stocks = Stocks(self.paths.stocks)
+        recursed_paths.append(dirname(self.paths.path))
+        self.stocks = Stocks(self.paths.stocks, recursed_paths)
         self.pkgcache = PackageCache(self.paths.pkgcache)
 
     def register(self, dir):
         if not isdir(dir):
             raise Error("not a directory `%s'" % dir)
 
+        if realpath(dir) == dirname(self.paths.path):
+            raise Error("a pool can not contain itself")
+        
         self.stocks.register(dir)
         
     def unregister(self, dir):

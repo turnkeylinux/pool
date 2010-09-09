@@ -20,7 +20,7 @@
 <v t="loni.20100827184947.6"><vh>usage examples</vh></v>
 </v>
 <v t="loni.20100827184947.7" a="E"><vh>implementation</vh>
-<v t="zaril.20100906050211" a="E"><vh>implement full command set for binaries in regular directories</vh>
+<v t="zaril.20100906050211"><vh>implement full command set for binaries in regular directories</vh>
 <v t="zaril.20100906050211.1"><vh>init /path/to/build-chroot</vh></v>
 <v t="zaril.20100906050211.2"><vh>register / unregister # regular directories</vh></v>
 <v t="zaril.20100906230204"><vh>info</vh></v>
@@ -28,10 +28,11 @@
 <v t="zaril.20100907030232"><vh>refactor away stock</vh></v>
 </v>
 <v t="zaril.20100906050211.5"><vh>list</vh></v>
-<v t="zaril.20100906050211.6" a="ETV"><vh>get</vh></v>
-<v t="zaril.20100909033533"><vh>pool contains pool</vh></v>
-<v t="zaril.20100909033533.1"><vh>support sources</vh></v>
+<v t="zaril.20100906050211.6"><vh>get</vh></v>
 </v>
+<v t="zaril.20100909033533.1"><vh>support sources</vh></v>
+<v t="zaril.20100909033533" a="TV"><vh>pool contains pool</vh></v>
+<v t="zaril.20100909050527"><vh>support regular sources in regular directories</vh></v>
 </v>
 </v>
 </vnodes>
@@ -297,7 +298,6 @@ for package in $(cat /path/to/versioned-product-manifest); do
     fi
 done</t>
 <t tx="loni.20100827184947.7">ROADMAP
-support regular sources in regular directories
 support Git repositories
     scan deltas since last scan
 support Sumo arenas</t>
@@ -461,7 +461,30 @@ sync logic
         pass
 
 </t>
-<t tx="zaril.20100909033533"></t>
+<t tx="zaril.20100909033533">ROADMAP
+    solve typing issue
+    proxy all pool functions
+    handle circular dependencies
+
+Q: how do we `identify' pools?
+A:
+    try to initialize pool object at link path?
+        otherwise its a regular directory
+---
+Q: how do I prevent cyclic subpools?
+A:
+    pass parent pools through and check before we create the instance
+        
+ersions</t>
 <t tx="zaril.20100909033533.1"></t>
+<t tx="zaril.20100909050527">* IDEAS
+get_sources
+    path/to/dir/package-name: &lt;version&gt;
+
+add all legally listed binary packages files we build to cache
+    (so we don't have to rebuild the same package multiple times)
+
+extract package to package build directory
+        </t>
 </tnodes>
 </leo_file>
