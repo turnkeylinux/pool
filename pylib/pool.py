@@ -26,7 +26,7 @@ class PoolPaths(Paths):
                             'logs'])
 
 def mkdir(p):
-    os.makedirs(str(p))
+    utils.makedirs(str(p))
 
 def parse_deb_filename(filename):
     """Parses package filename -> (name, version)"""

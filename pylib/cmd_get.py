@@ -49,6 +49,12 @@ def read_packages(fh):
         packages.append(line)
     return packages
     
+def get_treedir(pkgname):
+    if pkgname.startswith("lib"):
+        return join(pkgname[:4], pkgname)
+    else:
+        return join(pkgname[:1], pkgname)
+            
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'i:sqt',
@@ -99,7 +105,14 @@ def main():
             continue
 
         src_path = p.getpath(package)
-        dst_path = join(outputdir, basename(src_path))
+        fname = basename(src_path)
+        
+        if opt_tree:
+            package_name = package.split("=")[0]
+            dst_path = join(outputdir, get_treedir(package_name), fname)
+            utils.makedirs(dirname(dst_path))
+        else:
+            dst_path = join(outputdir, basename(src_path))
 
         if not exists(dst_path):
             utils.hardlink_or_copy(src_path, dst_path)
