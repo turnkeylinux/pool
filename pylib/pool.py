@@ -56,12 +56,14 @@ class PackageCache:
             version = None
 
         for filename in os.listdir(self.path):
-            if not isfile(filename) or not filename.endswith(".deb"):
+            filepath = join(self.path, filename)
+            
+            if not isfile(filepath) or not filename.endswith(".deb"):
                 continue
 
             cached_name, cached_version = parse_deb_filename(filename)
             if name == cached_name and (version is None or version == cached_version):
-                return join(self.path, filename)
+                return filepath
 
         return None
         
@@ -100,33 +102,30 @@ class Stocks:
             return cls(path)
 
         def __init__(self, path):
+            self.name = basename(path)
             self.path = path
             self.link = os.readlink(join(path, "link"))
 
-        def get_binaries(self):
-            """Recursively scan stock for binaries -> list of filename"""
-
-            binaries = []
-            for dirpath, dnames, fnames in os.walk(self.link):
-                for fname in fnames:
-                    if not islink(fname) and isfile(fname) and fname.endswith(".deb"):
-                        binaries.append(join(dirpath, fname))
-
-            return binaries
-
+            if not isdir(self.link):
+                raise Error("stock link to non-directory `%s'" % stock.link)
+            
     def __init__(self, path):
         self.path = path
-        
-        stocks = {}
+
+        self.stocks = {}
+        self.subpools = {}
         for stock_name in os.listdir(path):
             path_stock = join(path, stock_name)
             if not isdir(path_stock):
                 continue
 
-            stocks[stock_name] = self.Stock(path_stock)
-
-        self.stocks = stocks
-    
+            stock = self.Stock(path_stock)
+            try:
+                self.subpools[stock_name] = Pool(stock.link)
+            except Error:
+                pass
+            self.stocks[stock_name] = stock
+            
     def register(self, dir):
         stock_name = basename(abspath(dir))
         if self.stocks.has_key(stock_name):
@@ -143,11 +142,26 @@ class Stocks:
         shutil.rmtree(self.stocks[stock_name].path)
         del self.stocks[stock_name]
 
+    def get_binaries(self):
+        """Recursively scan stocks for binaries -> list of filename"""
+
+        binaries = []
+        for stock in self.stocks.values():
+            if stock.name in self.subpools.keys():
+                continue
+            
+            for dirpath, dnames, fnames in os.walk(stock.link):
+                for fname in fnames:
+                    if not islink(fname) and isfile(fname) and fname.endswith(".deb"):
+                        binaries.append(join(dirpath, fname))
+
+        return binaries
+
+    def get_subpools(self):
+        return self.subpools.values()
+
     def __iter__(self):
         return iter(self.stocks.values())
-
-    def __len__(self):
-        return len(self.stocks)
 
 def sync(method):
     def wrapper(self, *args, **kws):
@@ -194,17 +208,23 @@ class Pool:
             
     def _sync(self):
         """synchronise pool with registered stocks"""
-        for stock in self.stocks:
-            for binary in stock.get_binaries():
-                if self.pkgcache.exists(basename(binary)):
-                    continue
+        for binary in self.stocks.get_binaries():
+            if self.pkgcache.exists(basename(binary)):
+                continue
 
-                self.pkgcache.add(binary)
+            self.pkgcache.add(binary)
     
     @sync
     def exists(self, package):
         """Check if package exists in pool -> Returns bool"""
-        return self.pkgcache.exists(package)
+        if self.pkgcache.exists(package):
+            return True
+
+        for subpool in self.stocks.get_subpools():
+            if subpool.exists(package):
+                return True
+
+        return False
 
     @sync
     def list(self, all_versions=False):
@@ -213,10 +233,13 @@ class Pool:
         If all_versions is True, returns all versions of packages,
         otherwise, returns only the newest versions.
         """
-        packages = []
+        packages = set()
+        for subpool in self.stocks.get_subpools():
+            packages |= set(subpool.list(all_versions))
+            
         if all_versions:
             for name, version in self.pkgcache.list():
-                packages.append((name, version))
+                packages.add((name, version))
 
         else:
             newest = {}
@@ -225,11 +248,20 @@ class Pool:
                     newest[name] = version
 
             for name, version in newest.items():
-                packages.append((name, version))
+                packages.add((name, version))
 
-        return packages
+        return list(packages)
 
+    @sync
     def getpath(self, package):
-        """Get path to package in pool"""
-        return self.pkgcache.getpath(package)
-        
+        """Get path to package in pool if it exists or None if it doesn't"""
+        path = self.pkgcache.getpath(package)
+        if path:
+            return path
+
+        for subpool in self.stocks.get_subpools():
+            path = subpool.getpath(package)
+            if path:
+                return path
+
+        return None
