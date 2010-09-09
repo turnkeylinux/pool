@@ -203,25 +203,17 @@ class Pool:
         return self.pkgcache.exists(package)
 
     @sync
-    def list(self, globs=[], all_versions=False, name_only=False):
-        """List packages in pool -> list of packages"""
-        if not isinstance(globs, (list, tuple)):
-            globs = [ globs ]
-            
-        if all_versions and name_only:
-            raise Error("conflicting otions")
+    def list(self, all_versions=False):
+        """List packages in pool -> list of (name, version) tuples.
 
-        retarr = []
+        If all_versions is True, returns all versions of packages,
+        otherwise, returns only the newest versions.
+        """
+        packages = []
         if all_versions:
             for name, version in self.pkgcache.list():
-                retarr.append("%s=%s" % (name, version))
-        elif name_only:
-            names = set()
-            for name, version in self.pkgcache.list():
-                names.add(name)
+                packages.append((name, version))
 
-            for name in names:
-                retarr.append(name)
         else:
             newest = {}
             for name, version in self.pkgcache.list():
@@ -229,6 +221,6 @@ class Pool:
                     newest[name] = version
 
             for name, version in newest.items():
-                retarr.append("%s=%s" % (name, version))
+                packages.append((name, version))
 
-        return retarr
+        return packages
