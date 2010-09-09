@@ -11,7 +11,7 @@
 <vnodes>
 <v t="loni.20100827184947" a="E"><vh>Project</vh>
 <v t="loni.20100827184947.1" a="E"><vh>design</vh>
-<v t="loni.20100827184947.2" a="ETV"><vh>brainstorming</vh>
+<v t="loni.20100827184947.2" a="E"><vh>brainstorming</vh>
 <v t="zaril.20100828060043"><vh>first draft</vh></v>
 </v>
 <v t="zaril.20100828055849"><vh>terminology</vh></v>
@@ -28,7 +28,9 @@
 <v t="zaril.20100907030232"><vh>refactor away stock</vh></v>
 </v>
 <v t="zaril.20100906050211.5"><vh>list</vh></v>
-<v t="zaril.20100906050211.6"><vh>get</vh></v>
+<v t="zaril.20100906050211.6" a="ETV"><vh>get</vh></v>
+<v t="zaril.20100909033533"><vh>pool contains pool</vh></v>
+<v t="zaril.20100909033533.1"><vh>support sources</vh></v>
 </v>
 </v>
 </v>
@@ -433,7 +435,22 @@ sync logic
     -n --name-only
         print only the names of packages in the pool (without the version)
             incompatible with -a option</t>
-<t tx="zaril.20100906050211.6"></t>
+<t tx="zaril.20100906050211.6">logic
+    if no arguments, list the newest packages
+
+    check if package exists
+        raise error if it doesn't and we're strict
+        warn if we're not strict unless we're quiet
+
+    for each package:
+        if tree mode:
+            calc treedir (outputdir+...)
+            mkdir -p treedir
+
+        ask the pool to output that package to the outputdir
+
+
+    </t>
 <t tx="zaril.20100906230204">* logic
     list .pool/stock subdirectories
     for each stock:
@@ -444,5 +461,7 @@ sync logic
         pass
 
 </t>
+<t tx="zaril.20100909033533"></t>
+<t tx="zaril.20100909033533.1"></t>
 </tnodes>
 </leo_file>

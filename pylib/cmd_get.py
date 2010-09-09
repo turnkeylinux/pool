@@ -16,9 +16,12 @@ Options:
 import sys
 import help
 import getopt
-import pool
 
+from os.path import *
 import re
+
+import pool
+import utils
 
 @help.usage(__doc__)
 def usage():
@@ -95,7 +98,11 @@ def main():
                 warn("%s: no such package" % package)
             continue
 
-        p.get(outputdir, package)
+        src_path = p.getpath(package)
+        dst_path = join(outputdir, basename(src_path))
+
+        if not exists(dst_path):
+            utils.hardlink_or_copy(src_path, dst_path)
 
     sys.exit(exitcode)
         

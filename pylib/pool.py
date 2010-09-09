@@ -1,10 +1,11 @@
 import os
 from os.path import *
 
-import errno
 import shutil
 
 from paths import Paths
+
+import utils
 
 class Error(Exception):
     pass
@@ -42,15 +43,12 @@ class PackageCache:
     def __init__(self, path):
         self.path = path
 
-    def exists(self, package):
-        """Returns True if <package> exists in cache.
+    def getpath(self, package):
+        """Returns path to package if it exists, or None otherwise.
 
-        <package> := filename | package-name[=package-version]
+        <package> := package-name[=package-version]
         """
 
-        if exists(join(self.path, basename(package))):
-            return True
-        
         if "=" in package:
             name, version = package.split("=", 1)
         else:
@@ -63,20 +61,26 @@ class PackageCache:
 
             cached_name, cached_version = parse_deb_filename(filename)
             if name == cached_name and (version is None or version == cached_version):
-                return True
+                return join(self.path, filename)
 
-        return False
+        return None
+        
+    def exists(self, package):
+        """Returns True if <package> exists in cache.
+
+        <package> := filename | package-name[=package-version]
+        """
+
+        if exists(join(self.path, basename(package))):
+            return True
+
+        return self.getpath(package) != None
 
     def add(self, path):
         """Add binary to cache. Hardlink if possible, copy otherwise"""
 
         cached_path = join(self.path, basename(path))
-        try:
-            os.link(path, cached_path)
-        except OSError, e:
-            if e[0] != errno.EXDEV:
-                raise
-            shutil.copyfile(path, cached_path)
+        utils.hardlink_or_copy(path, cached_path)
 
     def list(self):
         """List packages in package cache -> list of (package, version)"""
@@ -224,3 +228,8 @@ class Pool:
                 packages.append((name, version))
 
         return packages
+
+    def getpath(self, package):
+        """Get path to package in pool"""
+        return self.pkgcache.getpath(package)
+        
