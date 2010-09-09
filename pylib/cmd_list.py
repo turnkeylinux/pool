@@ -43,25 +43,25 @@ def main():
     except getopt.GetoptError, e:
         usage(e)
 
-    all_versions = False
-    name_only = False
+    opt_all_versions = False
+    opt_name_only = False
     
     for opt, val in opts:
         if opt in ('-a', '--all-versions'):
-            all_versions = True
+            opt_all_versions = True
         elif opt in ('-n', '--name-only'):
-            name_only = True
+            opt_name_only = True
 
-    if name_only and all_versions:
+    if opt_name_only and opt_all_versions:
         fatal("--name-only and --all-versions are conflicting options")
             
-    packages = pool.Pool().list(all_versions)
+    packages = pool.Pool().list(opt_all_versions)
     globs = args
 
     if globs:
         packages = filter_packages(packages, globs)
         
-    if name_only:
+    if opt_name_only:
         names = set()
         for name, version in packages:
             names.add(name)
