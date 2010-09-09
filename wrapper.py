@@ -24,9 +24,9 @@ PATH_LIBEXEC="libexec"
 # are printed in Commands.usage()
 COMMANDS_USAGE_ORDER = ['init',
                         '',
-                        'register',
-                        'unregister',
-                        'info']
+                        'register', 'unregister', 'info',
+                        '',
+                        'exists', 'list', 'get']
 
 def get_copyright():
     return COPYRIGHT % version.get_version()
