@@ -161,8 +161,9 @@ class Stocks:
             
             for dirpath, dnames, fnames in os.walk(stock.link):
                 for fname in fnames:
-                    if not islink(fname) and isfile(fname) and fname.endswith(".deb"):
-                        binaries.append(join(dirpath, fname))
+                    fpath = join(dirpath, fname)
+                    if not islink(fpath) and isfile(fpath) and fname.endswith(".deb"):
+                        binaries.append(fpath)
 
         return binaries
 
