@@ -3,14 +3,14 @@
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
 <globals body_outline_ratio="0.488082901554">
-	<global_window_position top="0" left="1290" height="965" width="770"/>
+	<global_window_position top="0" left="500" height="965" width="770"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
 <find_panel_settings/>
 <vnodes>
 <v t="loni.20100827184947" a="E"><vh>Project</vh>
-<v t="loni.20100827184947.1"><vh>design</vh>
+<v t="loni.20100827184947.1" a="E"><vh>design</vh>
 <v t="loni.20100827184947.2"><vh>brainstorming</vh>
 <v t="zaril.20100828060043"><vh>first draft</vh></v>
 </v>
@@ -33,13 +33,13 @@
 <v t="zaril.20100909033533"><vh>pool contains pool</vh></v>
 <v t="zaril.20100910205006"><vh>BUG: sync not importing binaries?</vh></v>
 <v t="zaril.20100909050527" a="E"><vh>support regular sources in regular directories</vh>
-<v t="zaril.20100911052023" a="EMTV"><vh>setup a local caching proxy</vh>
+<v t="zaril.20100911052023" a="M"><vh>setup a local caching proxy</vh>
 <v t="zaril.20100912044439" a="M"><vh>fix squid</vh></v>
 <v t="zaril.20100912052909"><vh>configure jaunty to use apt-proxy</vh></v>
 <v t="zaril.20100912065617"><vh>apt-proxy README</vh></v>
 <v t="zaril.20100912052439"><vh>test debootstrap with caching proxy</vh></v>
 </v>
-<v t="zaril.20100910021430" a="E"><vh>research existing solutions</vh>
+<v t="zaril.20100910021430" a="M"><vh>research existing solutions</vh>
 <v t="zaril.20100910040422.2" a="M"><vh>explore cowdancer</vh></v>
 <v t="zaril.20100911012707" a="M"><vh>explore fl-cow</vh></v>
 <v t="zaril.20100912055420" a="M"><vh>exlore apt-move</vh></v>
@@ -49,6 +49,7 @@
 <v t="zaril.20100916032546" a="M"><vh>explore build dependencies</vh></v>
 <v t="zaril.20100911091317"><vh>research suid</vh></v>
 </v>
+<v t="zaril.20100923043734" a="EMTV"><vh>exists</vh></v>
 </v>
 </v>
 </v>
@@ -496,30 +497,12 @@ A:
 exists
 list
 get
-    improved pbuilder 
-
-        suid root?
-            use fakeroot inside?
-
-        suid chroot utility?
-
-        use deck?
-
-names
-    superbuilder
-    userpbuilder
-    usersbuilder
-    mightybuilder
-
 
 * TEST:
     add debian package (buildable)
     link to real buildroot
 
 * IDEAS
-use deck to branch the buildroot
-    suid wrapper?
-
 get_sources
     path/to/dir/package-name: &lt;version&gt;
 
@@ -530,11 +513,7 @@ extract package to package build directory
     
 we need to install build dependencies to the buildroot  
     with apt-get
-    
-* Q: how do we build a package in a new buildroot
-
-* logic
-    </t>
+   </t>
 <t tx="zaril.20100910021430">
 * TODO
 explore building packages with pbuilder
@@ -1018,6 +997,25 @@ debian-builder
 
 
 
+</t>
+<t tx="zaril.20100923043734">assume get_sources returns:
+    /path/to/package: version
+
+get_sources logic
+    walk the tree
+        any directory that has debian/ in it
+            and is not under debian/
+
+Q: how do we get the version?
+parse output from dpkg-parsechangelog
+    Version: ...
+        
+        calls /usr/lib/dpkg/parsechangelog/debian
+            strips trailing whitespace
+            skips newlines
+        
+                ^(\w[-+0-9a-z.]*) \(([^\(\) \t]+)\)((\s+[-+0-9a-z.]+)+)\;/i
+parse the changelog ourselves
 </t>
 </tnodes>
 </leo_file>

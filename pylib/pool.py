@@ -6,6 +6,7 @@ import shutil
 from paths import Paths
 
 import utils
+import debsrc
 
 class Error(Exception):
     pass
@@ -40,6 +41,22 @@ def parse_deb_filename(filename):
     name, version = filename.split("_")[:2]
 
     return name, version
+
+def parse_package_id(package):
+    """Parse package_id string
+
+    <package> := package-name[=package-version]
+
+    Returns (name, version)
+    Returns (name, None) if no version is provided
+    """
+    if "=" in package:
+        name, version = package.split("=", 1)
+    else:
+        name = package
+        version = None
+
+    return name, version
     
 class PackageCache:
     """Class representing the pool's package cache"""
@@ -52,12 +69,7 @@ class PackageCache:
         <package> := package-name[=package-version]
         """
 
-        if "=" in package:
-            name, version = package.split("=", 1)
-        else:
-            name = package
-            version = None
-
+        name, version = parse_package_id(package)
         for filename in os.listdir(self.path):
             filepath = join(self.path, filename)
             
@@ -167,6 +179,28 @@ class Stocks:
 
         return binaries
 
+    def get_sources(self):
+        """Recursively scan stocks for Debian source packages
+        Returns an array of (/path/to/package-source/package-bin, version) tuples"""
+
+        sources = []
+        for stock in self.stocks.values():
+            if stock.name in self.subpools.keys():
+                continue
+
+            stock_sources = debsrc.get_paths(stock.link)
+            for stock_source in stock_sources:
+                try:
+                    version = debsrc.get_version(stock_source)
+                    packages = debsrc.get_packages(stock_source)
+                except debsrc.Error:
+                    continue
+
+                for package in packages:
+                    sources.append((join(stock_source, package), version))
+
+        return sources
+    
     def get_subpools(self):
         return self.subpools.values()
 
@@ -234,6 +268,15 @@ class Pool:
         if self.pkgcache.exists(package):
             return True
 
+        name, version = parse_package_id(package)
+        for source_path, source_version in self.stocks.get_sources():
+            if basename(source_path) == name:
+                if version is None:
+                    return True
+
+                if source_version == version:
+                    return True
+        
         for subpool in self.stocks.get_subpools():
             if subpool.exists(package):
                 return True
