@@ -2,6 +2,8 @@ import os
 from os.path import *
 
 import shutil
+import tempfile
+import commands
 
 from paths import Paths
 
@@ -57,7 +59,15 @@ def parse_package_id(package):
         version = None
 
     return name, version
-    
+
+def fmt_package_id(name, version):
+    if version:
+        return "%s=%s" % (name, version)
+    return name
+
+def mkargs(*args):
+    return tuple(map(commands.mkarg, args))
+
 class PackageCache:
     """Class representing the pool's package cache"""
     def __init__(self, path):
@@ -235,8 +245,11 @@ class Pool:
             raise Error("no pool found (POOL_DIR=%s)" % dirname(self.paths.path))
 
         recursed_paths.append(dirname(self.paths.path))
+        self.buildroot = os.readlink(self.paths.build.root)
         self.stocks = Stocks(self.paths.stocks, recursed_paths)
         self.pkgcache = PackageCache(self.paths.pkgcache)
+        self.tmpdir = os.environ.get("POOL_TMPDIR") or "/var/tmp/pool"
+        mkdir(self.tmpdir)
 
     def register(self, dir):
         if not isdir(dir):
@@ -261,21 +274,29 @@ class Pool:
                 continue
 
             self.pkgcache.add(binary)
-    
+
+    def _get_source_path(self, package):
+        name, version = parse_package_id(package)
+        for source_path, source_version in self.stocks.get_sources():
+            if basename(source_path) == name:
+                source_path = dirname(source_path)
+                
+                if version is None:
+                    return source_path
+
+                if source_version == version:
+                    return source_path
+
+        return None
+
     @sync
     def exists(self, package):
         """Check if package exists in pool -> Returns bool"""
         if self.pkgcache.exists(package):
             return True
 
-        name, version = parse_package_id(package)
-        for source_path, source_version in self.stocks.get_sources():
-            if basename(source_path) == name:
-                if version is None:
-                    return True
-
-                if source_version == version:
-                    return True
+        if self._get_source_path(package):
+            return True
         
         for subpool in self.stocks.get_subpools():
             if subpool.exists(package):
@@ -320,4 +341,42 @@ class Pool:
             if path:
                 return path
 
-        return None
+        source_path = self._get_source_path(package)
+        if not source_path:
+            return None
+
+        # get the precise package requested back from the cache
+        package_name, package_version = parse_package_id(package)
+        if not package_version:
+            package_version = debsrc.get_version(source_path)
+        package = fmt_package_id(package_name, package_version)
+
+        build_outputdir = tempfile.mkdtemp(dir=self.tmpdir, prefix="%s-%s." % (package_name, package_version))
+
+        print "### BUILDING PACKAGE: " + package
+        print "###           SOURCE: " + source_path
+        
+        # build the package
+        error = os.system("cd %s && deckdebuild %s %s" % mkargs(source_path, self.buildroot, build_outputdir))
+
+        if error:
+            shutil.rmtree(build_outputdir)
+            raise Error("package `%s' failed to build" % package)
+
+        print
+
+        # copy *.debs and build output from output dir
+        for fname in os.listdir(build_outputdir):
+            fpath = join(build_outputdir, fname)
+            if fname.endswith(".deb"):
+                self.pkgcache.add(fpath)
+            elif fname.endswith(".build"):
+                shutil.copyfile(fpath, join(self.paths.build.logs, fname))
+
+        shutil.rmtree(build_outputdir)
+
+        path = self.pkgcache.getpath(package)
+        if not path:
+            raise Error("recently built package `%s' missing from cache" % package)
+    
+        return path

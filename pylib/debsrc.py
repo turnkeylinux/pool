@@ -34,3 +34,4 @@ def get_packages(srcpath):
              for line in file(controlfile).readlines()
              if re.match(r'^Package:', line, re.I) ]
 
+

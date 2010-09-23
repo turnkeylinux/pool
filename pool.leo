@@ -11,7 +11,7 @@
 <vnodes>
 <v t="loni.20100827184947" a="E"><vh>Project</vh>
 <v t="loni.20100827184947.1" a="E"><vh>design</vh>
-<v t="loni.20100827184947.2"><vh>brainstorming</vh>
+<v t="loni.20100827184947.2" a="TV"><vh>brainstorming</vh>
 <v t="zaril.20100828060043"><vh>first draft</vh></v>
 </v>
 <v t="zaril.20100828055849"><vh>terminology</vh></v>
@@ -50,7 +50,8 @@
 <v t="zaril.20100911091317"><vh>research suid</vh></v>
 </v>
 <v t="zaril.20100923043734" a="M"><vh>exists</vh></v>
-<v t="zaril.20100923071058" a="TV"><vh>list</vh></v>
+<v t="zaril.20100923071058"><vh>list</vh></v>
+<v t="zaril.20100923072629"><vh>get</vh></v>
 </v>
 </v>
 </v>
@@ -114,7 +115,12 @@ GOTCHA: sumo auto-versioning is tricky
 Q: how does auto-versioning work for multi-debian packagse in a regular Git repository?
 ---
 Q: do we support different versioning for single-debian package and multi-debian packages?
-    </t>
+---
+Q: can we support object caching safely?
+A:
+    if its content addressable then yes
+
+</t>
 <t tx="loni.20100827184947.4">FILE/DATA STRUCTURE
 
 .pool/
@@ -1019,5 +1025,40 @@ parse output from dpkg-parsechangelog
 parse the changelog ourselves
 </t>
 <t tx="zaril.20100923071058"></t>
+<t tx="zaril.20100923072629">getpath logic
+    try to get the package from the cache, but if we can't:
+        search stocks to find source path matching package/version
+        deckdebuild the package with the provided build root
+        insert any matching built debs into the cache
+            if it doesn't already exist?
+        insert build log
+        return path of package in cache
+
+POOL_TMPDIR     defaults to TMPDIR or /var/tmp
+
+$POOL_TMPDIR/&lt;package&gt;-&lt;version&gt;/
+    &lt;package&gt;-&lt;version&gt;
+    *.debs
+
+
+* IDEAS
+fix deckdebuild so you can choose where to output debs to
+    this way we can save the double copy of the source dir
+   
+* QUESTIONS:
+
+Q: what do we do if the package fails to build?
+A: 
+ideas
+    output the failed build output + raise exception
+---
+Q: do we care which stock it came from?
+A: not really the source is a full filesystem path (unless we want to report an error)
+    the stock just points to it
+
+* TODO:
+debsrc.get_name
+pool.tmpdir
+</t>
 </tnodes>
 </leo_file>
