@@ -49,7 +49,8 @@
 <v t="zaril.20100916032546" a="M"><vh>explore build dependencies</vh></v>
 <v t="zaril.20100911091317"><vh>research suid</vh></v>
 </v>
-<v t="zaril.20100923043734" a="EMTV"><vh>exists</vh></v>
+<v t="zaril.20100923043734" a="M"><vh>exists</vh></v>
+<v t="zaril.20100923071058" a="TV"><vh>list</vh></v>
 </v>
 </v>
 </v>
@@ -1017,5 +1018,6 @@ parse output from dpkg-parsechangelog
                 ^(\w[-+0-9a-z.]*) \(([^\(\) \t]+)\)((\s+[-+0-9a-z.]+)+)\;/i
 parse the changelog ourselves
 </t>
+<t tx="zaril.20100923071058"></t>
 </tnodes>
 </leo_file>

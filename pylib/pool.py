@@ -294,20 +294,19 @@ class Pool:
         for subpool in self.stocks.get_subpools():
             packages |= set(subpool.list(all_versions))
             
+        packages |= set(self.pkgcache.list())
+        packages |= set([ (basename(path), version)
+                          for path, version in self.stocks.get_sources() ])
+        
         if all_versions:
-            for name, version in self.pkgcache.list():
-                packages.add((name, version))
+            return list(packages)
 
-        else:
-            newest = {}
-            for name, version in self.pkgcache.list():
-                if not newest.has_key(name) or newest[name] < version:
-                    newest[name] = version
+        newest = {}
+        for name, version in packages:
+            if not newest.has_key(name) or newest[name] < version:
+                newest[name] = version
 
-            for name, version in newest.items():
-                packages.add((name, version))
-
-        return list(packages)
+        return newest.items()
 
     @sync
     def getpath(self, package):
