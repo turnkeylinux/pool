@@ -56,6 +56,7 @@ def main():
         fatal("--name-only and --all-versions are conflicting options")
             
     packages = pool.Pool().list(opt_all_versions)
+    packages.sort()
     globs = args
 
     if globs:
