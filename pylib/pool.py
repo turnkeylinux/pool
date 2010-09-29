@@ -324,7 +324,8 @@ class Pool:
 
         newest = {}
         for name, version in packages:
-            if not newest.has_key(name) or newest[name] < version:
+            if not newest.has_key(name) or \
+               debsrc.cmp_versions(newest[name], version) < 0:
                 newest[name] = version
 
         return newest.items()

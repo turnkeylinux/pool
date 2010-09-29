@@ -5,6 +5,14 @@ from os.path import *
 class Error(Exception):
     pass
 
+def cmp_versions(a, b):
+    """Compare a with b according to Debian versioning criteria"""
+
+    def normalize(v):
+        return re.sub(r'(\D|\b)0+', r'\1', v).rstrip("-")
+        
+    return cmp(normalize(a), normalize(b))
+
 def get_paths(path):
     if isfile(join(path, "debian", "control")):
         return [ path ]
