@@ -244,9 +244,8 @@ class Pool:
         if not exists(self.paths.path):
             raise Error("no pool found (POOL_DIR=%s)" % dirname(self.paths.path))
 
-        recursed_paths.append(dirname(self.paths.path))
         self.buildroot = os.readlink(self.paths.build.root)
-        self.stocks = Stocks(self.paths.stocks, recursed_paths)
+        self.stocks = Stocks(self.paths.stocks, recursed_paths + [ dirname(self.paths.path) ])
         self.pkgcache = PackageCache(self.paths.pkgcache)
         self.tmpdir = os.environ.get("POOL_TMPDIR") or "/var/tmp/pool"
         mkdir(self.tmpdir)
@@ -333,6 +332,9 @@ class Pool:
     @sync
     def getpath(self, package):
         """Get path to package in pool if it exists or None if it doesn't"""
+        if '=' not in package:
+            raise Error("getpath requires explicit version for `%s'" % package)
+        
         path = self.pkgcache.getpath(package)
         if path:
             return path
