@@ -36,6 +36,13 @@ def filter_packages(packages, globs):
 
     return filtered
     
+def list_packages(opt_all_versions, globs=None):
+    packages = pool.Pool().list(opt_all_versions)
+    if globs:
+        packages = filter_packages(packages, globs)
+
+    return packages
+
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'an',
@@ -54,14 +61,11 @@ def main():
 
     if opt_name_only and opt_all_versions:
         fatal("--name-only and --all-versions are conflicting options")
-            
-    packages = pool.Pool().list(opt_all_versions)
-    packages.sort()
-    globs = args
 
-    if globs:
-        packages = filter_packages(packages, globs)
-        
+    globs = args
+    packages = list_packages(opt_all_versions, globs)
+    packages.sort()
+
     if opt_name_only:
         names = set()
         for name, version in packages:

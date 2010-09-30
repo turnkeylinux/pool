@@ -23,6 +23,8 @@ import re
 import pool
 import utils
 
+import cmd_list
+
 @help.usage(__doc__)
 def usage():
     print >> sys.stderr, "Syntax: %s [-options] <output-dir> [ package[=version] ... ]" % sys.argv[0]
@@ -54,7 +56,11 @@ def get_treedir(pkgname):
         return join(pkgname[:4], pkgname)
     else:
         return join(pkgname[:1], pkgname)
-            
+
+def fmt_package_tuples(package_tuples):
+    return [ name + "=" + version
+             for name, version in package_tuples ]
+
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'i:sqt',
@@ -90,12 +96,9 @@ def main():
     p = pool.Pool()
     if input:
         packages += read_packages(input)
-    else:
-        # if no packages specified, get all the newest versions
-        if not packages:
-            packages = [ "%s=%s" % (name, version)
-                         for name, version in p.list() ]
 
+    resolved = []
+    unresolved = []
     for package in packages:
         if not p.exists(package):
             if opt_strict:
@@ -104,6 +107,21 @@ def main():
                 warn("%s: no such package" % package)
             continue
 
+        if '=' in package:
+            resolved.append(package)
+        else:
+            unresolved.append(package)
+
+    if unresolved:
+        resolved += fmt_package_tuples(cmd_list.list_packages(False, unresolved))
+
+    packages = resolved
+
+    if not packages and not input:
+        # if no packages specified, get all the newest versions
+        packages = fmt_package_tuples(p.list())
+
+    for package in packages:
         src_path = p.getpath(package)
         fname = basename(src_path)
         
