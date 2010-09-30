@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if [[ "$#" != "3" ]]; then
+    echo "syntax: $0 /path/to/repository <branch> <new-directory>"
+    exit 1
+fi
+
+set -e
+
+src=$1
+branch=$2
+dst=$3
+
+if ! git --git-dir=$src/.git show-ref -q $branch; then
+    echo error: no such branch \'$branch\'
+    exit 1
+fi
+
+git-clone -n -s $src $dst
+cd $dst
+rm -f .git/refs/remotes/origin/HEAD
+mv .git/refs/remotes/origin/* .git/refs/heads
+
+git-checkout -q $branch
+
