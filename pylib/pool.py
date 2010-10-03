@@ -10,6 +10,8 @@ from paths import Paths
 import utils
 import debsrc
 
+from git import Git
+
 class Error(Exception):
     pass
 
@@ -128,6 +130,10 @@ class Stocks:
 
         def __init__(self, path):
             self.name = basename(path)
+            self.branch = None
+            if "#" in self.name:
+                self.branch = self.name.split("#")[1]
+
             self.path = path
             self.link = os.readlink(join(path, "link"))
 
@@ -157,15 +163,47 @@ class Stocks:
                 pass
             self.stocks[stock_name] = stock
             
-    def register(self, dir):
+    @staticmethod
+    def _parse_stock(stock):
+        try:
+            dir, branch = stock.split("#", 1)
+        except ValueError:
+            dir = stock
+            branch = None
+
+        return dir, branch
+
+    def register(self, stock):
+        dir, branch = self._parse_stock(stock)
+        if not isdir(dir):
+            raise Error("not a directory `%s'" % dir)
+
+        try:
+            git = Git(dir)
+        except Git.Error:
+            git = None
+
+        if (not git and branch) or (git and branch and not git.show_ref(branch)):
+            raise Error("no such branch `%s' at `%s'" % (branch, dir))
+
+        if git and not branch:
+            branch = basename(git.symbolic_ref("HEAD"))
+        
         stock_name = basename(abspath(dir))
+        if branch:
+            stock_name += "#" + branch
+        
         if self.stocks.has_key(stock_name):
             raise Error("stock already registered under name `%s'" % stock_name)
 
         self.stocks[stock_name] = self.Stock.init_create(join(self.path, stock_name), dir)
         
-    def unregister(self, dir):
-        stock_name = basename(abspath(dir))
+    def unregister(self, stock):
+        dir, branch = self._parse_stock(stock)
+        stock_name = basename(dir)
+        if branch:
+            stock_name += "#" + branch
+            
         if not self.stocks.has_key(stock_name) or \
            self.stocks[stock_name].link != realpath(dir):
             raise Error("no matches for unregister")
@@ -243,28 +281,25 @@ class Pool:
         self.paths = PoolPaths(path)
         if not exists(self.paths.path):
             raise Error("no pool found (POOL_DIR=%s)" % dirname(self.paths.path))
-
         self.buildroot = os.readlink(self.paths.build.root)
         self.stocks = Stocks(self.paths.stocks, recursed_paths + [ dirname(self.paths.path) ])
         self.pkgcache = PackageCache(self.paths.pkgcache)
         self.tmpdir = os.environ.get("POOL_TMPDIR") or "/var/tmp/pool"
         mkdir(self.tmpdir)
-
-    def register(self, dir):
-        if not isdir(dir):
-            raise Error("not a directory `%s'" % dir)
-
-        if realpath(dir) == dirname(self.paths.path):
-            raise Error("a pool can not contain itself")
+    
+    def register(self, stock):
+        self.stocks.register(stock)
         
-        self.stocks.register(dir)
-        
-    def unregister(self, dir):
-        self.stocks.unregister(dir)
+    def unregister(self, stock):
+        self.stocks.unregister(stock)
 
     def print_info(self):
         for stock in self.stocks:
-            print stock.link
+            addr = stock.link
+            if stock.branch:
+                addr += "#" + stock.branch
+                
+            print addr
             
     def _sync(self):
         """synchronise pool with registered stocks"""

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet ekr_test?>
 <leo_file>
-<leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.488082901554">
-	<global_window_position top="0" left="500" height="965" width="770"/>
+<leo_header file_format="2" tnodes="0" max_tnode_index="1" clone_windows="0"/>
+<globals body_outline_ratio="0.434196891192">
+	<global_window_position top="0" left="470" height="965" width="800"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -11,7 +11,7 @@
 <vnodes>
 <v t="loni.20100827184947" a="E"><vh>Project</vh>
 <v t="loni.20100827184947.1" a="E"><vh>design</vh>
-<v t="loni.20100827184947.2" a="TV"><vh>brainstorming</vh>
+<v t="loni.20100827184947.2" a="E"><vh>brainstorming</vh>
 <v t="zaril.20100828060043"><vh>first draft</vh></v>
 </v>
 <v t="zaril.20100828055849"><vh>terminology</vh></v>
@@ -32,7 +32,7 @@
 </v>
 <v t="zaril.20100909033533"><vh>pool contains pool</vh></v>
 <v t="zaril.20100910205006"><vh>BUG: sync not importing binaries?</vh></v>
-<v t="zaril.20100909050527" a="E"><vh>support regular sources in regular directories</vh>
+<v t="zaril.20100909050527"><vh>support regular sources in regular directories</vh>
 <v t="zaril.20100911052023" a="M"><vh>setup a local caching proxy</vh>
 <v t="zaril.20100912044439" a="M"><vh>fix squid</vh></v>
 <v t="zaril.20100912052909"><vh>configure jaunty to use apt-proxy</vh></v>
@@ -43,15 +43,29 @@
 <v t="zaril.20100910040422.2" a="M"><vh>explore cowdancer</vh></v>
 <v t="zaril.20100911012707" a="M"><vh>explore fl-cow</vh></v>
 <v t="zaril.20100912055420" a="M"><vh>exlore apt-move</vh></v>
-<v t="zaril.20100911004946"><vh>explore pbuilder</vh>
+<v t="zaril.20100911004946" a="E"><vh>explore pbuilder</vh>
 <v t="zaril.20100918092126"><vh>alternatives</vh></v>
 </v>
+<v t="zaril.20100923230802" a="M"><vh>explore sbuild</vh></v>
 <v t="zaril.20100916032546" a="M"><vh>explore build dependencies</vh></v>
 <v t="zaril.20100911091317"><vh>research suid</vh></v>
 </v>
 <v t="zaril.20100923043734" a="M"><vh>exists</vh></v>
 <v t="zaril.20100923071058"><vh>list</vh></v>
 <v t="zaril.20100923072629"><vh>get</vh></v>
+</v>
+<v t="zaril.20100930001758"><vh>sort debian packages according to dpkg algorithm</vh></v>
+<v t="zaril.20100930010726"><vh>fix getpath to get newest packages?</vh>
+<v t="zaril.20100930021923"><vh>pool.Pool().list() can not be invoked twice</vh></v>
+</v>
+<v t="zaril.20100923143609" a="E"><vh>support complex stock types</vh>
+<v t="zaril.20100929180644" a="E"><vh>versioning design ideas</vh></v>
+<v t="zaril.20100929193931"><vh>test/develop lightweight branch cloning</vh></v>
+<v t="zaril.20101003042126" a="E"><vh>support single</vh>
+<v t="zaril.20101003051253"><vh>register git branches</vh></v>
+<v t="zaril.20101003051313"><vh>fix info</vh></v>
+<v t="zaril.20101003051253.1" a="TV"><vh>unregister git branches</vh></v>
+</v>
 </v>
 </v>
 </v>
@@ -73,6 +87,7 @@ leave failed builds in temporary directory
 
 figure out how to allow packages to be built manually
     unversioned - for testing?
+
 
 * QUESTIONS
 Q: what should we call the system?
@@ -323,14 +338,32 @@ for package in $(cat /path/to/versioned-product-manifest); do
     fi
 done</t>
 <t tx="loni.20100827184947.7">ROADMAP
-support Git repositories
-    scan deltas since last scan
-support Sumo arenas</t>
+support Sumo arenas
+</t>
 <t tx="zaril.20100828055849">pool
     a system for which maintains a pool of binary packages built on-demand from registered stock
 
 stock
     a container for packages in binary or source form
+
+stock types
+    git single
+        git repository containing one single package
+
+    git
+        git repository containing multiple packages
+
+    plain
+        regular directory containing multiple packages
+
+    sumo
+        sumo arena containing multiple packages
+
+binary
+    a binary Debian package inside a stock
+
+source
+    a source Debian package inside a stock
 
 build root
     a chroot environment with an suitable toolchain setup for building packages</t>
@@ -1060,5 +1093,260 @@ A: not really the source is a full filesystem path (unless we want to report an 
 debsrc.get_name
 pool.tmpdir
 </t>
+<t tx="zaril.20100923143609">TODO: fixed untagged auto-versioning
+
+features
+    support branches in Git repositories
+
+subset list logic
+    light check out of the branch we want
+    detect all Debian directories
+    run sourceversion-list on all Debian directories
+    
+subset getpath logic
+    light check out of the branch we want
+    seek version we want in temporary checkout
+    build package
+
+tests/milestones
+    setup a new pool with the following stocks
+        use pyproject in various versions
+            create a devel version of pyproject
+    
+    register stable branch of a tagged project
+        checked out branch - devel
+            should ignore devel versions
+
+        goals
+            when we list we should see only the stable version
+            get that stable version built
+
+    register a Git repository with two branches
+        one branch empty (checked out)
+        two debian packages in the other branch
+
+        goals
+            when we list we should see only the stable versions
+            get that stable versions built
+
+   register a Sumo repository
+</t>
+<t tx="zaril.20100923230802">SUMMARY
+    sbuild mails build logs to maintainer
+
+    builds from dsc
+
+Q: how is sbuild different from pbuilder?
+A: doesn't build the package directly from source (pdebuild)
+(though generating source package is not a problem)
+</t>
+<t tx="zaril.20100929180644">scan deltas since last scan
+    yes, to detect which paths changed
+        run sourceversion-list on them
+
+    inefficient alternative
+        if anything changed, run sourceversion-list on all paths
+   
+remember - we're using branches for development
+    don't touch working directory?
+        this way if we have a catastrophic failure - no lost data
+    clone repository for all operations
+    checkout correct branch to a different working directory?
+
+fixed untagged auto-versioning
+    its unclear with untagged versions what is the newest pacakge (sub-day precision)
+        add hour/minute/second precision?
+        add daily count?
+            count all commits today + 1
+
+    need to change auto-version so that untagged versions always precede tagged versions
+        e.g., tagged version = 0.0.1-1-g472ece7
+            package--2010-09-23.1.33879c21
+            package-0-2010-09-23.1.33879c21 
+            package-0000-2010-09-23.1.33879c21
+        
+
+tag-based auto-versioning
+    for single projects only (debian/ in top directory)
+        tags are per-repository
+        reminder: we're using git-describe
+
+    separate program for mappings versions/commits vice versa
+        map commits to versions
+        map versions from commits (rev list -&gt; versions)
+            initially map HEAD -&gt; 
+
+    logic
+        current state saved in a temporary commit
+        map version to commit
+        seek to commit
+        autogenerate a changelog
+        build package
+        restore original state
+
+for non-tagged versioning pool doesn't know how to generate versions
+    it only knows how to read the changelog
+        first line for every changelog commit -&gt; thats the version
+
+    committing changes to more than one package at a time will produce a similar changelog entry
+        in both packages
+
+    moving or copying a source directory looses its history of old versions
+        git-log debian/changelog
+            won't produce 
+
+multiple Debian sources in Sumo arena
+    versions based on changelog entries
+        chanko brings changelog into overlay on first import
+    
+    use hooks to auto-generate changelog entry?
+        append turnkey&lt;N&gt;?
+            configurable string 
+                environment variable
+
+            (could also be .0)
+
+        provide some method of supressing the changelog?
+            touch debian/changelog 
+                if you've changed it yourself, it won't auto-update
+
+    provide user a tool to choose to update the changelog?
+
+    develop Sumo seek capability and commit hooks
+
+multiple Debian sources in Git repositories
+    
+    debian/changelog based versioning
+
+    changes don't necessarily generate a new version
+        you have to change the changelog for a new version to be created
+        
+        a list of changelog commits generated
+            seek to those commits for the contents of that package version
+
+            allow us to develop and commit to packages without effecting pool
+                test packages locally before changing the commit log 
+
+
+          
+* QUESTIONS
+
+Q: is tagged auto-versioning embedded or do we calculate the tagged auto-version independently?
+    we also need the ability to seek back to arbitrary earlier versions
+        seeking back to the tag is trivial
+        seeking back to the offset is simple if unreliable (includes short commit id)</t>
+<t tx="zaril.20100929193931">SUMMARY
+    goal: checkout a specific branch to a separate working directory as efficiently as possible
+    insight: we may to modify this script somewhat to work with Sumo arenas
+        use sumo-checkout instead of git-checkout
+            maybe add the -q option to sumo-checkout
+
+    git-clone cli options
+        -s --shared
+            clones repository using alternates (no hardlinks)
+                very efficient 
+    
+        -n --no-checkout
+            doesn't check out the current branch
+    
+cli
+    cd /path/to/new
+    git-clone-checkout path-to-git-repository branch
+
+test
+    cd /turnkey/tmp/testgit
+    rm -rf test
+    git-clone-branch ../pyproject/ master test
+
+logic
+    check that branch exists on src
+
+    git-clone -n -s src dst
+    cd dst
+    
+    rm -f .git/refs/remotes/origin/HEAD
+    mv .git/refs/remotes/origin/* .git/refs/heads
+
+    git-checkout -q &lt;branch&gt;
+</t>
+<t tx="zaril.20100930001758">trailing zeros not considered
+    -2010 == 0-2010
+    
+    \d-2010 &gt; 0-2010
+
+    2010 == 2010-0000
+
+    1.01 == 1.1
+
+    1.02 &gt; 1.1  
+
+    2010.1 &gt; 2010-1
+
+    2010:1 &gt; 2010.1
+
+logic
+    remove trailing zeros after any non-number
+
+IDEA: translate sort algorithm directly to python?
+    just remove trailing zeros?
+</t>
+<t tx="zaril.20100930010726">TEST
+    get pool to give you an older package than is available
+        put newer package in subpool
+        older package in cache will be returned
+
+IDEAS
+
+cli level solution
+    make getpath check for explicit version
+
+    pass unversioned packages to list for versioning
+        could return no matching packages
+            verify that package exists first
+            raise exception if pool-list returns non-zero
+
+        add results to list of packages
+
+        con
+            inefficient for small amount of packages?
+                it seems we need to do this anyway, so better not replicate this functionality
+
+
+
+
+
+        
+</t>
+<t tx="zaril.20100930021923">problem: modification of default array value</t>
+<t tx="zaril.20101003042126">
+
+unregister logic
+    if </t>
+<t tx="zaril.20101003051253">
+test: 
+    register /turnkey/tmp/verseek/git-single    
+        should register checked out branch (e.g., master)
+
+    register /turnkey/tmp/verseek/git-single#devel
+        register devel branch
+
+
+logic
+    parse path
+    if branch isn't None and path isn't a git repository, raise exception
+
+register logic
+    dir, branch = parse stock 
+    check that the directory exists
+    try to create a git instance at that directory
+        if stock is a git repo and branch is none:
+            branch = currently checked out branch</t>
+<t tx="zaril.20101003051253.1">roadmap
+    specific branches unregistered
+        require explicit branch specification
+    implicit branch unregistration
+        look it up
+</t>
+<t tx="zaril.20101003051313"></t>
 </tnodes>
 </leo_file>
