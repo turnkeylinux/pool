@@ -6,7 +6,7 @@ import pool
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s <dir>" % sys.argv[0]
+    print >> sys.stderr, "Syntax: %s /path/to/stock[#branch]" % sys.argv[0]
 
 def fatal(s):
     print >> sys.stderr, "error: " + str(s)
@@ -21,9 +21,9 @@ def main():
     if len(args) != 1:
         usage("bad number of arguments")
 
-    dir = args[0]
+    stock = args[0]
     try:
-        pool.Pool().unregister(dir)
+        pool.Pool().unregister(stock)
     except pool.Error, e:
         fatal(e)
         
