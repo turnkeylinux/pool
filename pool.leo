@@ -1344,8 +1344,17 @@ register logic
 <t tx="zaril.20101003051253.1">roadmap
     specific branches unregistered
         require explicit branch specification
-    implicit branch unregistration
-        look it up
+
+implicit branch unregistration
+    if branch is None
+        list all stocks that have a matching dir linked
+            if there is more than one raise an exception
+            otherwise, thats the stock we'll delete
+
+    this also work for plain directories
+
+
+
 </t>
 <t tx="zaril.20101003051313"></t>
 </tnodes>

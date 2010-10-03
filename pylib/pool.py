@@ -171,7 +171,7 @@ class Stocks:
             dir = stock
             branch = None
 
-        return dir, branch
+        return realpath(dir), branch
 
     def register(self, stock):
         dir, branch = self._parse_stock(stock)
@@ -204,12 +204,17 @@ class Stocks:
         if branch:
             stock_name += "#" + branch
             
-        if not self.stocks.has_key(stock_name) or \
-           self.stocks[stock_name].link != realpath(dir):
+        matches = [ stock for stock in self.stocks.values()
+                    if stock.link == dir and (not branch or stock.branch == branch) ]
+        if not matches:
             raise Error("no matches for unregister")
 
-        shutil.rmtree(self.stocks[stock_name].path)
-        del self.stocks[stock_name]
+        if len(matches) > 1:
+            raise Error("multiple implicit matches for unregister")
+
+        stock = matches[0]
+        shutil.rmtree(stock.path)
+        del self.stocks[stock.name]
 
     def get_binaries(self):
         """Recursively scan stocks for binaries -> list of filename"""
