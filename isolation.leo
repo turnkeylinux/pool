@@ -3,13 +3,13 @@
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="21" clone_windows="0"/>
 <globals body_outline_ratio="0.5">
-	<global_window_position top="0" left="457" height="933" width="800"/>
+	<global_window_position top="0" left="138" height="933" width="800"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
 <find_panel_settings/>
 <vnodes>
-<v t="zaril.20100923035154" a="ETV"><vh>Isolation research</vh>
+<v t="zaril.20100923035154" a="E"><vh>Isolation research</vh>
 <v t="zaril.20100923035154.1" a="EM"><vh>explore fakechroot</vh></v>
 <v t="zaril.20100923035154.2" a="M"><vh>research chroot (why only root?)</vh>
 <v t="zaril.20100923035154.3"><vh>break out of chroot exploit</vh></v>
@@ -21,12 +21,11 @@
 <v t="zaril.20100923035316.3" a="M"><vh>explore xen</vh>
 <v t="zaril.20100923035316.4"><vh>explore ubuntu support for xen</vh></v>
 </v>
-<v t="zaril.20100923035316.5" a="M"><vh>explore uml</vh>
+<v t="zaril.20100923035316.5" a="MTV"><vh>explore uml</vh>
 <v t="zaril.20100923035316.6"><vh>explore rootstrap</vh></v>
 <v t="zaril.20100923035316.7"><vh>explore pbuilder-uml</vh></v>
 <v t="zaril.20100923035316.8" a="M"><vh>explore tun/tap</vh></v>
 </v>
-<v t="zaril.20100923035316.9" a="M"><vh>explore sbuild</vh></v>
 <v t="zaril.20100923035316.10" a="M"><vh>explore virtualbox</vh></v>
 <v t="zaril.20100923035316.11" a="M"><vh>explore dchroot / schroot</vh>
 <v t="zaril.20100923035316.12"><vh>time chroot tarball extraction</vh></v>
@@ -979,15 +978,6 @@ In computer networking, TUN and TAP are virtual network kernel drivers. They imp
 TAP (as in network TAP) simulates an Ethernet device and it operates with Layer 2 packets such as Ethernet frames. TUN (as in network TUNnel) simulates a network layer device and it operates with Layer 3 packets such as IP packets. TAP is used to create a Network bridge, while TUN is used with Routing.
 
 Packets sent by an operating system via a TUN/TAP device are delivered to a user-space program that attaches itself to the device. A user-space program may also pass packets into a TUN/TAP device. In this case TUN/TAP device delivers (or "injects") these packets to the operating system network stack thus emulating their reception from an external source.</t>
-<t tx="zaril.20100923035316.9">SUMMARY
-    sbuild mails build logs to maintainer
-
-    builds from dsc
-
-Q: how is sbuild different from pbuilder?
-A: doesn't build the package directly from source (pdebuild)
-(though generating source package is not a problem)
-</t>
 <t tx="zaril.20100923035316.10">/etc/init.d/vboxdrv
 /etc/init.d/vboxnet
 
