@@ -9,6 +9,7 @@ from paths import Paths
 
 from common import *
 import debsrc
+import verseek
 
 from git import Git
 
@@ -157,8 +158,6 @@ class Stock(object):
         paths = StockPaths(path)
         os.symlink(realpath(link), paths.link)
 
-        return cls(path)
-
     class Head(object):
         """Magical attribute.
 
@@ -240,11 +239,10 @@ class Stock(object):
 
         return checkout_path
 
-        
     def _update_source_versions(self, dir):
         """update versions for a particular source package at <dir>"""
         packages = debsrc.get_packages(dir)
-        versions = debsrc.get_versions(dir)
+        versions = verseek.list(dir)
 
         if self.branch:
             relative_path = make_relative(self.paths.checkout, dir)
@@ -352,7 +350,9 @@ class Stocks:
         if self.stocks.has_key(stock_name):
             raise Error("stock already registered under name `%s'" % stock_name)
 
-        self.stocks[stock_name] = Stock.init_create(join(self.path, stock_name), dir)
+        stock_path = join(self.path, stock_name)
+        Stock.init_create(stock_path, dir)
+        self.stocks[stock_name] = Stock(stock_path, self.pkgcache)
         
     def unregister(self, stock):
         dir, branch = self._parse_stock(stock)
@@ -369,7 +369,7 @@ class Stocks:
             raise Error("multiple implicit matches for unregister")
 
         stock = matches[0]
-        shutil.rmtree(stock.path)
+        shutil.rmtree(stock.paths.path)
         del self.stocks[stock.name]
 
     def sync(self):
@@ -497,6 +497,13 @@ class Pool:
 
         return newest.items()
 
+    def _get_source_path(self, name, version):
+        for stock, path, versions in self.stocks.get_source_versions():
+            if basename(path) == name and version in versions:
+                return join(stock.workdir, dirname(path))
+
+        return None
+        
     @sync
     def getpath(self, package):
         """Get path to package in pool if it exists or None if it doesn't"""
@@ -512,19 +519,21 @@ class Pool:
             if path:
                 return path
 
-        source_path = self._get_source_path(package)
-        if not source_path:
-            return None
-
         package_name, package_version = parse_package_id(package)
         build_outputdir = tempfile.mkdtemp(dir=self.tmpdir, prefix="%s-%s." % (package_name, package_version))
+
+        source_path = self._get_source_path(package_name, package_version)
+        if not source_path:
+            return None
 
         print "### BUILDING PACKAGE: " + package
         print "###           SOURCE: " + source_path
         
-        # build the package
+        # seek to version, build the package, seek back
+        verseek.seek(source_path, package_version)
         error = os.system("cd %s && deckdebuild %s %s" % mkargs(source_path, self.buildroot, build_outputdir))
-
+        verseek.seek(source_path)
+        
         if error:
             shutil.rmtree(build_outputdir)
             raise Error("package `%s' failed to build" % package)

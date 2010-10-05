@@ -72,8 +72,9 @@
 </v>
 </v>
 <v t="zaril.20101003054139.1" a="M"><vh>list</vh></v>
-<v t="zaril.20101003054139.2" a="ETV"><vh>get</vh></v>
+<v t="zaril.20101003054139.2" a="TV"><vh>get</vh></v>
 </v>
+<v t="zaril.20101005094458"><vh>support Sumo branches</vh></v>
 </v>
 </v>
 </v>
@@ -1442,6 +1443,7 @@ Stock interface
     deckdebuild
     import built package into cache
     return the path to the built package
+
 </t>
 <t tx="zaril.20101003091746">psuedo-logic
 
@@ -1518,6 +1520,8 @@ git-checkout -q -f devel
     </t>
 <t tx="zaril.20101005065057">GOTCHA: rev-parse tag^0 != rev-parse tag
     the first returns the commit pointed to by the tag, the second returns the tag object
+</t>
+<t tx="zaril.20101005094458">we need to open them
 </t>
 </tnodes>
 </leo_file>
