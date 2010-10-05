@@ -435,25 +435,7 @@ class Pool:
             
     def _sync(self):
         """synchronise pool with registered stocks"""
-        for binary in self.stocks.get_binaries():
-            if self.pkgcache.exists(basename(binary)):
-                continue
-
-            self.pkgcache.add(binary)
-
-    def _get_source_path(self, package):
-        name, version = parse_package_id(package)
-        for source_path, source_version in self.stocks.get_sources():
-            if basename(source_path) == name:
-                source_path = dirname(source_path)
-                
-                if version is None:
-                    return source_path
-
-                if source_version == version:
-                    return source_path
-
-        return None
+        self.stocks.sync()
 
     @sync
     def exists(self, package):
@@ -461,7 +443,7 @@ class Pool:
         if self.pkgcache.exists(package):
             return True
 
-        if self._get_source_path(package):
+        if self.stocks.exists_source_version(*parse_package_id(package)):
             return True
         
         for subpool in self.stocks.get_subpools():
