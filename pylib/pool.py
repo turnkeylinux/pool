@@ -368,6 +368,16 @@ class Stocks:
         """sync all stocks"""
         for stock in self:
             stock.sync()
+
+    def get_source_versions(self):
+        """List all stock sources.
+        Returns an array of (stock, relative_path/package, version) tuples"""
+        
+        source_versions = []
+        for stock in self:
+            for path, versions in stock.source_versions.items():
+                source_versions.append((stock, path, versions))
+        return source_versions
     
     def exists_source_version(self, name, version=None):
         """Returns true if the package source exists in any of the stocks.
@@ -464,8 +474,9 @@ class Pool:
             packages |= set(subpool.list(all_versions))
             
         packages |= set(self.pkgcache.list())
-        packages |= set([ (basename(path), version)
-                          for path, version in self.stocks.get_sources() ])
+        for stock, path, versions in self.stocks.get_source_versions():
+            package = basename(path)
+            packages |= set([ (package, version) for version in versions ])
         
         if all_versions:
             return list(packages)

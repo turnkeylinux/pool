@@ -66,12 +66,12 @@
 <v t="zaril.20101003051313" a="M"><vh>fix info</vh></v>
 <v t="zaril.20101003051253.1" a="EM"><vh>unregister git branches</vh></v>
 <v t="zaril.20101003054139" a="E"><vh>exists</vh>
-<v t="zaril.20101003091746" a="E"><vh>Stock.sync</vh>
+<v t="zaril.20101003091746"><vh>Stock.sync</vh>
 <v t="zaril.20101005045129" a="E"><vh>light update of light clone</vh></v>
-<v t="zaril.20101005065057" a="ETV"><vh>copy all tags</vh></v>
+<v t="zaril.20101005065057"><vh>copy all tags</vh></v>
 </v>
 </v>
-<v t="zaril.20101003054139.1"><vh>list</vh></v>
+<v t="zaril.20101003054139.1" a="TV"><vh>list</vh></v>
 <v t="zaril.20101003054139.2"><vh>get</vh></v>
 </v>
 </v>
