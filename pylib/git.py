@@ -413,3 +413,10 @@ class Git(object):
         path = join(self.gitdir, "refs", ref)
         if lexists(path):
             os.remove(path)
+
+    def set_alternates(self, git):
+        """set alternates path to point to the objects path of the specified git object"""
+
+        fh = file(join(self.gitdir, "objects/info/alternates"), "w")
+        print >> fh, join(git.gitdir, "objects")
+        fh.close()
