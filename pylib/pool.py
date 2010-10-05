@@ -1,6 +1,7 @@
 import os
 from os.path import *
 
+import re
 import shutil
 import tempfile
 import commands
@@ -8,7 +9,6 @@ import commands
 from paths import Paths
 
 from common import *
-import debsrc
 import verseek
 
 from git import Git
@@ -43,6 +43,20 @@ def parse_deb_filename(filename):
     name, version = filename.split("_")[:2]
 
     return name, version
+
+def deb_cmp_versions(a, b):
+    """Compare a with b according to Debian versioning criteria"""
+
+    def normalize(v):
+        return re.sub(r'(\D|\b)0+', r'\1', v).rstrip("-")
+        
+    return cmp(normalize(a), normalize(b))
+
+def deb_get_packages(srcpath):
+    controlfile = join(srcpath, "debian/control")
+    return [ re.sub(r'^.*?:', '', line).strip()
+             for line in file(controlfile).readlines()
+             if re.match(r'^Package:', line, re.I) ]
 
 def parse_package_id(package):
     """Parse package_id string
@@ -241,7 +255,7 @@ class Stock(object):
 
     def _update_source_versions(self, dir):
         """update versions for a particular source package at <dir>"""
-        packages = debsrc.get_packages(dir)
+        packages = deb_get_packages(dir)
         versions = verseek.list(dir)
 
         if self.branch:
@@ -492,7 +506,7 @@ class Pool:
         newest = {}
         for name, version in packages:
             if not newest.has_key(name) or \
-               debsrc.cmp_versions(newest[name], version) < 0:
+               deb_cmp_versions(newest[name], version) < 0:
                 newest[name] = version
 
         return newest.items()
