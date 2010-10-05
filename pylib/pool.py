@@ -188,22 +188,6 @@ class Stock(object):
 
         self.source_versions = source_versions
 
-    def __init__(self, path, pkgcache):
-        self.paths = StockPaths(path)
-        
-        self.name = basename(path)
-        self.branch = None
-        if "#" in self.name:
-            self.branch = self.name.split("#")[1]
-
-        self.link = os.readlink(self.paths.link)
-
-        if not isdir(self.link):
-            raise Error("stock link to non-directory `%s'" % stock.link)
-
-        self._init_versions()
-        self.workdir = self._get_workdir()
-
     def _get_workdir(self):
         """Return an initialized workdir path.
 
@@ -238,6 +222,22 @@ class Stock(object):
             checkout.update_ref("refs/tags/" + tag, orig.rev_parse(tag))
 
         return checkout_path
+
+    def __init__(self, path, pkgcache):
+        self.paths = StockPaths(path)
+        
+        self.name = basename(path)
+        self.branch = None
+        if "#" in self.name:
+            self.branch = self.name.split("#")[1]
+
+        self.link = os.readlink(self.paths.link)
+
+        if not isdir(self.link):
+            raise Error("stock link to non-directory `%s'" % stock.link)
+
+        self._init_versions()
+        self.workdir = self._get_workdir()
 
     def _update_source_versions(self, dir):
         """update versions for a particular source package at <dir>"""
