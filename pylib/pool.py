@@ -134,15 +134,6 @@ class PackageCache:
         return arr
 
 
-class StockPaths(Paths):
-    def __init__(self, path):
-        Paths.__init__(self, path,
-                       ['link',
-                        'source-versions',
-                        'HEAD',
-                        'checkout'])
-
-
 def make_relative(root, path):
     """Return <path> relative to <root>.
 
@@ -164,6 +155,15 @@ def make_relative(root, path):
 
         root = dirname(root).rstrip('/')
         up_count += 1
+
+class StockPaths(Paths):
+    def __init__(self, path):
+        Paths.__init__(self, path,
+                       ['link',
+                        'source-versions',
+                        'HEAD',
+                        'checkout'])
+
 
 class Stock(object):
     @classmethod
