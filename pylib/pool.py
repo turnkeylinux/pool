@@ -153,7 +153,7 @@ def make_relative(root, path):
 
 class Stock(object):
     @classmethod
-    def init_create(cls, path, link):
+    def create(cls, path, link):
         mkdir(path)
         paths = StockPaths(path)
         os.symlink(realpath(link), paths.link)
@@ -351,7 +351,7 @@ class Stocks:
             raise Error("stock already registered under name `%s'" % stock_name)
 
         stock_path = join(self.path, stock_name)
-        Stock.init_create(stock_path, dir)
+        Stock.create(stock_path, dir)
         self.stocks[stock_name] = Stock(stock_path, self.pkgcache)
         
     def unregister(self, stock):
