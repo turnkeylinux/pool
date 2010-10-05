@@ -88,10 +88,11 @@ class Git(object):
         if not lexists(path):
             os.mkdir(path)
 
+        init_path = path
         if not bare:
-            path = join(path, ".git")
+            init_path = join(init_path, ".git")
 
-        command = "git --git-dir %s init" % commands.mkarg(path)
+        command = "git --git-dir %s init" % commands.mkarg(init_path)
         if not verbose:
             command += " > /dev/null"
         os.system(command)
