@@ -2,7 +2,8 @@
 # Copyright (c) 2010 TurnKey Linux - all rights reserved
 """
 Environment variables:
-    POOL_DIR	Location of pool (defaults to `.')
+    POOL_DIR		Location of pool (defaults to `.')
+    POOL_TMPDIR		Location of temporary files (defaults to `/var/tmp/pool')
 """
 
 import re
