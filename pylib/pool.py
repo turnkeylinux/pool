@@ -7,7 +7,7 @@ import commands
 
 from paths import Paths
 
-import utils
+from common import *
 import debsrc
 
 from git import Git
@@ -32,9 +32,6 @@ class PoolPaths(Paths):
         self.build = Paths(self.build,
                            ['root',
                             'logs'])
-
-def mkdir(p):
-    utils.makedirs(str(p))
 
 def parse_deb_filename(filename):
     """Parses package filename -> (name, version)"""
@@ -106,10 +103,12 @@ class PackageCache:
         return self.getpath(package) != None
 
     def add(self, path):
-        """Add binary to cache. Hardlink if possible, copy otherwise"""
+        """Add binary to cache. Hardlink if possible, copy otherwise."""
+        if self.exists(basename(path)):
+            return
 
         cached_path = join(self.path, basename(path))
-        utils.hardlink_or_copy(path, cached_path)
+        hardlink_or_copy(path, cached_path)
 
     def list(self):
         """List packages in package cache -> list of (package, version)"""
@@ -119,29 +118,175 @@ class PackageCache:
             arr.append((name, version))
         return arr
 
+
+class StockPaths(Paths):
+    def __init__(self, path):
+        Paths.__init__(self, path,
+                       ['link',
+                        'source-versions',
+                        'HEAD',
+                        'checkout'])
+
+
+def make_relative(root, path):
+    """Return <path> relative to <root>.
+
+    For example:
+        make_relative("../../", "file") == "path/to/file"
+        make_relative("/root", "/tmp") == "../tmp"
+        make_relative("/root", "/root/backups/file") == "backups/file"
+        
+    """
+
+    up_count = 0
+
+    root = realpath(root).rstrip('/')
+    path = realpath(path).rstrip('/')
+
+    while True:
+        if path == root or path.startswith(root.rstrip("/") + "/"):
+            return ("../" * up_count) + path[len(root) + 1:]
+
+        root = dirname(root).rstrip('/')
+        up_count += 1
+
+class Stock(object):
+    @classmethod
+    def init_create(cls, path, link):
+        mkdir(path)
+        paths = StockPaths(path)
+        os.symlink(realpath(link), paths.link)
+
+        return cls(path)
+
+    class Head(object):
+        """Magical attribute.
+
+        Set writes to the stock's HEAD.
+        Get reads the value from it.
+        """
+        def __get__(self, obj, type):
+            path = obj.paths.HEAD
+            if exists(path):
+                return file(path).read().rstrip()
+
+            return None
+
+        def __set__(self, obj, val):
+            path = obj.paths.HEAD
+            file(path, "w").write(val + "\n")
+
+    head = Head()
+
+    def _init_versions(self):
+        source_versions = {}
+        for dpath, dnames, fnames in os.walk(self.paths.source_versions):
+            relative_path = make_relative(self.paths.source_versions, dpath)
+            for fname in fnames:
+                fpath = join(dpath, fname)
+                versions = [ line.strip() for line in file(fpath).readlines() if line.strip() ]
+                source_versions[join(relative_path, fname)] = versions
+
+        self.source_versions = source_versions
+        
+    def __init__(self, path, pkgcache):
+        self.paths = StockPaths(path)
+        
+        self.name = basename(path)
+        self.branch = None
+        if "#" in self.name:
+            self.branch = self.name.split("#")[1]
+
+        self.link = os.readlink(self.paths.link)
+
+        if not isdir(self.link):
+            raise Error("stock link to non-directory `%s'" % stock.link)
+
+        self._init_versions()
+
+    def _get_workdir(self):
+        """return the workdir path.
+
+        If the stock links to a git repository, check out the desired
+        branch to the checkout workdir, and return its path.
+        """
+        if not self.branch:
+            return self.link
+
+        orig = Git(self.link)
+        checkout_path = self.paths.checkout
+        
+        if not exists(checkout_path):
+            mkdir(checkout_path)
+            checkout = Git.init_create(checkout_path)
+            checkout.set_alternates(orig)
+        else:
+            checkout = Git(checkout_path)
+
+        # checkout latest changes
+        commit = orig.rev_parse(self.branch)
+        if not commit:
+            raise Error("no such branch `%s' at %s" % (self.branch, self.link))
+        
+        checkout.update_ref("refs/heads/" + self.branch, commit)
+        checkout.checkout("-q", "-f", self.branch)
+
+        # update tags
+        for tag in orig.list_tags():
+            checkout.update_ref("refs/tags/" + tag, orig.rev_parse(tag))
+
+        return checkout_path
+
+    def _update_source_versions(self, dir):
+        """update versions for a particular source package at <dir>"""
+        packages = debsrc.get_packages(dir)
+        versions = debsrc.get_versions(dir)
+
+        if self.branch:
+            relative_path = make_relative(self.paths.checkout, dir)
+        else:
+            relative_path = make_relative(self.link, dir)
+
+        source_versions_path = join(self.paths.source_versions, relative_path)
+        mkdir(source_versions_path)
+        
+        for package in packages:
+            fh = file(join(source_versions_path, package), "w")
+            for version in versions:
+                print >> fh, version
+            fh.close()
+
+            self.source_versions[join(relative_path, package)] = versions
+    
+    def _sync(self, dir):
+        """recursive sync back-end. updates versions of source packages and adds binaries to cache"""
+        if isfile(join(dir, "debian/control")):
+            return self._update_source_versions(dir)
+
+        for fname in os.listdir(dir):
+            fpath = join(dir, fname)
+            if not islink(fpath) and isfile(fpath) and fname.endswith(".deb"):
+                self.pkgcache.add(fpath)
+
+            if isdir(fpath):
+                self._sync(fpath)
+        
+    def sync(self):
+        """sync stock by updating source versions and importing binaries into the cache"""
+        if self.branch:
+            if Git(self.link).rev_parse(self.branch) == self.head:
+                return
+
+        workdir = self._get_workdir()
+        self._sync(workdir)
+
+        if self.branch:
+            self.head = Git(workdir).rev_parse("HEAD")
+
 class Stocks:
-    class Stock:
-        @classmethod
-        def init_create(cls, path, link):
-            mkdir(path)
-            os.symlink(realpath(link), join(path, "link"))
-
-            return cls(path)
-
-        def __init__(self, path):
-            self.name = basename(path)
-            self.branch = None
-            if "#" in self.name:
-                self.branch = self.name.split("#")[1]
-
-            self.path = path
-            self.link = os.readlink(join(path, "link"))
-
-            if not isdir(self.link):
-                raise Error("stock link to non-directory `%s'" % stock.link)
-            
-    def __init__(self, path, recursed_paths=[]):
+    def __init__(self, path, pkgcache, recursed_paths=[]):
         self.path = path
+        self.pkgcache = pkgcache
 
         self.stocks = {}
         self.subpools = {}
@@ -150,7 +295,7 @@ class Stocks:
             if not isdir(path_stock):
                 continue
 
-            stock = self.Stock(path_stock)
+            stock = Stock(path_stock, pkgcache)
             if stock.link in recursed_paths:
                 raise CircularDependency("circular dependency detected `%s' is in recursed paths %s" %
                                          (stock.link, recursed_paths))
@@ -163,6 +308,9 @@ class Stocks:
                 pass
             self.stocks[stock_name] = stock
             
+    def __iter__(self):
+        return iter(self.stocks.values())
+
     @staticmethod
     def _parse_stock(stock):
         try:
@@ -196,7 +344,7 @@ class Stocks:
         if self.stocks.has_key(stock_name):
             raise Error("stock already registered under name `%s'" % stock_name)
 
-        self.stocks[stock_name] = self.Stock.init_create(join(self.path, stock_name), dir)
+        self.stocks[stock_name] = Stock.init_create(join(self.path, stock_name), dir)
         
     def unregister(self, stock):
         dir, branch = self._parse_stock(stock)
@@ -204,7 +352,7 @@ class Stocks:
         if branch:
             stock_name += "#" + branch
             
-        matches = [ stock for stock in self.stocks.values()
+        matches = [ stock for stock in self
                     if stock.link == dir and (not branch or stock.branch == branch) ]
         if not matches:
             raise Error("no matches for unregister")
@@ -216,49 +364,28 @@ class Stocks:
         shutil.rmtree(stock.path)
         del self.stocks[stock.name]
 
-    def get_binaries(self):
-        """Recursively scan stocks for binaries -> list of filename"""
+    def sync(self):
+        """sync all stocks"""
+        for stock in self:
+            stock.sync()
+    
+    def exists_source_version(self, name, version=None):
+        """Returns true if the package source exists in any of the stocks.
+        If version is None (default), any version will match"""
 
-        binaries = []
-        for stock in self.stocks.values():
-            if stock.name in self.subpools.keys():
-                continue
-            
-            for dirpath, dnames, fnames in os.walk(stock.link):
-                for fname in fnames:
-                    fpath = join(dirpath, fname)
-                    if not islink(fpath) and isfile(fpath) and fname.endswith(".deb"):
-                        binaries.append(fpath)
+        for stock in self:
+            for path, versions in stock.source_versions.items():
+                if basename(path) == name:
+                    if version is None:
+                        return True
 
-        return binaries
+                    if version in versions:
+                        return True
 
-    def get_sources(self):
-        """Recursively scan stocks for Debian source packages
-        Returns an array of (/path/to/package-source/package-bin, version) tuples"""
-
-        sources = []
-        for stock in self.stocks.values():
-            if stock.name in self.subpools.keys():
-                continue
-
-            stock_sources = debsrc.get_paths(stock.link)
-            for stock_source in stock_sources:
-                try:
-                    version = debsrc.get_version(stock_source)
-                    packages = debsrc.get_packages(stock_source)
-                except debsrc.Error:
-                    continue
-
-                for package in packages:
-                    sources.append((join(stock_source, package), version))
-
-        return sources
+        return False
     
     def get_subpools(self):
         return self.subpools.values()
-
-    def __iter__(self):
-        return iter(self.stocks.values())
 
 def sync(method):
     def wrapper(self, *args, **kws):

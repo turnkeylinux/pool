@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="1" clone_windows="0"/>
-<globals body_outline_ratio="0.434196891192">
+<globals body_outline_ratio="0.476683937824">
 	<global_window_position top="0" left="470" height="965" width="800"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -32,7 +32,7 @@
 </v>
 <v t="zaril.20100909033533"><vh>pool contains pool</vh></v>
 <v t="zaril.20100910205006"><vh>BUG: sync not importing binaries?</vh></v>
-<v t="zaril.20100909050527"><vh>support regular sources in regular directories</vh>
+<v t="zaril.20100909050527" a="E"><vh>support regular sources in regular directories</vh>
 <v t="zaril.20100911052023" a="M"><vh>setup a local caching proxy</vh>
 <v t="zaril.20100912044439" a="M"><vh>fix squid</vh></v>
 <v t="zaril.20100912052909"><vh>configure jaunty to use apt-proxy</vh></v>
@@ -60,11 +60,19 @@
 </v>
 <v t="zaril.20100923143609" a="E"><vh>support complex stock types</vh>
 <v t="zaril.20100929180644" a="E"><vh>versioning design ideas</vh></v>
-<v t="zaril.20100929193931"><vh>test/develop lightweight branch cloning</vh></v>
-<v t="zaril.20101003042126" a="E"><vh>support single</vh>
-<v t="zaril.20101003051253"><vh>register git branches</vh></v>
-<v t="zaril.20101003051313"><vh>fix info</vh></v>
-<v t="zaril.20101003051253.1" a="TV"><vh>unregister git branches</vh></v>
+<v t="zaril.20100929193931" a="E"><vh>test/develop lightweight branch cloning</vh></v>
+<v t="zaril.20101003042126" a="E"><vh>support Git branches</vh>
+<v t="zaril.20101003051253" a="M"><vh>register git branches</vh></v>
+<v t="zaril.20101003051313" a="M"><vh>fix info</vh></v>
+<v t="zaril.20101003051253.1" a="EM"><vh>unregister git branches</vh></v>
+<v t="zaril.20101003054139" a="E"><vh>exists</vh>
+<v t="zaril.20101003091746" a="E"><vh>Stock.sync</vh>
+<v t="zaril.20101005045129" a="E"><vh>light update of light clone</vh></v>
+<v t="zaril.20101005065057" a="ETV"><vh>copy all tags</vh></v>
+</v>
+</v>
+<v t="zaril.20101003054139.1"><vh>list</vh></v>
+<v t="zaril.20101003054139.2"><vh>get</vh></v>
 </v>
 </v>
 </v>
@@ -151,10 +159,15 @@ A:
     stock/
         &lt;name&gt;#&lt;branch&gt;/
             link -&gt; /path/to/stock # symbolic link to the stock
-            HEAD # contains the last HEAD we've we handled
     
-            &lt;relative-path&gt;/&lt;package&gt;.versions
-                contains cached list of versions
+            source-versions/
+                &lt;relative-path&gt;/&lt;package&gt;
+                    contains cached list of versions
+
+            HEAD # contains the last HEAD we checked out
+            checkout/
+
+
     
     
 
@@ -1248,15 +1261,11 @@ Q: is tagged auto-versioning embedded or do we calculate the tagged auto-version
     
         -n --no-checkout
             doesn't check out the current branch
-    
+
+   
 cli
     cd /path/to/new
     git-clone-checkout path-to-git-repository branch
-
-test
-    cd /turnkey/tmp/testgit
-    rm -rf test
-    git-clone-branch ../pyproject/ master test
 
 logic
     check that branch exists on src
@@ -1268,6 +1277,12 @@ logic
     mv .git/refs/remotes/origin/* .git/refs/heads
 
     git-checkout -q &lt;branch&gt;
+
+test
+    cd /turnkey/tmp/testgit
+    rm -rf test
+    git-clone-branch ../pyproject/ master test
+
 </t>
 <t tx="zaril.20100930001758">trailing zeros not considered
     -2010 == 0-2010
@@ -1318,10 +1333,7 @@ cli level solution
         
 </t>
 <t tx="zaril.20100930021923">problem: modification of default array value</t>
-<t tx="zaril.20101003042126">
-
-unregister logic
-    if </t>
+<t tx="zaril.20101003042126"></t>
 <t tx="zaril.20101003051253">
 test: 
     register /turnkey/tmp/verseek/git-single    
@@ -1357,5 +1369,149 @@ implicit branch unregistration
 
 </t>
 <t tx="zaril.20101003051313"></t>
+<t tx="zaril.20101003054139">test
+    pool-register /turnkey/tmp/verseek/git-single#devel
+    pool-exists pyproject=1.0
+
+    also want to test binaries
+
+get_sources doesn't work
+    
+
+return value
+    stock_name, relative_path/package-bin, version
+
+    in a single
+        stock_name, '', version
+
+roadmap
+    no caching
+    caching + naive cache update
+        if anything changes, rescan stock
+        you always read from the cache, you just make sure its updated first
+
+Q: do we create version caches for regular directories?
+    whats the point?
+    it would simplify the interface?
+    the cached versions could simply be updated every time for regular directories
+        would represent a simplified view of the regular directory
+            from the pools POV
+
+logic
+    update versions for all stocks
+    build data structure that represents perceived versions
+        stock_name, relative_path/package, versions...
+
+    each stock should know how to 
+        updates its own versions
+        scan itself for binaries
+
+* IDEAS
+
+the sync phase shouldn't have to happen twice
+    once for binaries and once for sources
+    checking out stock is an expensive operation (potentially)
+
+Q: what does the interface have to look like to support that?
+
+stock capable of checking out to internal location
+
+sync interface? 
+at the stocks level and at the stock level
+pass cache object if it finds a binary
+
+* TODO
+    fix get_source_versions
+        should use verseek to get the versions
+
+
+Stock interface
+    sync    
+        gets binaries and updates versions
+
+    checkout
+        checks out latest branch
+
+    versions
+        (relative/path, versions)
+</t>
+<t tx="zaril.20101003054139.1"></t>
+<t tx="zaril.20101003054139.2"></t>
+<t tx="zaril.20101003091746">psuedo-logic
+
+HEAD is a special file
+
+checkout the correct branch if git repository
+
+if it is a git repository, only rescan it if there are new updates
+if it isn't, scan it every time
+
+scan logic
+
+    scan for debian packages
+        debian packages may not include other debian packages or debian binaries
+    
+    if we find a binary, add it to the cache
+    if we find a source, add it to the version
+
+
+test
+    at level of individual Stock
+        create package cache object
+
+checkout logic
+    if checkout repo doesn't exist create it
+        set atlernates to point to original repo
+
+    update/create the desired branch on checkout
+        git-update-ref refs/heads/&lt;branch&gt; &lt;commit&gt;
+    
+    checkout the desired branch    
+        git-checkout -q -f &lt;branch&gt;
+
+    create HEAD
+</t>
+<t tx="zaril.20101005045129">IDEA: 
+
+
+IDEAS: 
+
+if we already have access to the objects, why not use it to do a more efficient checkout
+    e.g., I think checkout is more efficient than deleting the workspace and starting over
+
+don't use clone at all
+    specify alternates directly
+        by extending Git
+
+    saves us mucking around deleting/moving remote references
+
+create the references automatically also
+
+Q: do I need branches? can I just checkout to HEAD?
+A:
+    yes you need branches if you are going to checkout past commits
+        this way you have something to come back to
+---
+Q: does git-checkout update everything or just the stuff we need?
+A: just the stuff that changed - its very efficient
+
+TODO
+
+* test direct alternates creation
+git-init
+echo /path/to/orig/.git/objects &gt; .git/objects/info/alternates
+
+git-update-ref refs/heads/devel 0fb016541ae7608a137c9bdf1d047e87e7a6991b
+git-checkout -q -f devel
+
+
+
+
+
+
+    </t>
+<t tx="zaril.20101005065057">GOTCHA: rev-parse tag^0 != rev-parse tag
+    the first returns the commit pointed to by the tag, the second returns the tag object
+</t>
 </tnodes>
 </leo_file>

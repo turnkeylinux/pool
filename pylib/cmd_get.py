@@ -21,9 +21,9 @@ from os.path import *
 import re
 
 import pool
-import utils
 
 import cmd_list
+from common import *
 
 @help.usage(__doc__)
 def usage():
@@ -128,12 +128,12 @@ def main():
         if opt_tree:
             package_name = package.split("=")[0]
             dst_path = join(outputdir, get_treedir(package_name), fname)
-            utils.makedirs(dirname(dst_path))
+            mkdir(dirname(dst_path))
         else:
             dst_path = join(outputdir, basename(src_path))
 
         if not exists(dst_path):
-            utils.hardlink_or_copy(src_path, dst_path)
+            hardlink_or_copy(src_path, dst_path)
 
     sys.exit(exitcode)
         

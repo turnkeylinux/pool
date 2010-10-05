@@ -2,6 +2,8 @@ import re
 import os
 from os.path import *
 
+from subprocess import *
+
 class Error(Exception):
     pass
 
@@ -24,6 +26,16 @@ def get_paths(path):
             paths.extend(get_paths(subpath))
     return paths
 
+def get_versions(srcpath):
+    command = ["verseek", "-l", srcpath]
+    p = Popen(command, stdout=PIPE, stderr=PIPE)
+    output = p.communicate()[0]
+
+    if p.returncode != 0:
+        raise Error("failed command: " + " ".join(command))
+
+    return output.strip().split("\n")
+
 def get_version(srcpath):
     changelogfile = join(srcpath, "debian/changelog")
     if not exists(changelogfile):
@@ -41,5 +53,4 @@ def get_packages(srcpath):
     return [ re.sub(r'^.*?:', '', line).strip()
              for line in file(controlfile).readlines()
              if re.match(r'^Package:', line, re.I) ]
-
 

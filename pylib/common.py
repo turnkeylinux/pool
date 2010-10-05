@@ -1,6 +1,6 @@
 import os
-import errno
 import shutil
+import errno
 
 def hardlink_or_copy(src, dst):
     try:
@@ -10,14 +10,10 @@ def hardlink_or_copy(src, dst):
             raise
         shutil.copyfile(src, dst)
 
-def makedirs(path, mode=None):
+def mkdir(path):
+    path = str(path)
     try:
-        if mode is None:
-            os.makedirs(path)
-        else:
-            os.makedirs(path, mode)
-
+        os.makedirs(path)
     except OSError, e:
         if e[0] != errno.EEXIST:
             raise
-        
