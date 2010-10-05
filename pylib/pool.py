@@ -508,12 +508,7 @@ class Pool:
         if not source_path:
             return None
 
-        # get the precise package requested back from the cache
         package_name, package_version = parse_package_id(package)
-        if not package_version:
-            package_version = debsrc.get_version(source_path)
-        package = fmt_package_id(package_name, package_version)
-
         build_outputdir = tempfile.mkdtemp(dir=self.tmpdir, prefix="%s-%s." % (package_name, package_version))
 
         print "### BUILDING PACKAGE: " + package
