@@ -162,6 +162,11 @@ class Git(object):
         self._system("git-add", *paths)
 
     @setup
+    def checkout(self, *args):
+        """git-checkout *args"""
+        self._system("git-checkout", *args)
+        
+    @setup
     def checkout_index(self):
         """git-checkout-index -a -f"""
         self._system("git-checkout-index -a -f")
