@@ -177,7 +177,7 @@ class Stock(object):
 
     head = Head()
 
-    def _read_versions(self):
+    def _init_read_versions(self):
         source_versions = {}
         for dpath, dnames, fnames in os.walk(self.paths.source_versions):
             relative_path = make_relative(self.paths.source_versions, dpath)
@@ -188,7 +188,7 @@ class Stock(object):
 
         return source_versions
 
-    def _get_workdir(self):
+    def _init_get_workdir(self):
         """Return an initialized workdir path.
 
         If the stock links to a plain directory, the workdir is simply its path.
@@ -236,8 +236,8 @@ class Stock(object):
         if not isdir(self.link):
             raise Error("stock link to non-directory `%s'" % stock.link)
 
-        self.source_versions = self._read_versions()
-        self.workdir = self._get_workdir()
+        self.source_versions = self._init_read_versions()
+        self.workdir = self._init_get_workdir()
 
     def _update_source_versions(self, dir):
         """update versions for a particular source package at <dir>"""
