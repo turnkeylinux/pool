@@ -253,7 +253,7 @@ class Git(object):
         Returns None on failure.
         """
         try:
-            return self._getoutput("git-rev-parse", rev + "^0")
+            return self._getoutput("git-rev-parse", rev)
         except self.Error:
             return None
 
