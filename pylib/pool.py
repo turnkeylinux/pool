@@ -188,7 +188,7 @@ class Stock(object):
                 source_versions[join(relative_path, fname)] = versions
 
         self.source_versions = source_versions
-        
+
     def __init__(self, path, pkgcache):
         self.paths = StockPaths(path)
         
@@ -203,12 +203,15 @@ class Stock(object):
             raise Error("stock link to non-directory `%s'" % stock.link)
 
         self._init_versions()
+        self.workdir = self._get_workdir()
 
     def _get_workdir(self):
-        """return the workdir path.
+        """Return an initialized workdir path.
 
-        If the stock links to a git repository, check out the desired
-        branch to the checkout workdir, and return its path.
+        If the stock links to a plain directory, the workdir is simply its path.
+        
+        If the stock links to a git repository, the workdir will point to a
+        persistent lightweight checkout of the desired branch.
         """
         if not self.branch:
             return self.link
@@ -237,6 +240,7 @@ class Stock(object):
 
         return checkout_path
 
+        
     def _update_source_versions(self, dir):
         """update versions for a particular source package at <dir>"""
         packages = debsrc.get_packages(dir)
@@ -258,8 +262,13 @@ class Stock(object):
 
             self.source_versions[join(relative_path, package)] = versions
     
-    def _sync(self, dir):
-        """recursive sync back-end. updates versions of source packages and adds binaries to cache"""
+    def _sync(self, dir=None):
+        """recursive sync back-end.
+        updates versions of source packages and adds binaries to cache"""
+
+        if dir is None:
+            dir = self.workdir
+            
         if isfile(join(dir, "debian/control")):
             return self._update_source_versions(dir)
 
@@ -277,11 +286,10 @@ class Stock(object):
             if Git(self.link).rev_parse(self.branch) == self.head:
                 return
 
-        workdir = self._get_workdir()
-        self._sync(workdir)
+        self._sync()
 
         if self.branch:
-            self.head = Git(workdir).rev_parse("HEAD")
+            self.head = Git(self.workdir).rev_parse("HEAD")
 
 class Stocks:
     def __init__(self, path, pkgcache, recursed_paths=[]):

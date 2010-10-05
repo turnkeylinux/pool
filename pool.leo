@@ -65,14 +65,14 @@
 <v t="zaril.20101003051253" a="M"><vh>register git branches</vh></v>
 <v t="zaril.20101003051313" a="M"><vh>fix info</vh></v>
 <v t="zaril.20101003051253.1" a="EM"><vh>unregister git branches</vh></v>
-<v t="zaril.20101003054139" a="E"><vh>exists</vh>
+<v t="zaril.20101003054139" a="EM"><vh>exists</vh>
 <v t="zaril.20101003091746"><vh>Stock.sync</vh>
 <v t="zaril.20101005045129" a="E"><vh>light update of light clone</vh></v>
 <v t="zaril.20101005065057"><vh>copy all tags</vh></v>
 </v>
 </v>
-<v t="zaril.20101003054139.1" a="TV"><vh>list</vh></v>
-<v t="zaril.20101003054139.2"><vh>get</vh></v>
+<v t="zaril.20101003054139.1" a="M"><vh>list</vh></v>
+<v t="zaril.20101003054139.2" a="ETV"><vh>get</vh></v>
 </v>
 </v>
 </v>
@@ -1436,7 +1436,13 @@ Stock interface
         (relative/path, versions)
 </t>
 <t tx="zaril.20101003054139.1"></t>
-<t tx="zaril.20101003054139.2"></t>
+<t tx="zaril.20101003054139.2">logic
+    verseek to desired version
+    chdir to &lt;workdir&gt;/relative_path
+    deckdebuild
+    import built package into cache
+    return the path to the built package
+</t>
 <t tx="zaril.20101003091746">psuedo-logic
 
 HEAD is a special file
