@@ -34,7 +34,7 @@ class PoolPaths(Paths):
                            ['root',
                             'logs'])
 
-def parse_deb_filename(filename):
+def deb_parse_filename(filename):
     """Parses package filename -> (name, version)"""
 
     if not filename.endswith(".deb"):
@@ -100,7 +100,7 @@ class PackageCache:
             if not isfile(filepath) or not filename.endswith(".deb"):
                 continue
 
-            cached_name, cached_version = parse_deb_filename(filename)
+            cached_name, cached_version = deb_parse_filename(filename)
             if name == cached_name and (version is None or version == cached_version):
                 return filepath
 
@@ -129,7 +129,7 @@ class PackageCache:
         """List packages in package cache -> list of (package, version)"""
         arr = []
         for filename in os.listdir(self.path):
-            name, version = parse_deb_filename(filename)
+            name, version = deb_parse_filename(filename)
             arr.append((name, version))
         return arr
 
