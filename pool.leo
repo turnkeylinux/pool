@@ -75,7 +75,7 @@
 <v t="zaril.20101003054139.2"><vh>get</vh></v>
 </v>
 <v t="zaril.20101006063626"><vh>fix subpools</vh></v>
-<v t="zaril.20101006073117" a="TV"><vh>optimize Stock.workdir</vh></v>
+<v t="zaril.20101006073117" a="EMTV"><vh>optimize Stock attributes</vh></v>
 <v t="zaril.20101005221943"><vh>extend pool-info</vh></v>
 <v t="zaril.20101005094458"><vh>support Sumo branches</vh></v>
 </v>
