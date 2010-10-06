@@ -196,18 +196,7 @@ class Stock(StockBase):
 
     head = Head()
 
-    def _init_read_versions(self):
-        source_versions = {}
-        for dpath, dnames, fnames in os.walk(self.paths.source_versions):
-            relative_path = make_relative(self.paths.source_versions, dpath)
-            for fname in fnames:
-                fpath = join(dpath, fname)
-                versions = [ line.strip() for line in file(fpath).readlines() if line.strip() ]
-                source_versions[join(relative_path, fname)] = versions
-
-        return source_versions
-
-    def _init_get_workdir(self):
+    def _get_workdir(self):
         """Return an initialized workdir path.
 
         If the stock links to a plain directory, the workdir is simply its path.
@@ -242,6 +231,32 @@ class Stock(StockBase):
 
         return checkout_path
 
+    class Workdir(object):
+        """Magical attribute for performing lazy evaluation of workdir.
+        If workdir is False, we evaluate its value.
+        """
+        def __get__(self, obj, type):
+            if not obj._workdir:
+                obj._workdir = obj._get_workdir()
+
+            return obj._workdir
+
+        def __set__(self, obj, val):
+            obj._workdir = val
+
+    workdir = Workdir()
+
+    def _init_read_versions(self):
+        source_versions = {}
+        for dpath, dnames, fnames in os.walk(self.paths.source_versions):
+            relative_path = make_relative(self.paths.source_versions, dpath)
+            for fname in fnames:
+                fpath = join(dpath, fname)
+                versions = [ line.strip() for line in file(fpath).readlines() if line.strip() ]
+                source_versions[join(relative_path, fname)] = versions
+
+        return source_versions
+
     def __init__(self, path, pkgcache):
         StockBase.__init__(self, path)
 
@@ -250,7 +265,7 @@ class Stock(StockBase):
             self.branch = self.name.split("#")[1]
 
         self.source_versions = self._init_read_versions()
-        self.workdir = self._init_get_workdir()
+        self.workdir = None
         self.pkgcache = pkgcache
 
     def _sync_update_source_versions(self, dir):
