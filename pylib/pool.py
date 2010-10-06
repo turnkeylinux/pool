@@ -401,6 +401,14 @@ class Stocks:
                 source_versions.append((stock, path, versions))
         return source_versions
     
+    def get_source_path(self, name, version):
+        """Return path of source package"""
+        for stock, path, versions in self.get_source_versions():
+            if basename(path) == name and version in versions:
+                return join(stock.workdir, dirname(path))
+
+        return None
+
     def exists_source_version(self, name, version=None):
         """Returns true if the package source exists in any of the stocks.
         If version is None (default), any version will match"""
@@ -511,13 +519,6 @@ class Pool:
 
         return newest.items()
 
-    def _get_source_path(self, name, version):
-        for stock, path, versions in self.stocks.get_source_versions():
-            if basename(path) == name and version in versions:
-                return join(stock.workdir, dirname(path))
-
-        return None
-        
     @sync
     def getpath(self, package):
         """Get path to package in pool if it exists or None if it doesn't"""
@@ -536,7 +537,7 @@ class Pool:
         package_name, package_version = parse_package_id(package)
         build_outputdir = tempfile.mkdtemp(dir=self.tmpdir, prefix="%s-%s." % (package_name, package_version))
 
-        source_path = self._get_source_path(package_name, package_version)
+        source_path = self.stocks.get_source_path(package_name, package_version)
         if not source_path:
             return None
 
