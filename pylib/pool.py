@@ -546,7 +546,7 @@ class Pool(object):
                 print
                 
             print "# subpools"
-            for subpool in subpools:
+            for subpool in self.subpools:
                 print subpool.path
             
     @sync
