@@ -13,8 +13,8 @@
 <v t="loni.20100827184947.1" a="E"><vh>design</vh>
 <v t="loni.20100827184947.2" a="E"><vh>brainstorming</vh>
 <v t="zaril.20100828060043"><vh>first draft</vh></v>
-</v>
 <v t="zaril.20100828055849"><vh>terminology</vh></v>
+</v>
 <v t="loni.20100827184947.4"><vh>file/data structure</vh></v>
 <v t="loni.20100827184947.5"><vh>cli syntax</vh></v>
 <v t="loni.20100827184947.6"><vh>usage examples</vh></v>
@@ -61,19 +61,22 @@
 <v t="zaril.20100923143609" a="E"><vh>support complex stock types</vh>
 <v t="zaril.20100929180644" a="E"><vh>versioning design ideas</vh></v>
 <v t="zaril.20100929193931" a="E"><vh>test/develop lightweight branch cloning</vh></v>
-<v t="zaril.20101003042126" a="E"><vh>support Git branches</vh>
+<v t="zaril.20101003042126"><vh>support Git branches</vh>
 <v t="zaril.20101003051253" a="M"><vh>register git branches</vh></v>
 <v t="zaril.20101003051313" a="M"><vh>fix info</vh></v>
 <v t="zaril.20101003051253.1" a="EM"><vh>unregister git branches</vh></v>
-<v t="zaril.20101003054139" a="EM"><vh>exists</vh>
+<v t="zaril.20101003054139" a="M"><vh>exists</vh>
 <v t="zaril.20101003091746"><vh>Stock.sync</vh>
 <v t="zaril.20101005045129" a="E"><vh>light update of light clone</vh></v>
 <v t="zaril.20101005065057"><vh>copy all tags</vh></v>
 </v>
 </v>
 <v t="zaril.20101003054139.1" a="M"><vh>list</vh></v>
-<v t="zaril.20101003054139.2" a="TV"><vh>get</vh></v>
+<v t="zaril.20101003054139.2"><vh>get</vh></v>
 </v>
+<v t="zaril.20101006063626"><vh>fix subpools</vh></v>
+<v t="zaril.20101006073117" a="TV"><vh>optimize Stock.workdir</vh></v>
+<v t="zaril.20101005221943"><vh>extend pool-info</vh></v>
 <v t="zaril.20101005094458"><vh>support Sumo branches</vh></v>
 </v>
 </v>
@@ -200,6 +203,17 @@ A:
 * info
     show pool information (registered stock, etc.)
 
+    --stocks                show stocks (default)
+    --subpools              show sub-poolsl
+    --buildroot             show buildroot
+    --pkgcache              show package cache
+    --source-versions       show source versions
+
+* info-build package 
+    will return info on built package
+        or no information if it wasn't built
+        or an error that the package doesn't exist
+
 * get [-options] /path/to/output/dir [ package[=version] ... ]
     function
         retrieve requested packages to output dir
@@ -268,6 +282,7 @@ A:
     prints true/false if the package exists in the pool
     if true exitcode = 0, false = 1
 
+* 
 FUTURE
     register-block /path/to/stock package[=version]
         register a block on a specific package inside a specific stock
@@ -372,6 +387,9 @@ stock types
 
     sumo
         sumo arena containing multiple packages
+
+    subpool
+        another pools
 
 binary
     a binary Debian package inside a stock
@@ -1522,6 +1540,43 @@ git-checkout -q -f devel
     the first returns the commit pointed to by the tag, the second returns the tag object
 </t>
 <t tx="zaril.20101005094458">we need to open them
+</t>
+<t tx="zaril.20101005221943">Q: how do we handle subpools?
+A:
+    we'll need to show the full stock path, not just the name
+        package=version stock_path[#branch] relative_path
+
+* IDEAS:
+pool-info or pool-list?
+    we could show which packages exist in pool-info too
+        as headers
+
+but pool-list already has the cli for that
+    but it was designed for something else entirely
+
+extend pool-info
+    --stocks                show stocks (default)
+    --subpools              show sub-poolsl
+    --buildroot             show buildroot
+    --pkgcache              show package cache
+    --source-versions       show source versions
+
+pool-info-build package 
+    will return info on built package
+        or no information if it wasn't built
+        or an error that the package doesn't exist
+</t>
+<t tx="zaril.20101006063626">StockSubpool should detect circular dependencies
+    if its link is in the recursed_paths
+
+register/unregister
+
+Q: can a new-class object inherit from an old-style object?
+</t>
+<t tx="zaril.20101006073117">slowing everything down (even pool-info)
+magical object with cache
+
+or set it to None on initialisation and init on demand
 </t>
 </tnodes>
 </leo_file>

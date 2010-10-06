@@ -19,21 +19,6 @@ class Error(Exception):
 class CircularDependency(Error):
     pass
 
-class PoolPaths(Paths):
-    def __init__(self, path=None):
-        if path is None:
-            path = os.getenv("POOL_DIR", os.getcwd())
-            
-        path = join(realpath(path), ".pool")
-        Paths.__init__(self, path,
-                       ['pkgcache',
-                        'stocks',
-                        'build'])
-
-        self.build = Paths(self.build,
-                           ['root',
-                            'logs'])
-
 def deb_parse_filename(filename):
     """Parses package filename -> (name, version)"""
 
@@ -165,13 +150,33 @@ class StockPaths(Paths):
                         'checkout'])
 
 
-class Stock(object):
+class StockBase(object):
     @classmethod
     def create(cls, path, link):
         mkdir(path)
         paths = StockPaths(path)
         os.symlink(realpath(link), paths.link)
 
+    def __init__(self, path):
+        self.paths = StockPaths(path)
+        
+        self.name = basename(path)
+        self.link = os.readlink(self.paths.link)
+        if not isdir(self.link):
+            raise Error("stock link to non-directory `%s'" % stock.link)
+
+class StockPool(StockBase):
+    """Class for managing a subpool-type stock"""
+    def __init__(self, path, recursed_paths=[]):
+        StockBase.__init__(self, path)
+        if self.link in recursed_paths:
+            raise CircularDependency("circular dependency detected `%s' is in recursed paths %s" %
+                                     (self.link, recursed_paths))
+
+        self.pool = Pool(self.link, recursed_paths)
+        
+class Stock(StockBase):
+    """Class for managing a non-subpool-type stock."""
     class Head(object):
         """Magical attribute.
 
@@ -238,20 +243,15 @@ class Stock(object):
         return checkout_path
 
     def __init__(self, path, pkgcache):
-        self.paths = StockPaths(path)
-        
-        self.name = basename(path)
+        StockBase.__init__(self, path)
+
         self.branch = None
         if "#" in self.name:
             self.branch = self.name.split("#")[1]
 
-        self.link = os.readlink(self.paths.link)
-
-        if not isdir(self.link):
-            raise Error("stock link to non-directory `%s'" % stock.link)
-
         self.source_versions = self._init_read_versions()
         self.workdir = self._init_get_workdir()
+        self.pkgcache = pkgcache
 
     def _update_source_versions(self, dir):
         """update versions for a particular source package at <dir>"""
@@ -304,32 +304,47 @@ class Stock(object):
             self.head = Git(self.workdir).rev_parse("HEAD")
 
 class Stocks:
+    """Class for managing and quering Pool Stocks in aggregate.
+
+    Iterating an instance of this class produces all non-subpool type stocks.
+    """
+    def _init_stock(self, path_stock):
+        stock = None
+        try:
+            stock = StockPool(path_stock, self.recursed_paths)
+            self.subpools[stock.name] = stock.pool
+        except CircularDependency:
+            raise
+        except Error:
+            pass
+
+        if not stock:
+            stock = Stock(path_stock, self.pkgcache)
+
+        self.stocks[stock.name] = stock
+    
     def __init__(self, path, pkgcache, recursed_paths=[]):
         self.path = path
         self.pkgcache = pkgcache
 
         self.stocks = {}
         self.subpools = {}
+        self.recursed_paths = recursed_paths
+        
         for stock_name in os.listdir(path):
             path_stock = join(path, stock_name)
             if not isdir(path_stock):
                 continue
 
-            stock = Stock(path_stock, pkgcache)
-            if stock.link in recursed_paths:
-                raise CircularDependency("circular dependency detected `%s' is in recursed paths %s" %
-                                         (stock.link, recursed_paths))
-            
-            try:
-                self.subpools[stock_name] = Pool(stock.link, recursed_paths)
-            except CircularDependency:
-                raise
-            except Error:
-                pass
-            self.stocks[stock_name] = stock
+            self._init_stock(path_stock)
             
     def __iter__(self):
-        return iter(self.stocks.values())
+        # iterate across all stocks except subpools
+        return iter((stock for stock in self.stocks.values()
+                     if not isinstance(stock, StockPool)))
+
+    def __len__(self):
+        return len(self.stocks) - len(self.subpools)
 
     @staticmethod
     def _parse_stock(stock):
@@ -356,7 +371,7 @@ class Stocks:
 
         if git and not branch:
             branch = basename(git.symbolic_ref("HEAD"))
-        
+
         stock_name = basename(abspath(dir))
         if branch:
             stock_name += "#" + branch
@@ -366,7 +381,7 @@ class Stocks:
 
         stock_path = join(self.path, stock_name)
         Stock.create(stock_path, dir)
-        self.stocks[stock_name] = Stock(stock_path, self.pkgcache)
+        self._init_stock(stock_path)
         
     def unregister(self, stock):
         dir, branch = self._parse_stock(stock)
@@ -374,7 +389,7 @@ class Stocks:
         if branch:
             stock_name += "#" + branch
             
-        matches = [ stock for stock in self
+        matches = [ stock for stock in self.stocks.values()
                     if stock.link == dir and (not branch or stock.branch == branch) ]
         if not matches:
             raise Error("no matches for unregister")
@@ -385,9 +400,11 @@ class Stocks:
         stock = matches[0]
         shutil.rmtree(stock.paths.path)
         del self.stocks[stock.name]
+        if stock.name in self.subpools:
+            del self.subpools[stock.name]
 
     def sync(self):
-        """sync all stocks"""
+        """sync all non-subpool stocks"""
         for stock in self:
             stock.sync()
 
@@ -427,6 +444,22 @@ class Stocks:
     def get_subpools(self):
         return self.subpools.values()
 
+class PoolPaths(Paths):
+    def __init__(self, path=None):
+        if path is None:
+            path = os.getenv("POOL_DIR", os.getcwd())
+            
+        path = join(realpath(path), ".pool")
+        Paths.__init__(self, path,
+                       ['pkgcache',
+                        'stocks',
+                        'build'])
+
+        self.build = Paths(self.build,
+                           ['root',
+                            'logs'])
+
+
 def sync(method):
     def wrapper(self, *args, **kws):
         self._sync()
@@ -451,11 +484,13 @@ class Pool:
     
     def __init__(self, path=None, recursed_paths=[]):
         self.paths = PoolPaths(path)
+        self.path = dirname(self.paths.path)
         if not exists(self.paths.path):
-            raise Error("no pool found (POOL_DIR=%s)" % dirname(self.paths.path))
+            raise Error("no pool found (POOL_DIR=%s)" % self.path)
         self.buildroot = os.readlink(self.paths.build.root)
-        self.stocks = Stocks(self.paths.stocks, recursed_paths + [ dirname(self.paths.path) ])
         self.pkgcache = PackageCache(self.paths.pkgcache)
+        self.stocks = Stocks(self.paths.stocks, self.pkgcache,
+                             recursed_paths + [ self.path ])
         self.tmpdir = os.environ.get("POOL_TMPDIR") or "/var/tmp/pool"
         mkdir(self.tmpdir)
     
@@ -466,12 +501,24 @@ class Pool:
         self.stocks.unregister(stock)
 
     def print_info(self):
+        if len(self.stocks):
+            print "# stocks"
+            
         for stock in self.stocks:
             addr = stock.link
             if stock.branch:
                 addr += "#" + stock.branch
                 
             print addr
+
+        subpools = self.stocks.get_subpools()
+        if subpools:
+            if len(self.stocks):
+                print
+                
+            print "# subpools"
+            for subpool in subpools:
+                print subpool.path
             
     def _sync(self):
         """synchronise pool with registered stocks"""
