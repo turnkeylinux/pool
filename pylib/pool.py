@@ -475,7 +475,8 @@ class PoolPaths(Paths):
         Paths.__init__(self, path,
                        ['pkgcache',
                         'stocks',
-                        'build'])
+                        'build',
+                        'tmp'])
 
         self.build = Paths(self.build,
                            ['root',
@@ -521,8 +522,7 @@ class Pool(object):
         self.pkgcache = PackageCache(self.paths.pkgcache)
         self.stocks = Stocks(self.paths.stocks, self.pkgcache,
                              recursed_paths + [ self.path ])
-        self.tmpdir = os.environ.get("POOL_TMPDIR") or "/var/tmp/pool"
-        mkdir(self.tmpdir)
+        mkdir(self.paths.tmp)
     
     def register(self, stock):
         self.stocks.register(stock)
@@ -607,7 +607,7 @@ class Pool(object):
                 return path
 
         package_name, package_version = parse_package_id(package)
-        build_outputdir = tempfile.mkdtemp(dir=self.tmpdir, prefix="%s-%s." % (package_name, package_version))
+        build_outputdir = tempfile.mkdtemp(dir=self.paths.tmp, prefix="%s-%s." % (package_name, package_version))
 
         source_path = self.stocks.get_source_path(package_name, package_version)
         if not source_path:
