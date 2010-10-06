@@ -168,7 +168,7 @@ A:
                 &lt;relative-path&gt;/&lt;package&gt;
                     contains cached list of versions
 
-            HEAD # contains the last HEAD we checked out
+            SYNC_HEAD # contains the last checkout/.git/HEAD we synced against
             checkout/
 
 

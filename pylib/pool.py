@@ -146,7 +146,7 @@ class StockPaths(Paths):
         Paths.__init__(self, path,
                        ['link',
                         'source-versions',
-                        'HEAD',
+                        'SYNC_HEAD',
                         'checkout'])
 
 
@@ -177,24 +177,24 @@ class StockPool(StockBase):
         
 class Stock(StockBase):
     """Class for managing a non-subpool-type stock."""
-    class Head(object):
+    class SyncHead(object):
         """Magical attribute.
 
         Set writes to the stock's HEAD.
         Get reads the value from it.
         """
         def __get__(self, obj, type):
-            path = obj.paths.HEAD
+            path = obj.paths.SYNC_HEAD
             if exists(path):
                 return file(path).read().rstrip()
 
             return None
 
         def __set__(self, obj, val):
-            path = obj.paths.HEAD
+            path = obj.paths.SYNC_HEAD
             file(path, "w").write(val + "\n")
 
-    head = Head()
+    sync_head = SyncHead()
 
     def _get_workdir(self):
         """Return an initialized workdir path.
@@ -281,7 +281,6 @@ class Stock(StockBase):
         versions = verseek.list(dir)
 
         relative_path = make_relative(self.workdir, dir)
-
         source_versions_path = join(self.paths.source_versions, relative_path)
         mkdir(source_versions_path)
         
@@ -315,7 +314,7 @@ class Stock(StockBase):
         """sync stock by updating source versions and importing binaries into the cache"""
 
         if self.branch:
-            if Git(self.link).rev_parse(self.branch) == self.head:
+            if Git(self.link).rev_parse(self.branch) == self.sync_head:
                 return
 
         # delete old cached versions
@@ -327,7 +326,7 @@ class Stock(StockBase):
         self._sync()
 
         if self.branch:
-            self.head = Git(self.paths.checkout).rev_parse("HEAD")
+            self.sync_head = Git(self.paths.checkout).rev_parse("HEAD")
 
 class Stocks:
     """Class for managing and quering Pool Stocks in aggregate.
