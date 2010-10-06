@@ -225,6 +225,13 @@ class Stock(StockBase):
         checkout.update_ref("refs/heads/" + self.branch, commit)
         checkout.checkout("-q", "-f", self.branch)
 
+        if exists(join(checkout_path, "arena.internals")):
+            command = "cd %s && sumo-open" % commands.mkarg(checkout_path)
+            error = os.system(command)
+            if error:
+                raise Error("failed command: " + command)
+            return join(checkout_path, "arena")
+
         # update tags
         for tag in orig.list_tags():
             checkout.update_ref("refs/tags/" + tag, orig.rev_parse(tag))
@@ -273,10 +280,7 @@ class Stock(StockBase):
         packages = deb_get_packages(dir)
         versions = verseek.list(dir)
 
-        if self.branch:
-            relative_path = make_relative(self.paths.checkout, dir)
-        else:
-            relative_path = make_relative(self.link, dir)
+        relative_path = make_relative(self.workdir, dir)
 
         source_versions_path = join(self.paths.source_versions, relative_path)
         mkdir(source_versions_path)
@@ -323,7 +327,7 @@ class Stock(StockBase):
         self._sync()
 
         if self.branch:
-            self.head = Git(self.workdir).rev_parse("HEAD")
+            self.head = Git(self.paths.checkout).rev_parse("HEAD")
 
 class Stocks:
     """Class for managing and quering Pool Stocks in aggregate.

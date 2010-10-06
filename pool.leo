@@ -15,7 +15,7 @@
 <v t="zaril.20100828060043"><vh>first draft</vh></v>
 <v t="zaril.20100828055849"><vh>terminology</vh></v>
 </v>
-<v t="loni.20100827184947.4"><vh>file/data structure</vh></v>
+<v t="loni.20100827184947.4" a="TV"><vh>file/data structure</vh></v>
 <v t="loni.20100827184947.5"><vh>cli syntax</vh></v>
 <v t="loni.20100827184947.6"><vh>usage examples</vh></v>
 </v>
@@ -75,8 +75,8 @@
 <v t="zaril.20101003054139.2"><vh>get</vh></v>
 </v>
 <v t="zaril.20101006063626"><vh>fix subpools</vh></v>
-<v t="zaril.20101006073117" a="EMTV"><vh>optimize Stock attributes</vh></v>
-<v t="zaril.20101005221943"><vh>extend pool-info</vh></v>
+<v t="zaril.20101006073117" a="M"><vh>optimize Stock attributes</vh></v>
+<v t="zaril.20101005221943" a="M"><vh>extend pool-info</vh></v>
 <v t="zaril.20101005094458"><vh>support Sumo branches</vh></v>
 </v>
 </v>
@@ -1539,7 +1539,15 @@ git-checkout -q -f devel
 <t tx="zaril.20101005065057">GOTCHA: rev-parse tag^0 != rev-parse tag
     the first returns the commit pointed to by the tag, the second returns the tag object
 </t>
-<t tx="zaril.20101005094458">we need to open them
+<t tx="zaril.20101005094458">detect logic
+    arena.internals?
+    sumo-base
+        would work anywhere in the arena (union, internals, etc)
+
+logic
+    we need to open the arena in the checkout directory
+    we to adjust the directory we scan
+
 </t>
 <t tx="zaril.20101005221943">Q: how do we handle subpools?
 A:
