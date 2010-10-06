@@ -294,10 +294,17 @@ class Stock(StockBase):
         
     def sync(self):
         """sync stock by updating source versions and importing binaries into the cache"""
+
         if self.branch:
             if Git(self.link).rev_parse(self.branch) == self.head:
                 return
 
+        # delete old cached versions
+        if exists(self.paths.source_versions):
+            shutil.rmtree(self.paths.source_versions)
+            mkdir(self.paths.source_versions)
+        self.source_versions = {}
+        
         self._sync()
 
         if self.branch:
