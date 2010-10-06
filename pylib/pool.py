@@ -432,7 +432,7 @@ class Stocks:
 
     def get_source_versions(self):
         """List all stock sources.
-        Returns an array of (stock, relative_path/package, version) tuples"""
+        Returns an array of (stock, relative_path/package, versions) tuples"""
         
         source_versions = []
         for stock in self:
@@ -489,6 +489,8 @@ def sync(method):
     return wrapper
 
 class Pool(object):
+    """Class for creating and controlling a Pool.
+    This class's public methods map roughly to the pool's cli interface"""
     class Subpools(object):
         def __get__(self, obj, type):
             return obj.stocks.get_subpools()
