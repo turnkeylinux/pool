@@ -488,7 +488,13 @@ def sync(method):
         return method(self, *args, **kws)
     return wrapper
 
-class Pool:
+class Pool(object):
+    class Subpools(object):
+        def __get__(self, obj, type):
+            return obj.stocks.get_subpools()
+
+    subpools = Subpools()
+
     @classmethod
     def init_create(cls, buildroot, path=None):
         paths = PoolPaths(path)
@@ -533,8 +539,7 @@ class Pool:
                 
             print addr
 
-        subpools = self.stocks.get_subpools()
-        if subpools:
+        if self.subpools:
             if len(self.stocks):
                 print
                 
@@ -551,7 +556,7 @@ class Pool:
         if self.stocks.exists_source_version(*parse_package_id(package)):
             return True
         
-        for subpool in self.stocks.get_subpools():
+        for subpool in self.subpools:
             if subpool.exists(package):
                 return True
 
@@ -565,7 +570,7 @@ class Pool:
         otherwise, returns only the newest versions.
         """
         packages = set()
-        for subpool in self.stocks.get_subpools():
+        for subpool in self.subpools:
             packages |= set(subpool.list(all_versions))
             
         packages |= set(self.pkgcache.list())
@@ -594,7 +599,7 @@ class Pool:
         if path:
             return path
 
-        for subpool in self.stocks.get_subpools():
+        for subpool in self.subpools:
             path = subpool.getpath(package)
             if path:
                 return path
