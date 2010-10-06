@@ -253,7 +253,7 @@ class Stock(StockBase):
         self.workdir = self._init_get_workdir()
         self.pkgcache = pkgcache
 
-    def _update_source_versions(self, dir):
+    def _sync_update_source_versions(self, dir):
         """update versions for a particular source package at <dir>"""
         packages = deb_get_packages(dir)
         versions = verseek.list(dir)
@@ -282,7 +282,7 @@ class Stock(StockBase):
             dir = self.workdir
             
         if isfile(join(dir, "debian/control")):
-            return self._update_source_versions(dir)
+            return self._sync_update_source_versions(dir)
 
         for fname in os.listdir(dir):
             fpath = join(dir, fname)
