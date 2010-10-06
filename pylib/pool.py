@@ -484,7 +484,7 @@ class PoolPaths(Paths):
 
 def sync(method):
     def wrapper(self, *args, **kws):
-        self._sync()
+        self.sync()
         return method(self, *args, **kws)
     return wrapper
 
@@ -542,10 +542,6 @@ class Pool:
             for subpool in subpools:
                 print subpool.path
             
-    def _sync(self):
-        """synchronise pool with registered stocks"""
-        self.stocks.sync()
-
     @sync
     def exists(self, package):
         """Check if package exists in pool -> Returns bool"""
@@ -639,3 +635,7 @@ class Pool:
             raise Error("recently built package `%s' missing from cache" % package)
     
         return path
+
+    def sync(self):
+        """synchronise pool with registered stocks"""
+        self.stocks.sync()
