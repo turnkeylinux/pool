@@ -51,10 +51,23 @@ def print_pkgcache(p):
 
 def print_source_versions(p):
     p.sync()
+
+    output = []
     for stock, path, versions in p.stocks.get_source_versions():
         for version in versions:
-            print "%s=%s\t%s\t\t%s" % (basename(path), version,
-                                       stock.name, dirname(path))
+            package = basename(path) + "=" + version
+            relative_path = dirname(path)
+            output.append((package, stock.name, relative_path))
+
+    if output:
+        package_width = max([ len(vals[0]) for vals in output ])
+        stock_name_width = max([ len(vals[1]) for vals in output ])
+
+        for package, stock_name, relative_path in output:
+            print "%s  %s  %s" % (package.ljust(package_width),
+                                  stock_name.ljust(stock_name_width),
+                                  relative_path)
+        
 
 def info(func, recursive, p=None):
     if p is None:
