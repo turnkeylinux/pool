@@ -122,7 +122,7 @@ def main():
         packages = fmt_package_tuples(p.list())
 
     for package in packages:
-        src_path = p.getpath(package)
+        src_path = p.getpath_deb(package)
         fname = basename(src_path)
         
         if opt_tree:

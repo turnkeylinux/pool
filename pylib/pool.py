@@ -564,17 +564,19 @@ class Pool(object):
         return newest.items()
 
     @sync
-    def getpath(self, package):
-        """Get path to package in pool if it exists or None if it doesn't"""
+    def getpath_deb(self, package):
+        """Get path to package in pool if it exists or None if it doesn't.
+        If package exists only in source, build and cache it first.
+        """
         if '=' not in package:
-            raise Error("getpath requires explicit version for `%s'" % package)
+            raise Error("getpath_deb requires explicit version for `%s'" % package)
         
         path = self.pkgcache.getpath(package)
         if path:
             return path
 
         for subpool in self.subpools:
-            path = subpool.getpath(package)
+            path = subpool.getpath_deb(package)
             if path:
                 return path
 
