@@ -617,31 +617,41 @@ class Pool(object):
     
         return path
 
+    class BuildLogs(object):
+        def __get__(self, obj, type):
+            for fname in os.listdir(obj.paths.build.logs):
+                fpath = join(obj.paths.build.logs, fname)
+                if not isfile(fpath) or not fname.endswith(".build"):
+                    continue
+
+                log_name, log_version = fname[:-len(".build")].split("_", 1)
+                yield log_name, log_version
+
+    build_logs = BuildLogs()
+
     def getpath_build_log(self, source_package):
         """Returns build log of specific version requested.
         If no specific version is requested, returns build-log of latest version"""
 
         name, version = parse_package_id(source_package)
-        build_versions = []
+        log_versions = []
 
-        for fname in os.listdir(self.paths.build.logs):
-            fpath = join(self.paths.build.logs, fname)
-            if not isfile(fpath) or not fname.endswith(".build"):
-                continue
-
-            build_name, build_version = fname[:-len(".build")].split("_", 1)
-            if name == build_name:
+        def get_build_path(log_name, log_version):
+            return join(self.paths.build.logs, "%s_%s.build" % (log_name, log_version))
+            
+        for log_name, log_version in self.build_logs:
+            if name == log_name:
                 if version:
-                    if version == build_version:
-                        return fpath
+                    if version == log_version:
+                        return get_build_path(name, version)
                 else:
-                    build_versions.append(build_version)
+                    log_versions.append(log_version)
 
-        if build_versions:
-            build_versions.sort(deb_cmp_versions)
-            last_version = build_versions[-1]
+        if log_versions:
+            log_versions.sort(deb_cmp_versions)
+            last_version = log_versions[-1]
 
-            return join(self.paths.build.logs, "%s_%s.build" % (name, last_version))
+            return get_build_path(name, last_version)
             
         for subpool in self.subpools:
             path = subpool.getpath_build_log(source_package)
