@@ -80,10 +80,10 @@
 <v t="zaril.20101005094458"><vh>support Sumo branches</vh></v>
 <v t="zaril.20101006120036"><vh>fix pool-info handling of --stocks and --subpools?</vh></v>
 <v t="zaril.20101007060755" a="E"><vh>pool-info-build package</vh>
-<v t="zaril.20101007100036"><vh>support binary names</vh></v>
 <v t="zaril.20101007101419"><vh>add build logs to pool-info</vh></v>
+<v t="zaril.20101007100036" a="TV"><vh>support binary names</vh></v>
 </v>
-<v t="zaril.20101007101547" a="TV"><vh>auto less output in pool-info? / pool-info-build</vh></v>
+<v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
 </v>
 </v>
 </v>
@@ -1642,7 +1642,13 @@ A:
     E: try changing the Package: to be different from Source: in hello-debhelper
         dpkg -f package.deb
     R: Source </t>
-<t tx="zaril.20101007100036"></t>
+<t tx="zaril.20101007100036">logic
+    lookup the binary
+    if the binary has a source, lookup the source
+    else the source is the binary name
+
+TEST: with hello-debhelper -&gt;  foo
+</t>
 <t tx="zaril.20101007101419"></t>
 <t tx="zaril.20101007101547"></t>
 </tnodes>
