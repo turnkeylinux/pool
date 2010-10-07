@@ -16,10 +16,10 @@
 <v t="zaril.20100828055849"><vh>terminology</vh></v>
 </v>
 <v t="loni.20100827184947.4"><vh>file/data structure</vh></v>
-<v t="loni.20100827184947.5"><vh>cli syntax</vh></v>
+<v t="loni.20100827184947.5" a="TV"><vh>cli syntax</vh></v>
 <v t="loni.20100827184947.6"><vh>usage examples</vh></v>
 </v>
-<v t="loni.20100827184947.7" a="E"><vh>implementation</vh>
+<v t="loni.20100827184947.7"><vh>implementation</vh>
 <v t="zaril.20100906050211"><vh>implement full command set for binaries in regular directories</vh>
 <v t="zaril.20100906050211.1"><vh>init /path/to/build-chroot</vh></v>
 <v t="zaril.20100906050211.2"><vh>register / unregister # regular directories</vh></v>
@@ -58,7 +58,7 @@
 <v t="zaril.20100930010726"><vh>fix getpath to get newest packages?</vh>
 <v t="zaril.20100930021923"><vh>pool.Pool().list() can not be invoked twice</vh></v>
 </v>
-<v t="zaril.20100923143609" a="E"><vh>support complex stock types</vh>
+<v t="zaril.20100923143609"><vh>support complex stock types</vh>
 <v t="zaril.20100929180644" a="E"><vh>versioning design ideas</vh></v>
 <v t="zaril.20100929193931" a="E"><vh>test/develop lightweight branch cloning</vh></v>
 <v t="zaril.20101003042126"><vh>support Git branches</vh>
@@ -76,15 +76,17 @@
 </v>
 <v t="zaril.20101006063626"><vh>fix subpools</vh></v>
 <v t="zaril.20101006073117" a="M"><vh>optimize Stock attributes</vh></v>
-<v t="zaril.20101005221943" a="EM"><vh>extend pool-info</vh></v>
 <v t="zaril.20101005094458"><vh>support Sumo branches</vh></v>
-<v t="zaril.20101006120036"><vh>fix pool-info handling of --stocks and --subpools?</vh></v>
-<v t="zaril.20101007060755" a="E"><vh>pool-info-build package</vh>
+</v>
+<v t="zaril.20101005221943" a="EM"><vh>extend pool-info</vh></v>
+<v t="zaril.20101007060755"><vh>pool-info-build package</vh>
 <v t="zaril.20101007101419"><vh>add build logs to pool-info</vh></v>
-<v t="zaril.20101007100036" a="TV"><vh>support binary names</vh></v>
+<v t="zaril.20101007100036"><vh>support binary names</vh></v>
 </v>
+<v t="zaril.20101006120036"><vh>fix pool-info handling of --stocks and --subpools?</vh></v>
+</v>
+<v t="zaril.20101007151726" a="E"><vh>TODO</vh>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
-</v>
 </v>
 </v>
 </vnodes>
@@ -188,7 +190,6 @@ A:
 <t tx="loni.20100827184947.5">=== ENVIRONMENT
 
     POOL_DIR        defaults to cwd
-    POOL_TMPDIR     defaults to TMPDIR or /var/tmp
 
 === CLI SYNTAX
 
@@ -1651,5 +1652,6 @@ TEST: with hello-debhelper -&gt;  foo
 </t>
 <t tx="zaril.20101007101419"></t>
 <t tx="zaril.20101007101547"></t>
+<t tx="zaril.20101007151726"></t>
 </tnodes>
 </leo_file>
