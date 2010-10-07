@@ -6,14 +6,15 @@ High-level class for representing file paths.
 File paths are accessible as instance attributes
 . and - are replaced for _
 
+The files attribute is "inherited".
+
 USAGE
 
 class FooPaths(Paths):
 	files = ["foo", "sub.dir/sub-file"]
 
 class BarPaths(FooPaths):
-	files = FooPaths.files + \
-		[ "bar" ] + subdir("sub.dir2", ["sub-file2"])
+	files = [ "bar" ] + subdir("sub.dir2", ["sub-file2"])
 
 paths = BarPaths("/tmp")
 print paths.foo
@@ -31,7 +32,16 @@ class Paths:
     def __init__(self, path, files=[]):
         self.path = path
         self.files = {}
-        for file in files + self.__class__.files:
+
+        def classfiles(cls):
+            files = cls.files
+            for base in cls.__bases__:
+                if issubclass(base, Paths):
+                    files += classfiles(base)
+
+            return files
+
+        for file in files + classfiles(self.__class__):
             self.register(file)
 
     def __getattr__(self, name):
@@ -76,8 +86,7 @@ def test():
             files = ["foo", "sub.dir/sub-file"]
 
     class BarPaths(FooPaths):
-            files = FooPaths.files + \
-                    [ "bar" ] + subdir("sub.dir2", ["sub-file2"])
+            files = [ "bar" ] + subdir("sub.dir2", ["sub-file2"])
 
     paths = BarPaths("/tmp")
     print paths.foo
