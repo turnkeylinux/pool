@@ -563,6 +563,39 @@ class Pool(object):
 
         return newest.items()
 
+    def getpath_build_log(self, source_package):
+        """Returns build log of specific version requested.
+        If no specific version is requested, returns build-log of latest version"""
+
+        name, version = parse_package_id(source_package)
+        build_versions = []
+
+        for fname in os.listdir(self.paths.build.logs):
+            fpath = join(self.paths.build.logs, fname)
+            if not isfile(fpath) or not fname.endswith(".build"):
+                continue
+
+            build_name, build_version = fname[:-len(".build")].split("_", 1)
+            if name == build_name:
+                if version:
+                    if version == build_version:
+                        return fpath
+                else:
+                    build_versions.append(build_version)
+
+        if build_versions:
+            build_versions.sort(deb_cmp_versions)
+            last_version = build_versions[-1]
+
+            return join(self.paths.build.logs, "%s_%s.build" % (name, last_version))
+            
+        for subpool in self.subpools:
+            path = subpool.getpath_build_log(source_package)
+            if path:
+                return path
+
+        return None
+    
     @sync
     def getpath_deb(self, package):
         """Get path to package in pool if it exists or None if it doesn't.

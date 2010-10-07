@@ -24,7 +24,7 @@ PATH_LIBEXEC="libexec"
 # are printed in Commands.usage()
 COMMANDS_USAGE_ORDER = ['init',
                         '',
-                        'register', 'unregister', 'info',
+                        'register', 'unregister', 'info', 'info-build',
                         '',
                         'exists', 'list', 'get']
 

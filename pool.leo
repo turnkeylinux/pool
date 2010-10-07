@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="1" clone_windows="0"/>
-<globals body_outline_ratio="0.476683937824">
-	<global_window_position top="0" left="470" height="965" width="800"/>
+<globals body_outline_ratio="0.471502590674">
+	<global_window_position top="0" left="528" height="965" width="742"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -76,9 +76,14 @@
 </v>
 <v t="zaril.20101006063626"><vh>fix subpools</vh></v>
 <v t="zaril.20101006073117" a="M"><vh>optimize Stock attributes</vh></v>
-<v t="zaril.20101005221943" a="M"><vh>extend pool-info</vh></v>
+<v t="zaril.20101005221943" a="EM"><vh>extend pool-info</vh></v>
 <v t="zaril.20101005094458"><vh>support Sumo branches</vh></v>
-<v t="zaril.20101006120036" a="TV"><vh>fix pool-info handling of --stocks and --subpools?</vh></v>
+<v t="zaril.20101006120036"><vh>fix pool-info handling of --stocks and --subpools?</vh></v>
+<v t="zaril.20101007060755" a="E"><vh>pool-info-build package</vh>
+<v t="zaril.20101007100036"><vh>support binary names</vh></v>
+<v t="zaril.20101007101419"><vh>add build logs to pool-info</vh></v>
+</v>
+<v t="zaril.20101007101547" a="TV"><vh>auto less output in pool-info? / pool-info-build</vh></v>
 </v>
 </v>
 </v>
@@ -171,6 +176,7 @@ A:
 
             SYNC_HEAD # contains the last checkout/.git/HEAD we synced against
             checkout/
+            
 
 
     
@@ -203,12 +209,15 @@ A:
 
 * info
     show pool information (registered stock, etc.)
+    --registered            show stocks and subpools (defaults)
+    --stocks                show stocks
+    --subpools              show sub-pools
 
-    --stocks                show stocks (default)
-    --subpools              show sub-poolsl
     --buildroot             show buildroot
     --pkgcache              show package cache
     --source-versions       show source versions
+
+    -r --recursive        Lookup pool info recursively in subpools
 
 * info-build package 
     will return info on built package
@@ -1568,13 +1577,7 @@ extend pool-info
     --subpools              show sub-poolsl
     --buildroot             show buildroot
     --pkgcache              show package cache
-    --source-versions       show source versions
-
-pool-info-build package 
-    will return info on built package
-        or no information if it wasn't built
-        or an error that the package doesn't exist
-</t>
+    --source-versions       show source versions</t>
 <t tx="zaril.20101006063626">StockSubpool should detect circular dependencies
     if its link is in the recursed_paths
 
@@ -1594,5 +1597,53 @@ or set it to None on initialisation and init on demand
     only shows stocks
 --subpools
     only shows subpools</t>
+<t tx="zaril.20101007060755">cli syntax
+    pool-info-build source[=version]
+
+will return info on built package
+    or no information if it wasn't built
+    or an error that the package doesn't exist
+
+GOTCHA: this is tricky because the source isn't automatically associated with the binary
+
+IDEAS:
+    store build log in stocks with the same relative paths as source_versions?
+        one build log per version per relative_path
+
+        so we would look up a build log
+            looking up the correct source_version
+            peeking into the build log directory with the same relative path
+                for that same version
+
+    allow looking up packages by source name?
+        with preference to binary or build?
+
+    lookup build log recursively in all pools?
+    
+    add buildlogs to info command
+
+        shows which build logs exist
+            one way of seeing the source package names
+
+        --source-builds?
+        --buildlogs
+        --source-build-logs
+
+    if we've already built the package, we can lookup the Source
+        by extracting it from the deb's control file
+
+Q: how do I find the Source: field of a package?
+    I guess its Source if the Package name isn't the same as the Source
+
+A:
+    Source field in the deb's control file if Source != Package
+        otherwise no Source field
+
+    E: try changing the Package: to be different from Source: in hello-debhelper
+        dpkg -f package.deb
+    R: Source </t>
+<t tx="zaril.20101007100036"></t>
+<t tx="zaril.20101007101419"></t>
+<t tx="zaril.20101007101547"></t>
 </tnodes>
 </leo_file>
