@@ -6,7 +6,9 @@ Options:
   --stocks		Prints list of registered stocks
   --subpools		Prints list of registered subpools
 
-  --buildroot		Prints build-root
+  --build-root		Prints build-root
+  --build-logs		Prints a list of build logs for source packages
+  
   --pkgcache		Prints list of cached packages
   --source-versions	Prints versions of package sources in registered stocks
 
@@ -63,7 +65,7 @@ def print_subpools(p):
     for subpool in p.subpools:
         print subpool.path
 
-def print_buildroot(p):
+def print_build_root(p):
     print p.buildroot
 
 def print_pkgcache(p):
@@ -89,7 +91,9 @@ def print_source_versions(p):
             print "%s  %s  %s" % (package.ljust(package_width),
                                   stock_name.ljust(stock_name_width),
                                   relative_path)
-        
+def print_build_logs(p):
+    for log_name, log_version in p.build_logs:
+        print log_name + "=" + log_version
 
 def info(func, recursive, p=None):
     if p is None:
@@ -110,7 +114,8 @@ def main():
                                    ['registered',
                                     'stocks',
                                     'subpools',
-                                    'buildroot',
+                                    'build-root',
+                                    'build-logs',
                                     'pkgcache',
                                     'source-versions',
                                     'recursive'])
@@ -136,9 +141,12 @@ def main():
             if opt == '--subpools':
                 rigid.set(print_subpools)
 
-            if opt == '--buildroot':
-                rigid.set(print_buildroot)
+            if opt == '--build-root':
+                rigid.set(print_build_root)
 
+            if opt == '--build-logs':
+                rigid.set(print_build_logs)
+                
             if opt == '--pkgcache':
                 rigid.set(print_pkgcache)
 
