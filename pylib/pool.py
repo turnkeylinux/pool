@@ -147,7 +147,7 @@ class StockBase(object):
     @classmethod
     def create(cls, path, link):
         mkdir(path)
-        paths = self.Paths(path)
+        paths = cls.Paths(path)
         os.symlink(realpath(link), paths.link)
 
     def __init__(self, path):
