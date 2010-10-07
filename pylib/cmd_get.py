@@ -122,18 +122,18 @@ def main():
         packages = fmt_package_tuples(p.list())
 
     for package in packages:
-        src_path = p.getpath_deb(package)
-        fname = basename(src_path)
+        path_from = p.getpath_deb(package)
+        fname = basename(path_from)
         
         if opt_tree:
             package_name = package.split("=")[0]
-            dst_path = join(outputdir, get_treedir(package_name), fname)
-            mkdir(dirname(dst_path))
+            path_to = join(outputdir, get_treedir(package_name), fname)
+            mkdir(dirname(path_to))
         else:
-            dst_path = join(outputdir, basename(src_path))
+            path_to = join(outputdir, basename(path_from))
 
-        if not exists(dst_path):
-            hardlink_or_copy(src_path, dst_path)
+        if not exists(path_to):
+            hardlink_or_copy(path_from, path_to)
 
     sys.exit(exitcode)
         
