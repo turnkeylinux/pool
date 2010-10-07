@@ -636,14 +636,14 @@ class Pool(object):
         name, version = parse_package_id(source_package)
         log_versions = []
 
-        def get_build_path(log_name, log_version):
+        def get_log_path(log_name, log_version):
             return join(self.paths.build.logs, "%s_%s.build" % (log_name, log_version))
             
         for log_name, log_version in self.build_logs:
             if name == log_name:
                 if version:
                     if version == log_version:
-                        return get_build_path(name, version)
+                        return get_log_path(name, version)
                 else:
                     log_versions.append(log_version)
 
@@ -651,7 +651,7 @@ class Pool(object):
             log_versions.sort(deb_cmp_versions)
             last_version = log_versions[-1]
 
-            return get_build_path(name, last_version)
+            return get_log_path(name, last_version)
             
         for subpool in self.subpools:
             path = subpool.getpath_build_log(source_package)
