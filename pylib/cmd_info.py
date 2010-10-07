@@ -2,7 +2,10 @@
 """Prints pool info
 
 Options:
-  --stocks		Prints list of registered stocks (default)
+  --registered		Prints list of registered stocks and subpools (default)
+  --stocks		Prints list of registered stocks
+  --subpools		Prints list of registered subpools
+
   --buildroot		Prints build-root
   --pkgcache		Prints list of cached packages
   --source-versions	Prints versions of package sources in registered stocks
@@ -38,8 +41,27 @@ class RigidVal:
     def get(self):
         return self.val
 
+def print_registered(p):
+    if p.stocks:
+        print "# stocks"
+    print_stocks(p)
+
+    if p.subpools:
+        if p.stocks:
+            print
+        print "# subpools"
+        print_subpools(p)
+    
 def print_stocks(p):
-    p.print_info()
+    for stock in p.stocks:
+        addr = stock.link
+        if stock.branch:
+            addr += "#" + stock.branch
+        print addr
+
+def print_subpools(p):
+    for subpool in p.subpools:
+        print subpool.path
 
 def print_buildroot(p):
     print p.buildroot
@@ -85,7 +107,9 @@ def info(func, recursive, p=None):
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hr',
-                                   ['stocks',
+                                   ['registered',
+                                    'stocks',
+                                    'subpools',
                                     'buildroot',
                                     'pkgcache',
                                     'source-versions',
@@ -103,8 +127,14 @@ def main():
             if opt in ('-r', '--recursive'):
                 recursive = True
 
+            if opt == '--registered':
+                rigid.set(print_registered)
+
             if opt == '--stocks':
                 rigid.set(print_stocks)
+
+            if opt == '--subpools':
+                rigid.set(print_subpools)
 
             if opt == '--buildroot':
                 rigid.set(print_buildroot)
@@ -119,7 +149,7 @@ def main():
         
     func = rigid.get()
     if func is None:
-        func = print_stocks
+        func = print_registered
 
     try:
         info(func, recursive)

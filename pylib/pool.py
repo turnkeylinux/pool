@@ -533,25 +533,6 @@ class Pool(object):
     def unregister(self, stock):
         self.stocks.unregister(stock)
 
-    def print_info(self):
-        if len(self.stocks):
-            print "# stocks"
-            
-        for stock in self.stocks:
-            addr = stock.link
-            if stock.branch:
-                addr += "#" + stock.branch
-                
-            print addr
-
-        if self.subpools:
-            if len(self.stocks):
-                print
-                
-            print "# subpools"
-            for subpool in self.subpools:
-                print subpool.path
-            
     @sync
     def exists(self, package):
         """Check if package exists in pool -> Returns bool"""

@@ -15,7 +15,7 @@
 <v t="zaril.20100828060043"><vh>first draft</vh></v>
 <v t="zaril.20100828055849"><vh>terminology</vh></v>
 </v>
-<v t="loni.20100827184947.4" a="TV"><vh>file/data structure</vh></v>
+<v t="loni.20100827184947.4"><vh>file/data structure</vh></v>
 <v t="loni.20100827184947.5"><vh>cli syntax</vh></v>
 <v t="loni.20100827184947.6"><vh>usage examples</vh></v>
 </v>
@@ -78,6 +78,7 @@
 <v t="zaril.20101006073117" a="M"><vh>optimize Stock attributes</vh></v>
 <v t="zaril.20101005221943" a="M"><vh>extend pool-info</vh></v>
 <v t="zaril.20101005094458"><vh>support Sumo branches</vh></v>
+<v t="zaril.20101006120036" a="TV"><vh>fix pool-info handling of --stocks and --subpools?</vh></v>
 </v>
 </v>
 </v>
@@ -1586,5 +1587,12 @@ magical object with cache
 
 or set it to None on initialisation and init on demand
 </t>
+<t tx="zaril.20101006120036">--registered (default)
+    shows stocks and subpools
+
+--stocks
+    only shows stocks
+--subpools
+    only shows subpools</t>
 </tnodes>
 </leo_file>
