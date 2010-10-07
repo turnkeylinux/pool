@@ -118,7 +118,6 @@ class PackageCache:
             arr.append((name, version))
         return arr
 
-
 def make_relative(root, path):
     """Return <path> relative to <root>.
 
@@ -141,24 +140,18 @@ def make_relative(root, path):
         root = dirname(root).rstrip('/')
         up_count += 1
 
-class StockPaths(Paths):
-    def __init__(self, path):
-        Paths.__init__(self, path,
-                       ['link',
-                        'source-versions',
-                        'SYNC_HEAD',
-                        'checkout'])
-
-
 class StockBase(object):
+    class Paths(Paths):
+        files = [ 'link' ]
+
     @classmethod
     def create(cls, path, link):
         mkdir(path)
-        paths = StockPaths(path)
+        paths = self.Paths(path)
         os.symlink(realpath(link), paths.link)
 
     def __init__(self, path):
-        self.paths = StockPaths(path)
+        self.paths = self.Paths(path)
         
         self.name = basename(path)
         self.link = os.readlink(self.paths.link)
@@ -177,6 +170,11 @@ class StockPool(StockBase):
         
 class Stock(StockBase):
     """Class for managing a non-subpool-type stock."""
+
+    class Paths(StockBase.Paths):
+        files = StockBase.Paths.files + \
+                [ 'source-versions', 'SYNC_HEAD', 'checkout' ]
+                
     class SyncHead(object):
         """Magical attribute.
 
@@ -470,21 +468,12 @@ class Stocks:
         return self.subpools.values()
 
 class PoolPaths(Paths):
+    files = [ "pkgcache", "stocks", "tmp", "build/root", "build/logs" ]
     def __init__(self, path=None):
         if path is None:
             path = os.getenv("POOL_DIR", os.getcwd())
-            
         path = join(realpath(path), ".pool")
-        Paths.__init__(self, path,
-                       ['pkgcache',
-                        'stocks',
-                        'build',
-                        'tmp'])
-
-        self.build = Paths(self.build,
-                           ['root',
-                            'logs'])
-
+        Paths.__init__(self, path)
 
 def sync(method):
     def wrapper(self, *args, **kws):
