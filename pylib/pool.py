@@ -172,8 +172,7 @@ class Stock(StockBase):
     """Class for managing a non-subpool-type stock."""
 
     class Paths(StockBase.Paths):
-        files = StockBase.Paths.files + \
-                [ 'source-versions', 'SYNC_HEAD', 'checkout' ]
+        files = [ 'source-versions', 'SYNC_HEAD', 'checkout' ]
                 
     class SyncHead(object):
         """Magical attribute.
