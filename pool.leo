@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="1" clone_windows="0"/>
-<globals body_outline_ratio="0.471502590674">
-	<global_window_position top="0" left="528" height="965" width="742"/>
+<globals body_outline_ratio="0.313989637306">
+	<global_window_position top="0" left="0" height="965" width="742"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -11,12 +11,12 @@
 <vnodes>
 <v t="loni.20100827184947" a="E"><vh>Project</vh>
 <v t="loni.20100827184947.1" a="E"><vh>design</vh>
-<v t="loni.20100827184947.2" a="E"><vh>brainstorming</vh>
+<v t="loni.20100827184947.2"><vh>brainstorming</vh>
 <v t="zaril.20100828060043"><vh>first draft</vh></v>
-<v t="zaril.20100828055849"><vh>terminology</vh></v>
 </v>
+<v t="zaril.20100828055849"><vh>terminology</vh></v>
 <v t="loni.20100827184947.4"><vh>file/data structure</vh></v>
-<v t="loni.20100827184947.5" a="TV"><vh>cli syntax</vh></v>
+<v t="loni.20100827184947.5"><vh>cli syntax</vh></v>
 <v t="loni.20100827184947.6"><vh>usage examples</vh></v>
 </v>
 <v t="loni.20100827184947.7"><vh>implementation</vh>
@@ -86,6 +86,7 @@
 <v t="zaril.20101006120036"><vh>fix pool-info handling of --stocks and --subpools?</vh></v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>TODO</vh>
+<v t="zaril.20101009193905" a="TV"><vh>accept multi-arguments in register/unregister?</vh></v>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
 </v>
 </v>
@@ -93,7 +94,12 @@
 <tnodes>
 <t tx="loni.20100827184947">@nocolor
 </t>
-<t tx="loni.20100827184947.1"></t>
+<t tx="loni.20100827184947.1">The pool is a system thats maintains a pool of binary packages which may be either imported as-is from a registered collection of binaries, or built on-demand from a registered source or collection of sources.
+
+The dominant abstraction for the pool is a virtual filesystem 
+folder that you can get get specific versions of specific packages from. Behind the scenes, the pool will build those binary packages for from source if required and cache the built binaries for future access.
+
+In this sense calling it a pool is in line with software terminology conventions [http://en.wikipedia.org/wiki/Object_pool].</t>
 <t tx="loni.20100827184947.2">* IDEAS
 change untagged auto-versioning to always be smaller than tagged autoversioning
 
@@ -108,6 +114,23 @@ leave failed builds in temporary directory
 figure out how to allow packages to be built manually
     unversioned - for testing?
 
+psuedo-logic for getting a single package=version
+    update binary cache 
+        scan all stock deltas for new binary packages to put into our cache
+    if lookup package in binary cache:
+        return package
+    
+    update source versions
+        scan all stock deltas for new debian source packages
+            a debian package cannot be inside another debian package
+        scan control file to get package name list and generate new auto-versions
+        output new auto-versions into pool's versions cache
+
+    lookup stock, relative_path for requested package=version in version cache
+    recalculate commit-id for stock, check that version is legal
+    seek to commit, extract source for debian package
+    build source for debian package in build environment
+    insert built packages into binary cache
 
 * QUESTIONS
 Q: what should we call the system?
@@ -154,9 +177,11 @@ Q: do we support different versioning for single-debian package and multi-debian
 Q: can we support object caching safely?
 A:
     if its content addressable then yes
-
 </t>
-<t tx="loni.20100827184947.4">FILE/DATA STRUCTURE
+<t tx="loni.20100827184947.4">Notes: 
+* The pools tucks away all of its internals neatly out of site in a `hidden' directory. The reason for doing this was to make it easy to treat the pool as a `special' directory, which may contain registered stocks or subpools as sub-directories.
+
+* The pool has no data formats/configuration files. All of its `data' is stored directly as filesystem constructs.
 
 .pool/
     build/
@@ -225,59 +250,20 @@ A:
         or no information if it wasn't built
         or an error that the package doesn't exist
 
-* get [-options] /path/to/output/dir [ package[=version] ... ]
-    function
-        retrieve requested packages to output dir
-            if a specific package version is requested, get that
-            if a specific version is not requested, retrieve the newest version
-    
-        if no packages are requested, output all the newest packages
-    
-    psuedo-logic for getting a single package=version
-        update binary cache 
-            scan all stock deltas for new binary packages to put into our cache
-        if lookup package in binary cache:
-            return package
-        
-        update source versions
-            scan all stock deltas for new debian source packages
-                a debian package cannot be inside another debian package
-            scan control file to get package name list and generate new auto-versions
-            output new auto-versions into pool's versions cache
-    
-        lookup stock, relative_path for requested package=version in version cache
-        recalculate commit-id for stock, check that version is legal
-        seek to commit, extract source for debian package
-        build source for debian package in build environment
-        insert built packages into binary cache
-    
-    options
-        -t --tree
-            output dir is in package tree format (like an automatic repository)
-                $outputdir/n/neverland/neverland-&lt;version&gt;.&lt;arch&gt;.deb
-    
-            instead of
-                $outputdir/neverland-&lt;version&gt;.&lt;arch&gt;.deb
-    
-        -s --strict
-            fatal error on missing packages 
-                by default we just issue warnings (which can be suppressed with -q)
-                the reason this is the default is that:
-                a) this what analogous tools such as mv and cp do when given multiple broken sources to copy/move
-                b) easy things should be easy, hard things should be possible
-                    given a manifest of packages from multiple pools (e.g., private world), 
-                    we can ask each pool to give us the portion of packages it holds for that manifest
-                    without having to first determine in which pool a package is located
-    
-        -q --quiet
-            suppress warnings about missing packages
-    
-        -i &lt;file&gt; | -
-            file from which we read the list of packages to retrieve
+* get [-options] &lt;output-dir&gt; [ package[=version] ... ]
+Get packages from pool
 
-        IDEA: --symbolic get? copy as links instead of real files?
-            will that still work?
-    
+  If a package is specified without a version, get the newest package.
+  If no packages are specified as arguments, get all the newest packages.
+
+Options:
+  -i --input &lt;file&gt;     file from which we read package list (- for stdin)
+
+  -s --strict           fatal error on missing packages
+  -q --quiet            suppress warnings about missing packages
+
+  -t --tree             output dir is in a package tree format (like a repository)
+  
 * list [ &lt;package-glob&gt; ]
     if &lt;package-glob&gt; is provided, print only those packages whose names match the glob
     otherwise, by default, print a list of the newest packages
@@ -290,66 +276,63 @@ A:
             incompatible with -a option
 
 * exists package[=version]
-    prints true/false if the package exists in the pool
-    if true exitcode = 0, false = 1
+Check if package exists in pool
 
-* 
-FUTURE
-    register-block /path/to/stock package[=version]
-        register a block on a specific package inside a specific stock
-            this blocks the package from being included in the pool
+Prints true/false if &lt;package&gt; exists in the pool.
+If true exitcode = 0, else exitcode = 1
 
-    unregister-block /path/to/stock package[=version]
-        unregister the block
+=== FUTURE CLI?
 
-    open
-        open the FUSE-based filesystem representation of the pool
+register-block /path/to/stock package[=version]
+    register a block on a specific package inside a specific stock
+        this blocks the package from being included in the pool
 
-    close
-        close the FUSE-based filesystem representation of the pool</t>
-<t tx="loni.20100827184947.6"># all commands are specified without the toolkit prefix
-# I haven't yet decided for sure what the name of this tool will be
+unregister-block /path/to/stock package[=version]
+    unregister the block
 
-cd pools
+open
+    open the FUSE-based filesystem representation of the pool
+
+close
+    close the FUSE-based filesystem representation of the pool</t>
+<t tx="loni.20100827184947.6">cd pools
 
 mkdir private
 cd private
 
-init /chroots/rocky-build
-    initialize a new pool
+# initialize a new pool
+pool-init /chroots/rocky-build
 
-register /turnkey/projects/*
-    auto identifies the type of the stock we register
-    e.g., if its a 
-        /path/to/sumo_arena[#branch]
-        /path/to/git_repository[#branch]
-        /path/to/regular_directory
-
-info
+for p in /turnkey/projects/*; do
+    # auto identifies the type of the stock we register
+    pool-register $p
+done
+    
+pool-info
     show pool information (registered containers, etc.)
 
-unregister /turnkey/projects/covin#devel
-    woops, noticed I registered the wrong branch
-        added #devel branch for emphasis 
-        unregister would work without it since there is only one branch registered for that path
+#  woops, noticed I registered the wrong branch
+#  added #devel branch for emphasis 
+#  unregister would work without it since there is only one branch registered for that path
+pool-unregister /turnkey/projects/covin#devel
 
-list -n
-    prints a list of all packages in the pool (by name only)
+# prints a list of all packages in the pool (by name only)
+pool-list -n
 
-list
-    prints a list of all packages + newest versions
+# prints a list of all packages + newest versions
+pool-list
+  
+# prints a list of all packagse that match this glob
+pool-list turnkey-*
 
-list turnkey-*
-    prints a list of all packagse that match this glob
+# prints a list of all package versions for neverland
+pool-list --all neverland
 
-list --all neverland
-    prints a list of all package versions for neverland
+# prints a loooong list of all package versions, old and new, for all packages
+# watch out, every git commit in an autoversioned project is a new virtual version
+pool-list --all
 
-list --all
-    prints a loooong list of all package versions, old and new, for all packages
-        watch out, every git commit in a Sumo arena is a new virtual version
-
-for name in $(list -n); do
+for name in $(pool-list -n); do
     if ! exists -q $name; then
         echo insane: package $name was just here a second ago
     fi
@@ -357,24 +340,24 @@ done
 
 mkdir /tmp/newest
 
-get /tmp/newest 
-    gets all the newest packages in the pool to /tmp/newest
+# gets all the newest packages in the pool to /tmp/newest
+pool-get /tmp/newest 
 
-get /tmp/newest neverland
-    gets the newest neverland to /tmp/newest
+# gets the newest neverland to /tmp/newest
+pool-get /tmp/newest neverland
 
-get /tmp/newest neverland=1.2.3
-    gets neverland 1.2.3 specifically to /tmp/newest
+# gets neverland 1.2.3 specifically to /tmp/newest
+pool-get /tmp/newest neverland=1.2.3
 
-get /tmp/newest -q -i /path/to/product-manifest
-    gets all packages that are listed in product-manifest and exist in our pool to /tmp/newest
-    don't warn us about packages which don't exist (unsafe)
+# gets all packages that are listed in product-manifest and exist in our pool to /tmp/newest
+# don't warn us about packages which don't exist (unsafe)
+pool-get /tmp/newest -q -i /path/to/product-manifest
 
 # creates a repository like 
 mkdir /tmp/product-repo
 for package in $(cat /path/to/versioned-product-manifest); do
-    if exists -q $package; then
-        get /tmp/product-repo --tree -s $package
+    if pool-exists -q $package; then
+        pool-get /tmp/product-repo --tree -s $package
     fi
 done</t>
 <t tx="loni.20100827184947.7">ROADMAP
@@ -400,7 +383,7 @@ stock types
         sumo arena containing multiple packages
 
     subpool
-        another pools
+        another pool
 
 binary
     a binary Debian package inside a stock
@@ -409,7 +392,14 @@ source
     a source Debian package inside a stock
 
 build root
-    a chroot environment with an suitable toolchain setup for building packages</t>
+    a chroot environment with an suitable toolchain setup for building packages
+
+build log
+    the output from the build process for a package built from source
+
+package cache
+    a cache of binary packages either built from source or imported as-is
+</t>
 <t tx="zaril.20100828060043">Q: how do i name this project?
 
 alternatives
@@ -1653,5 +1643,6 @@ TEST: with hello-debhelper -&gt;  foo
 <t tx="zaril.20101007101419"></t>
 <t tx="zaril.20101007101547"></t>
 <t tx="zaril.20101007151726"></t>
+<t tx="zaril.20101009193905"></t>
 </tnodes>
 </leo_file>
