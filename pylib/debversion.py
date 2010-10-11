@@ -1,7 +1,11 @@
 import re
 
+_re_leadingzeros = re.compile(r'(\D|\b)0+')
+_re_lex = re.compile(r'(\D*)')
+_re_num = re.compile(r'(\d*)')
+
 def normalize(v):
-    return re.sub(r'(\D|\b)0+', r'\1', v)
+    return _re_leadingzeros.sub(r'\1', v)
 
 def parse(v):
     if ':' in v:
@@ -22,13 +26,13 @@ class VersionParser:
         self.str = str
 
     def getlex(self):
-        lex = re.match(r'(\D*)', self.str).group(1)
+        lex = _re_lex.match(self.str).group(1)
         self.str = self.str[len(lex):]
         
         return lex
 
     def getnum(self):
-        num = re.match(r'(\d*)', self.str).group(1)
+        num = _re_num.match(self.str).group(1)
         self.str = self.str[len(num):]
 
         if num:
