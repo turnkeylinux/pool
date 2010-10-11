@@ -75,6 +75,11 @@ def compare(a, b):
     return 0
 
 def test():
+    try:
+	import psyco; psyco.full()
+    except ImportError:
+	pass
+    
     import time
     howmany = 1000
     start = time.time()
