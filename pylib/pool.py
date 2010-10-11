@@ -10,6 +10,7 @@ from paths import Paths
 
 from common import *
 import verseek
+import debversion
 
 from git import Git
 
@@ -28,14 +29,6 @@ def deb_parse_filename(filename):
     name, version = filename.split("_")[:2]
 
     return name, version
-
-def deb_cmp_versions(a, b):
-    """Compare a with b according to Debian versioning criteria"""
-
-    def normalize(v):
-        return re.sub(r'(\D|\b)0+', r'\1', v).rstrip("-")
-        
-    return cmp(normalize(a), normalize(b))
 
 def deb_get_packages(srcpath):
     controlfile = join(srcpath, "debian/control")
@@ -558,7 +551,7 @@ class Pool(object):
         newest = {}
         for name, version in packages:
             if not newest.has_key(name) or \
-               deb_cmp_versions(newest[name], version) < 0:
+               debversion.compare(newest[name], version) < 0:
                 newest[name] = version
 
         return newest.items()
@@ -648,7 +641,7 @@ class Pool(object):
                     log_versions.append(log_version)
 
         if log_versions:
-            log_versions.sort(deb_cmp_versions)
+            log_versions.sort(debversion.compare)
             last_version = log_versions[-1]
 
             return get_log_path(name, last_version)

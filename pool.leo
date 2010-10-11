@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet ekr_test?>
 <leo_file>
-<leo_header file_format="2" tnodes="0" max_tnode_index="1" clone_windows="0"/>
-<globals body_outline_ratio="0.313989637306">
-	<global_window_position top="0" left="0" height="965" width="742"/>
+<leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
+<globals body_outline_ratio="0.0880503144654">
+	<global_window_position top="0" left="1690" height="954" width="730"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -19,7 +19,7 @@
 <v t="loni.20100827184947.5"><vh>cli syntax</vh></v>
 <v t="loni.20100827184947.6"><vh>usage examples</vh></v>
 </v>
-<v t="loni.20100827184947.7"><vh>implementation</vh>
+<v t="loni.20100827184947.7" a="E"><vh>implementation</vh>
 <v t="zaril.20100906050211"><vh>implement full command set for binaries in regular directories</vh>
 <v t="zaril.20100906050211.1"><vh>init /path/to/build-chroot</vh></v>
 <v t="zaril.20100906050211.2"><vh>register / unregister # regular directories</vh></v>
@@ -32,7 +32,7 @@
 </v>
 <v t="zaril.20100909033533"><vh>pool contains pool</vh></v>
 <v t="zaril.20100910205006"><vh>BUG: sync not importing binaries?</vh></v>
-<v t="zaril.20100909050527" a="E"><vh>support regular sources in regular directories</vh>
+<v t="zaril.20100909050527"><vh>support regular sources in regular directories</vh>
 <v t="zaril.20100911052023" a="M"><vh>setup a local caching proxy</vh>
 <v t="zaril.20100912044439" a="M"><vh>fix squid</vh></v>
 <v t="zaril.20100912052909"><vh>configure jaunty to use apt-proxy</vh></v>
@@ -50,7 +50,7 @@
 <v t="zaril.20100916032546" a="M"><vh>explore build dependencies</vh></v>
 <v t="zaril.20100911091317"><vh>research suid</vh></v>
 </v>
-<v t="zaril.20100923043734" a="M"><vh>exists</vh></v>
+<v t="zaril.20100923043734" a="EM"><vh>exists</vh></v>
 <v t="zaril.20100923071058"><vh>list</vh></v>
 <v t="zaril.20100923072629"><vh>get</vh></v>
 </v>
@@ -84,9 +84,13 @@
 <v t="zaril.20101007100036"><vh>support binary names</vh></v>
 </v>
 <v t="zaril.20101006120036"><vh>fix pool-info handling of --stocks and --subpools?</vh></v>
+<v t="zaril.20101011023841" a="ETV"><vh>bug: deb_cmp_versions doesn't work correctly</vh>
+<v t="zaril.20101011033852"><vh>research debian versions</vh></v>
+</v>
+<v t="zaril.20101011023954"><vh>fix autoversion</vh></v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>TODO</vh>
-<v t="zaril.20101009193905" a="TV"><vh>accept multi-arguments in register/unregister?</vh></v>
+<v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
 </v>
 </v>
@@ -1644,5 +1648,111 @@ TEST: with hello-debhelper -&gt;  foo
 <t tx="zaril.20101007101547"></t>
 <t tx="zaril.20101007151726"></t>
 <t tx="zaril.20101009193905"></t>
+<t tx="zaril.20101011023841">SUMMARY:
+    version format
+        [epoch:]upstream_version[-debian_revision
+            
+            convention to start deban_revision at 1 each time upstream version increases
+
+    the following don't work
+        0turnkey-&lt;revision&gt;
+        0-turnkey-&lt;revision&gt;
+
+    only the ubuntu way works
+        0turnkey&lt;revision&gt;
+
+
+    examples
+        $ dpkg --compare-versions 1.0-2 gt 1.0-1-turnkey; echo $?
+        1
+        
+        dpkg --compare-versions 1.0-1 gt 1.0-0-turnkey; echo $?
+        1
+
+        $ dpkg --compare-versions 1.0-2 gt 1.0-1-; echo $?
+        1            
+
+
+
+    goal: understand why these tests evaluate the way they do
+
+    package version is broken at the last hyphen
+        so upstream can be complex the debian revision is what counts?
+
+    simplest test that demonstrates this behavior
+        dpkg --compare-versions 1-1 lt 1-2; echo $? (only a hyphen added)
+        0
+
+        dpkg --compare-versions 1-1- lt 1-2; echo $?
+        1
+            explanation
+                1-1 &gt; 1
+
+IDEA: recreate comparison algorithm
+
+
+
+
+        </t>
+<t tx="zaril.20101011023954">BUG: bad version returned when tag doesn't start with v
+BUG: premise of autoversioning wrong?
+</t>
+<t tx="zaril.20101011033852">
+RESOURCE: http://people.debian.org/~calvin/unofficial/
+
+The Debian package version number is parsed from the top entry of debian/changelog, eg. mypackage (1.0-0joe1) unstable; urgency=low. The `-0joe1' is the debian release number. Subsequent releases have release numbers `-0joe2', `-0joe3', etc.
+If there is already an official package, for example with version `1.0-4', then use `1.0-4joe1'.
+You can compare versions with dpkg, see the dpkg(8) manpage for more info.
+
+advanced package versioning:
+
+    * The package version is a beta version or release candidate, for example 1.0b1 or 1.0rc2
+      Problems will arise because dpkg will consider the final version 1.0 lower than the beta or release candidate version. The solution is to use a version like 0.99+1.0rc2-0joe1 which uses a lower version than 1.0 (0.99) and joins the release candidate version with a plus sign. This way the final version is greater than the previous one: 0.99+1.0rc2-0joe1 &lt; 1.0-0joe1.
+    * The new upstream version is lower than the previous one.
+      How can this happen? A simple typo for example. Instead of 1.0 someone uploaded the package as version 10.0. Now the new upstream version 1.1 is not greater than the last one. Solution is to use an epoch: 10.0-0joe1 &lt; 1:1.1-0joe1. See the Debian Policy epoch entry for an explanation.
+
+RESOURCE: http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version
+
+5.6.12 Version
+
+The version number of a package. The format is: [epoch:]upstream_version[-debian_revision]
+
+The three components here are:
+
+epoch
+
+    This is a single (generally small) unsigned integer. It may be omitted, in which case zero is assumed. If it is omitted then the upstream_version may not contain any colons.
+
+    It is provided to allow mistakes in the version numbers of older versions of a package, and also a package's previous version numbering schemes, to be left behind.
+
+upstream_version
+
+    This is the main part of the version number. It is usually the version number of the original ("upstream") package from which the .deb file has been made, if this is applicable. Usually this will be in the same format as that specified by the upstream author(s); however, it may need to be reformatted to fit into the package management system's format and comparison scheme.
+
+    The comparison behavior of the package management system with respect to the upstream_version is described below. The upstream_version portion of the version number is mandatory.
+
+    The upstream_version may contain only alphanumerics[33] and the characters . + - : (full stop, plus, hyphen, colon) and should start with a digit. If there is no debian_revision then hyphens are not allowed; if there is no epoch then colons are not allowed.
+
+debian_revision
+
+    This part of the version number specifies the version of the Debian package based on the upstream version. It may contain only alphanumerics and the characters + and . (plus and full stop) and is compared in the same way as the upstream_version is.
+
+    It is optional; if it isn't present then the upstream_version may not contain a hyphen. This format represents the case where a piece of software was written specifically to be turned into a Debian package, and so there is only one "debianization" of it and therefore no revision indication is required.
+
+    It is conventional to restart the debian_revision at 1 each time the upstream_version is increased.
+
+    The package management system will break the version number apart at the last hyphen in the string (if there is one) to determine the upstream_version and debian_revision. The absence of a debian_revision compares earlier than the presence of one (but note that the debian_revision is the least significant part of the version number).
+
+The upstream_version and debian_revision parts are compared by the package management system using the same algorithm:
+
+The strings are compared from left to right.
+
+First the initial part of each string consisting entirely of non-digit characters is determined. These two parts (one of which may be empty) are compared lexically. If a difference is found it is returned. The lexical comparison is a comparison of ASCII values modified so that all the letters sort earlier than all the non-letters.
+
+Then the initial part of the remainder of each string which consists entirely of digit characters is determined. The numerical values of these two parts are compared, and any difference found is returned as the result of the comparison. For these purposes an empty string (which can only occur at the end of one or both version strings being compared) counts as zero.
+
+These two steps (comparing and removing initial non-digit strings and initial digit strings) are repeated until a difference is found or both strings are exhausted.
+
+Note that the purpose of epochs is to allow us to leave behind mistakes in version numbering, and to cope with situations where the version numbering scheme changes. It is not intended to cope with version numbers containing strings of letters which the package management system cannot interpret (such as ALPHA or pre-), or with silly orderings (the author of this manual has heard of a package whose versions went 1.1, 1.2, 1.3, 1, 2.1, 2.2, 2 and so forth). </t>
 </tnodes>
 </leo_file>
