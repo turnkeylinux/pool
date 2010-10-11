@@ -51,6 +51,8 @@ class VersionParser:
 
         return 0
         
+# _compare is functionally equivalent to _compare_flat
+# only its much more readable
 def _compare(s1, s2):
     if s1 == s2:
         return 0
@@ -76,6 +78,8 @@ def _compare(s1, s2):
         if p1.str == p2.str:
             return 0
 
+# _compare_flat is functionally equivalent to _compare
+# but it embeds VersionParser's functionality inline for optimization
 def _compare_flat(s1, s2):
     if s1 == s2:
         return 0
