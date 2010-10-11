@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.0880503144654">
-	<global_window_position top="0" left="1690" height="954" width="730"/>
+<globals body_outline_ratio="0.267295597484">
+	<global_window_position top="0" left="540" height="954" width="730"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -58,8 +58,7 @@
 <v t="zaril.20100930010726"><vh>fix getpath to get newest packages?</vh>
 <v t="zaril.20100930021923"><vh>pool.Pool().list() can not be invoked twice</vh></v>
 </v>
-<v t="zaril.20100923143609"><vh>support complex stock types</vh>
-<v t="zaril.20100929180644" a="E"><vh>versioning design ideas</vh></v>
+<v t="zaril.20100923143609" a="E"><vh>support complex stock types</vh>
 <v t="zaril.20100929193931" a="E"><vh>test/develop lightweight branch cloning</vh></v>
 <v t="zaril.20101003042126"><vh>support Git branches</vh>
 <v t="zaril.20101003051253" a="M"><vh>register git branches</vh></v>
@@ -84,9 +83,14 @@
 <v t="zaril.20101007100036"><vh>support binary names</vh></v>
 </v>
 <v t="zaril.20101006120036"><vh>fix pool-info handling of --stocks and --subpools?</vh></v>
-<v t="zaril.20101011023841" a="ETV"><vh>bug: deb_cmp_versions doesn't work correctly</vh>
+<v t="zaril.20100929180644" a="E"><vh>autoversioning ideas</vh></v>
+<v t="zaril.20101011023841" a="E"><vh>bug: deb_cmp_versions doesn't work correctly</vh>
 <v t="zaril.20101011033852"><vh>research debian versions</vh></v>
 </v>
+<v t="zaril.20101011042720" a="E"><vh>bug: debversion.compare mis-calculating integers</vh>
+<v t="zaril.20101011052050" a="TV"><vh>optimize</vh></v>
+</v>
+<v t="zaril.20101011042328" a="E"><vh>autoversion support for `branch' from upstream version</vh></v>
 <v t="zaril.20101011023954"><vh>fix autoversion</vh></v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>TODO</vh>
@@ -1754,5 +1758,26 @@ Then the initial part of the remainder of each string which consists entirely of
 These two steps (comparing and removing initial non-digit strings and initial digit strings) are repeated until a difference is found or both strings are exhausted.
 
 Note that the purpose of epochs is to allow us to leave behind mistakes in version numbering, and to cope with situations where the version numbering scheme changes. It is not intended to cope with version numbers containing strings of letters which the package management system cannot interpret (such as ALPHA or pre-), or with silly orderings (the author of this manual has heard of a package whose versions went 1.1, 1.2, 1.3, 1, 2.1, 2.2, 2 and so forth). </t>
+<t tx="zaril.20101011042328"></t>
+<t tx="zaril.20101011042720">dpkg --compare-versions 0-2010.10.5-d6cbb928 lt 0-2010.10.10-a9ee521c; echo $?
+
+isolated bug:
+    "10" &lt; "5"
+
+compare("10", 5") == -1</t>
+<t tx="zaril.20101011052050">IDEAS:
+    compare with dpkg --compare-versions based implementation
+        272 per/sec with subprocess.call
+        227 per/sec with os.system
+
+    GOTCHA: you can't let dpkg --compare-versions do the comparison for you anyhow
+        it only returns True or False
+
+
+starting stats
+    3047 calls per second
+
+python /usr/lib/python2.4/profile.py -s cumulative ./debversion.py
+</t>
 </tnodes>
 </leo_file>
