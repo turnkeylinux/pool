@@ -64,16 +64,16 @@ def _compare(s1, s2):
     p2 = VersionParser(s2)
 
     while True:
+        n1 = p1.getnum()
+        n2 = p2.getnum()
+        val = cmp(n1, n2)
+        if val != 0:
+            return val
+
         l1 = p1.getlex()
         l2 = p2.getlex()
 
         val = cmp(l1, l2)
-        if val != 0:
-            return val
-
-        n1 = p1.getnum()
-        n2 = p2.getnum()
-        val = cmp(n1, n2)
         if val != 0:
             return val
 
