@@ -1,8 +1,7 @@
 import re
+import string
 
 _re_leadingzeros = re.compile(r'(\D|\b)0+')
-_re_lex = re.compile(r'(\D*)')
-_re_num = re.compile(r'(\d*)')
 
 def normalize(v):
     return _re_leadingzeros.sub(r'\1', v)
@@ -26,17 +25,34 @@ class VersionParser:
         self.str = str
 
     def getlex(self):
-        lex = _re_lex.match(self.str).group(1)
-        self.str = self.str[len(lex):]
-        
-        return lex
+        str = self.str
+        i = 0
+        for c in str:
+            if c in '0123456789':
+                break
+            i += 1
+
+        if i:
+            lex = str[:i]
+            self.str = str[i:]
+
+            return lex
+
+        return ''
 
     def getnum(self):
-        num = _re_num.match(self.str).group(1)
-        self.str = self.str[len(num):]
+        str = self.str
+        i = 0
+        for c in str:
+            if c not in '0123456789':
+                break
+            i += 1
 
-        if num:
-            return int(num)
+        if i:
+            num = int(str[:i])
+            self.str = str[i:]
+
+            return num
 
         return 0
         
@@ -67,7 +83,7 @@ def compare(a, b):
     a = parse(normalize(a))
     b = parse(normalize(b))
 
-    for i in range(3):
+    for i in (0, 1, 2):
         val = _compare(a[i], b[i])
         if val != 0:
             return val
@@ -75,11 +91,6 @@ def compare(a, b):
     return 0
 
 def test():
-    try:
-	import psyco; psyco.full()
-    except ImportError:
-	pass
-    
     import time
     howmany = 1000
     start = time.time()

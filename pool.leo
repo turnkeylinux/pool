@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.267295597484">
+<globals body_outline_ratio="0.214884696017">
 	<global_window_position top="0" left="540" height="954" width="730"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -88,7 +88,7 @@
 <v t="zaril.20101011033852"><vh>research debian versions</vh></v>
 </v>
 <v t="zaril.20101011042720" a="E"><vh>bug: debversion.compare mis-calculating integers</vh>
-<v t="zaril.20101011052050" a="TV"><vh>optimize</vh></v>
+<v t="zaril.20101011052050" a="ETV"><vh>optimize</vh></v>
 </v>
 <v t="zaril.20101011042328" a="E"><vh>autoversion support for `branch' from upstream version</vh></v>
 <v t="zaril.20101011023954"><vh>fix autoversion</vh></v>
@@ -1773,11 +1773,33 @@ compare("10", 5") == -1</t>
     GOTCHA: you can't let dpkg --compare-versions do the comparison for you anyhow
         it only returns True or False
 
+    implement in pyrex or C?
+
+    compile regexps?
+        up to 4509         
+
+    psyco
+        another 40% improvement
+            try:
+               import psyco; psyco.full()
+            except ImportError:
+               pass
+        
+    flatten loops
+        didn't do much
+
+    make inline
+
+    
+    get rid of the class?
+
+    replace regular expressions
+        30% improvement
+
 
 starting stats
     3047 calls per second
 
-python /usr/lib/python2.4/profile.py -s cumulative ./debversion.py
-</t>
+python /usr/lib/python2.4/profile.py -s cumulative ./debversion.py</t>
 </tnodes>
 </leo_file>
