@@ -88,7 +88,8 @@
 <v t="zaril.20101011033852"><vh>research debian versions</vh></v>
 </v>
 <v t="zaril.20101011042720" a="E"><vh>bug: debversion.compare mis-calculating integers</vh>
-<v t="zaril.20101011052050" a="ETV"><vh>optimize</vh></v>
+<v t="zaril.20101011052050" a="TV"><vh>optimize</vh></v>
+<v t="zaril.20101011074222"><vh>normalize bug</vh></v>
 </v>
 <v t="zaril.20101011042328" a="E"><vh>autoversion support for `branch' from upstream version</vh></v>
 <v t="zaril.20101011023954"><vh>fix autoversion</vh></v>
@@ -1785,21 +1786,31 @@ compare("10", 5") == -1</t>
             except ImportError:
                pass
         
+    replace regular expressions
+        30% improvement
+    
+        psyco produces another 30% improvement
+
     flatten loops
         didn't do much
 
     make inline
-
     
-    get rid of the class?
+    flatten class usage
+        17% improvement (6500)
+        psyco boosts this implementation 30% (9000)
 
-    replace regular expressions
-        30% improvement
+    normalize is a hog
+        176% improvement (18K)
+        psyco now boosts an additional 144% (to 44K)
 
-
-starting stats
-    3047 calls per second
+optimization bottom line
+    before: 3K/sec
+    after: 44K/sec (x14 improvement)
 
 python /usr/lib/python2.4/profile.py -s cumulative ./debversion.py</t>
+<t tx="zaril.20101011074222">INSIGHT: we don't need normalize at all!
+
+</t>
 </tnodes>
 </leo_file>

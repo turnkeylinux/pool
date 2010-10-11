@@ -1,22 +1,17 @@
 import re
 import string
 
-_re_leadingzeros = re.compile(r'(\D|\b)0+')
-
-def normalize(v):
-    return _re_leadingzeros.sub(r'\1', v)
-
 def parse(v):
     if ':' in v:
         epoch, v = v.split(':', 1)
     else:
-        epoch = ''
+        epoch = '0'
 
     if '-' in v:
         upstream_version, debian_revision = v.rsplit('-', 1)
     else:
         upstream_version = v
-        debian_revision = ''
+        debian_revision = '0'
 
     return epoch, upstream_version, debian_revision
 
@@ -66,6 +61,7 @@ def _compare(s1, s2):
     while True:
         n1 = p1.getnum()
         n2 = p2.getnum()
+        
         val = cmp(n1, n2)
         if val != 0:
             return val
@@ -77,22 +73,98 @@ def _compare(s1, s2):
         if val != 0:
             return val
 
+        if p1.str == p2.str:
+            return 0
+
+def _compare_flat(s1, s2):
+    if s1 == s2:
+        return 0
+
+    while True:
+        # parse numeric component for comparison
+        i = 0
+        for c in s1:
+            if c not in '0123456789':
+                break
+            i += 1
+
+        if i:
+            n1 = int(s1[:i])
+            s1 = s1[i:]
+
+        else:
+            n1 = 0
+
+        i = 0
+        for c in s2:
+            if c not in '0123456789':
+                break
+            i += 1
+
+        if i:
+            n2 = int(s2[:i])
+            s2 = s2[i:]
+
+        else:
+            n2 = 0
+
+        val = cmp(n1, n2)
+        if val != 0:
+            return val
+
+        # if numeric components equal, parse lexical components
+        i = 0
+        for c in s1:
+            if c in '0123456789':
+                break
+            i += 1
+
+        if i:
+            l1 = s1[:i]
+            s1 = s1[i:]
+        else:
+            l1 = ''
+
+        i = 0
+        for c in s2:
+            if c in '0123456789':
+                break
+            i += 1
+
+        if i:
+            l2 = s2[:i]
+            s2 = s2[i:]
+        else:
+            l2 = ''
+
+        val = cmp(l1, l2)
+        if val != 0:
+            return val
+
+        if s1 == s2:
+            return 0
+
 def compare(a, b):
     """Compare a with b according to Debian versioning criteria"""
 
-    a = parse(normalize(a))
-    b = parse(normalize(b))
+    a = parse(a)
+    b = parse(b)
 
     for i in (0, 1, 2):
-        val = _compare(a[i], b[i])
+        val = _compare_flat(a[i], b[i])
         if val != 0:
             return val
 
     return 0
 
 def test():
+    try:
+       import psyco; psyco.full()
+    except ImportError:
+       pass
+    
     import time
-    howmany = 1000
+    howmany = 10000
     start = time.time()
     for i in xrange(howmany):
         compare("0-2010.10.1-d6cbb928", "0-2010.10.10-a9ee521c")
