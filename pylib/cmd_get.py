@@ -117,7 +117,7 @@ def main():
 
     packages = resolved
 
-    if not packages and not input:
+    if not args[1:] and not input:
         # if no packages specified, get all the newest versions
         packages = fmt_package_tuples(p.list())
 
