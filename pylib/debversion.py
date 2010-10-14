@@ -61,17 +61,17 @@ def _compare(s1, s2):
     p2 = VersionParser(s2)
 
     while True:
-        n1 = p1.getnum()
-        n2 = p2.getnum()
-        
-        val = cmp(n1, n2)
-        if val != 0:
-            return val
-
         l1 = p1.getlex()
         l2 = p2.getlex()
 
         val = cmp(l1, l2)
+        if val != 0:
+            return val
+
+        n1 = p1.getnum()
+        n2 = p2.getnum()
+        
+        val = cmp(n1, n2)
         if val != 0:
             return val
 
@@ -85,7 +85,36 @@ def _compare_flat(s1, s2):
         return 0
 
     while True:
-        # parse numeric component for comparison
+        # parse lexical components
+        i = 0
+        for c in s1:
+            if c in '0123456789':
+                break
+            i += 1
+
+        if i:
+            l1 = s1[:i]
+            s1 = s1[i:]
+        else:
+            l1 = ''
+
+        i = 0
+        for c in s2:
+            if c in '0123456789':
+                break
+            i += 1
+
+        if i:
+            l2 = s2[:i]
+            s2 = s2[i:]
+        else:
+            l2 = ''
+
+        val = cmp(l1, l2)
+        if val != 0:
+            return val
+
+        # if lexical component is equal parse numeric component
         i = 0
         for c in s1:
             if c not in '0123456789':
@@ -113,35 +142,6 @@ def _compare_flat(s1, s2):
             n2 = 0
 
         val = cmp(n1, n2)
-        if val != 0:
-            return val
-
-        # if numeric components equal, parse lexical components
-        i = 0
-        for c in s1:
-            if c in '0123456789':
-                break
-            i += 1
-
-        if i:
-            l1 = s1[:i]
-            s1 = s1[i:]
-        else:
-            l1 = ''
-
-        i = 0
-        for c in s2:
-            if c in '0123456789':
-                break
-            i += 1
-
-        if i:
-            l2 = s2[:i]
-            s2 = s2[i:]
-        else:
-            l2 = ''
-
-        val = cmp(l1, l2)
         if val != 0:
             return val
 
