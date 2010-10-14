@@ -3,7 +3,7 @@
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
 <globals body_outline_ratio="0.427672955975">
-	<global_window_position top="0" left="0" height="954" width="732"/>
+	<global_window_position top="10" left="10" height="954" width="732"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -88,7 +88,8 @@
 <v t="zaril.20101011052050"><vh>optimize</vh></v>
 <v t="zaril.20101011074222"><vh>normalize bug</vh></v>
 </v>
-<v t="zaril.20101011023954" a="ETV"><vh>fix autoversion + deckdebuild from checkout</vh></v>
+<v t="zaril.20101011023954" a="E"><vh>fix autoversion + deckdebuild from checkout</vh></v>
+<v t="zaril.20101014093949" a="TV"><vh>bug: lexical comparison in debversion is wrong</vh></v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>TODO</vh>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
@@ -1662,6 +1663,10 @@ optimization bottom line
 python /usr/lib/python2.4/profile.py -s cumulative ./debversion.py</t>
 <t tx="zaril.20101011074222">INSIGHT: we don't need normalize at all!
 
+</t>
+<t tx="zaril.20101014093949">. &gt; ~
+non-letters should sort earlier than letters
+    'a' &lt; '@'
 </t>
 </tnodes>
 </leo_file>

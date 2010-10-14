@@ -50,7 +50,34 @@ class VersionParser:
             return num
 
         return 0
-        
+
+def _lexcmp(a, b):
+    i = 0
+    while True:
+        if len(a) == len(b):
+            if i == len(a):
+                return 0
+        else:
+            if i == len(a):
+                return -1
+
+            if i == len(b):
+                return 1
+
+        if a[i].isalpha():
+            if not b[i].isalpha():
+                return -1
+
+        if b[i].isalpha():
+            if not a[i].isalpha():
+                return 1
+
+        val = cmp(a[i], b[i])
+        if val != 0:
+            return val
+
+        i += 1
+
 # _compare is functionally equivalent to _compare_flat
 # only its much more readable
 def _compare(s1, s2):
@@ -64,7 +91,7 @@ def _compare(s1, s2):
         l1 = p1.getlex()
         l2 = p2.getlex()
 
-        val = cmp(l1, l2)
+        val = _lexcmp(l1, l2)
         if val != 0:
             return val
 
@@ -110,7 +137,7 @@ def _compare_flat(s1, s2):
         else:
             l2 = ''
 
-        val = cmp(l1, l2)
+        val = _lexcmp(l1, l2)
         if val != 0:
             return val
 
