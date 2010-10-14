@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.214884696017">
-	<global_window_position top="0" left="540" height="954" width="730"/>
+<globals body_outline_ratio="0.427672955975">
+	<global_window_position top="0" left="0" height="954" width="732"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -20,7 +20,7 @@
 <v t="loni.20100827184947.6"><vh>usage examples</vh></v>
 </v>
 <v t="loni.20100827184947.7" a="E"><vh>implementation</vh>
-<v t="zaril.20100906050211"><vh>implement full command set for binaries in regular directories</vh>
+<v t="zaril.20100906050211" a="E"><vh>implement full command set for binaries in regular directories</vh>
 <v t="zaril.20100906050211.1"><vh>init /path/to/build-chroot</vh></v>
 <v t="zaril.20100906050211.2"><vh>register / unregister # regular directories</vh></v>
 <v t="zaril.20100906230204"><vh>info</vh></v>
@@ -32,7 +32,7 @@
 </v>
 <v t="zaril.20100909033533"><vh>pool contains pool</vh></v>
 <v t="zaril.20100910205006"><vh>BUG: sync not importing binaries?</vh></v>
-<v t="zaril.20100909050527"><vh>support regular sources in regular directories</vh>
+<v t="zaril.20100909050527" a="E"><vh>support regular sources in regular directories</vh>
 <v t="zaril.20100911052023" a="M"><vh>setup a local caching proxy</vh>
 <v t="zaril.20100912044439" a="M"><vh>fix squid</vh></v>
 <v t="zaril.20100912052909"><vh>configure jaunty to use apt-proxy</vh></v>
@@ -83,16 +83,12 @@
 <v t="zaril.20101007100036"><vh>support binary names</vh></v>
 </v>
 <v t="zaril.20101006120036"><vh>fix pool-info handling of --stocks and --subpools?</vh></v>
-<v t="zaril.20100929180644" a="E"><vh>autoversioning ideas</vh></v>
-<v t="zaril.20101011023841" a="E"><vh>bug: deb_cmp_versions doesn't work correctly</vh>
-<v t="zaril.20101011033852"><vh>research debian versions</vh></v>
-</v>
-<v t="zaril.20101011042720" a="E"><vh>bug: debversion.compare mis-calculating integers</vh>
-<v t="zaril.20101011052050" a="TV"><vh>optimize</vh></v>
+<v t="zaril.20101011023841" a="E"><vh>bug: deb_cmp_versions doesn't work correctly</vh></v>
+<v t="zaril.20101011042720"><vh>bug: debversion.compare mis-calculating integers</vh>
+<v t="zaril.20101011052050"><vh>optimize</vh></v>
 <v t="zaril.20101011074222"><vh>normalize bug</vh></v>
 </v>
-<v t="zaril.20101011042328" a="E"><vh>autoversion support for `branch' from upstream version</vh></v>
-<v t="zaril.20101011023954"><vh>fix autoversion</vh></v>
+<v t="zaril.20101011023954" a="ETV"><vh>fix autoversion + deckdebuild from checkout</vh></v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>TODO</vh>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
@@ -1182,101 +1178,6 @@ Q: how is sbuild different from pbuilder?
 A: doesn't build the package directly from source (pdebuild)
 (though generating source package is not a problem)
 </t>
-<t tx="zaril.20100929180644">scan deltas since last scan
-    yes, to detect which paths changed
-        run sourceversion-list on them
-
-    inefficient alternative
-        if anything changed, run sourceversion-list on all paths
-   
-remember - we're using branches for development
-    don't touch working directory?
-        this way if we have a catastrophic failure - no lost data
-    clone repository for all operations
-    checkout correct branch to a different working directory?
-
-fixed untagged auto-versioning
-    its unclear with untagged versions what is the newest pacakge (sub-day precision)
-        add hour/minute/second precision?
-        add daily count?
-            count all commits today + 1
-
-    need to change auto-version so that untagged versions always precede tagged versions
-        e.g., tagged version = 0.0.1-1-g472ece7
-            package--2010-09-23.1.33879c21
-            package-0-2010-09-23.1.33879c21 
-            package-0000-2010-09-23.1.33879c21
-        
-
-tag-based auto-versioning
-    for single projects only (debian/ in top directory)
-        tags are per-repository
-        reminder: we're using git-describe
-
-    separate program for mappings versions/commits vice versa
-        map commits to versions
-        map versions from commits (rev list -&gt; versions)
-            initially map HEAD -&gt; 
-
-    logic
-        current state saved in a temporary commit
-        map version to commit
-        seek to commit
-        autogenerate a changelog
-        build package
-        restore original state
-
-for non-tagged versioning pool doesn't know how to generate versions
-    it only knows how to read the changelog
-        first line for every changelog commit -&gt; thats the version
-
-    committing changes to more than one package at a time will produce a similar changelog entry
-        in both packages
-
-    moving or copying a source directory looses its history of old versions
-        git-log debian/changelog
-            won't produce 
-
-multiple Debian sources in Sumo arena
-    versions based on changelog entries
-        chanko brings changelog into overlay on first import
-    
-    use hooks to auto-generate changelog entry?
-        append turnkey&lt;N&gt;?
-            configurable string 
-                environment variable
-
-            (could also be .0)
-
-        provide some method of supressing the changelog?
-            touch debian/changelog 
-                if you've changed it yourself, it won't auto-update
-
-    provide user a tool to choose to update the changelog?
-
-    develop Sumo seek capability and commit hooks
-
-multiple Debian sources in Git repositories
-    
-    debian/changelog based versioning
-
-    changes don't necessarily generate a new version
-        you have to change the changelog for a new version to be created
-        
-        a list of changelog commits generated
-            seek to those commits for the contents of that package version
-
-            allow us to develop and commit to packages without effecting pool
-                test packages locally before changing the commit log 
-
-
-          
-* QUESTIONS
-
-Q: is tagged auto-versioning embedded or do we calculate the tagged auto-version independently?
-    we also need the ability to seek back to arbitrary earlier versions
-        seeking back to the tag is trivial
-        seeking back to the offset is simple if unreliable (includes short commit id)</t>
 <t tx="zaril.20100929193931">SUMMARY
     goal: checkout a specific branch to a separate working directory as efficiently as possible
     insight: we may to modify this script somewhat to work with Sumo arenas
@@ -1699,67 +1600,17 @@ IDEA: recreate comparison algorithm
 
 
         </t>
-<t tx="zaril.20101011023954">BUG: bad version returned when tag doesn't start with v
-BUG: premise of autoversioning wrong?
-</t>
-<t tx="zaril.20101011033852">
-RESOURCE: http://people.debian.org/~calvin/unofficial/
+<t tx="zaril.20101011023954">IDEAS:
+    pregenerate the version before copying to the build?
 
-The Debian package version number is parsed from the top entry of debian/changelog, eg. mypackage (1.0-0joe1) unstable; urgency=low. The `-0joe1' is the debian release number. Subsequent releases have release numbers `-0joe2', `-0joe3', etc.
-If there is already an official package, for example with version `1.0-4', then use `1.0-4joe1'.
-You can compare versions with dpkg, see the dpkg(8) manpage for more info.
+    get autoversion HEAD to get the version from the changelog?
 
-advanced package versioning:
+    change the build process to get the version from the changelog?
+        if it can
 
-    * The package version is a beta version or release candidate, for example 1.0b1 or 1.0rc2
-      Problems will arise because dpkg will consider the final version 1.0 lower than the beta or release candidate version. The solution is to use a version like 0.99+1.0rc2-0joe1 which uses a lower version than 1.0 (0.99) and joins the release candidate version with a plus sign. This way the final version is greater than the previous one: 0.99+1.0rc2-0joe1 &lt; 1.0-0joe1.
-    * The new upstream version is lower than the previous one.
-      How can this happen? A simple typo for example. Instead of 1.0 someone uploaded the package as version 10.0. Now the new upstream version 1.1 is not greater than the last one. Solution is to use an epoch: 10.0-0joe1 &lt; 1:1.1-0joe1. See the Debian Policy epoch entry for an explanation.
+        verseek already created that for us
 
-RESOURCE: http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version
-
-5.6.12 Version
-
-The version number of a package. The format is: [epoch:]upstream_version[-debian_revision]
-
-The three components here are:
-
-epoch
-
-    This is a single (generally small) unsigned integer. It may be omitted, in which case zero is assumed. If it is omitted then the upstream_version may not contain any colons.
-
-    It is provided to allow mistakes in the version numbers of older versions of a package, and also a package's previous version numbering schemes, to be left behind.
-
-upstream_version
-
-    This is the main part of the version number. It is usually the version number of the original ("upstream") package from which the .deb file has been made, if this is applicable. Usually this will be in the same format as that specified by the upstream author(s); however, it may need to be reformatted to fit into the package management system's format and comparison scheme.
-
-    The comparison behavior of the package management system with respect to the upstream_version is described below. The upstream_version portion of the version number is mandatory.
-
-    The upstream_version may contain only alphanumerics[33] and the characters . + - : (full stop, plus, hyphen, colon) and should start with a digit. If there is no debian_revision then hyphens are not allowed; if there is no epoch then colons are not allowed.
-
-debian_revision
-
-    This part of the version number specifies the version of the Debian package based on the upstream version. It may contain only alphanumerics and the characters + and . (plus and full stop) and is compared in the same way as the upstream_version is.
-
-    It is optional; if it isn't present then the upstream_version may not contain a hyphen. This format represents the case where a piece of software was written specifically to be turned into a Debian package, and so there is only one "debianization" of it and therefore no revision indication is required.
-
-    It is conventional to restart the debian_revision at 1 each time the upstream_version is increased.
-
-    The package management system will break the version number apart at the last hyphen in the string (if there is one) to determine the upstream_version and debian_revision. The absence of a debian_revision compares earlier than the presence of one (but note that the debian_revision is the least significant part of the version number).
-
-The upstream_version and debian_revision parts are compared by the package management system using the same algorithm:
-
-The strings are compared from left to right.
-
-First the initial part of each string consisting entirely of non-digit characters is determined. These two parts (one of which may be empty) are compared lexically. If a difference is found it is returned. The lexical comparison is a comparison of ASCII values modified so that all the letters sort earlier than all the non-letters.
-
-Then the initial part of the remainder of each string which consists entirely of digit characters is determined. The numerical values of these two parts are compared, and any difference found is returned as the result of the comparison. For these purposes an empty string (which can only occur at the end of one or both version strings being compared) counts as zero.
-
-These two steps (comparing and removing initial non-digit strings and initial digit strings) are repeated until a difference is found or both strings are exhausted.
-
-Note that the purpose of epochs is to allow us to leave behind mistakes in version numbering, and to cope with situations where the version numbering scheme changes. It is not intended to cope with version numbers containing strings of letters which the package management system cannot interpret (such as ALPHA or pre-), or with silly orderings (the author of this manual has heard of a package whose versions went 1.1, 1.2, 1.3, 1, 2.1, 2.2, 2 and so forth). </t>
-<t tx="zaril.20101011042328"></t>
+        this way we don't need Git or autoversion as a build-dependency</t>
 <t tx="zaril.20101011042720">dpkg --compare-versions 0-2010.10.5-d6cbb928 lt 0-2010.10.10-a9ee521c; echo $?
 
 isolated bug:
