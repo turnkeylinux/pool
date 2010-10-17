@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.427672955975">
-	<global_window_position top="10" left="10" height="954" width="732"/>
+<globals body_outline_ratio="0.544025157233">
+	<global_window_position top="0" left="538" height="954" width="732"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -20,7 +20,8 @@
 <v t="loni.20100827184947.6"><vh>usage examples</vh></v>
 </v>
 <v t="loni.20100827184947.7" a="E"><vh>implementation</vh>
-<v t="zaril.20100906050211" a="E"><vh>implement full command set for binaries in regular directories</vh>
+<v t="zaril.20101018013654"><vh>v0.9</vh>
+<v t="zaril.20100906050211" a="E"><vh>implement full command set for binaries in regular directories</vh></v>
 <v t="zaril.20100906050211.1"><vh>init /path/to/build-chroot</vh></v>
 <v t="zaril.20100906050211.2"><vh>register / unregister # regular directories</vh></v>
 <v t="zaril.20100906230204"><vh>info</vh></v>
@@ -29,10 +30,9 @@
 </v>
 <v t="zaril.20100906050211.5"><vh>list</vh></v>
 <v t="zaril.20100906050211.6"><vh>get</vh></v>
-</v>
 <v t="zaril.20100909033533"><vh>pool contains pool</vh></v>
 <v t="zaril.20100910205006"><vh>BUG: sync not importing binaries?</vh></v>
-<v t="zaril.20100909050527" a="E"><vh>support regular sources in regular directories</vh>
+<v t="zaril.20100909050527"><vh>support regular sources in regular directories</vh>
 <v t="zaril.20100911052023" a="M"><vh>setup a local caching proxy</vh>
 <v t="zaril.20100912044439" a="M"><vh>fix squid</vh></v>
 <v t="zaril.20100912052909"><vh>configure jaunty to use apt-proxy</vh></v>
@@ -58,7 +58,7 @@
 <v t="zaril.20100930010726"><vh>fix getpath to get newest packages?</vh>
 <v t="zaril.20100930021923"><vh>pool.Pool().list() can not be invoked twice</vh></v>
 </v>
-<v t="zaril.20100923143609" a="E"><vh>support complex stock types</vh>
+<v t="zaril.20100923143609"><vh>support complex stock types</vh>
 <v t="zaril.20100929193931" a="E"><vh>test/develop lightweight branch cloning</vh></v>
 <v t="zaril.20101003042126"><vh>support Git branches</vh>
 <v t="zaril.20101003051253" a="M"><vh>register git branches</vh></v>
@@ -83,15 +83,19 @@
 <v t="zaril.20101007100036"><vh>support binary names</vh></v>
 </v>
 <v t="zaril.20101006120036"><vh>fix pool-info handling of --stocks and --subpools?</vh></v>
-<v t="zaril.20101011023841" a="E"><vh>bug: deb_cmp_versions doesn't work correctly</vh></v>
 <v t="zaril.20101011042720"><vh>bug: debversion.compare mis-calculating integers</vh>
 <v t="zaril.20101011052050"><vh>optimize</vh></v>
 <v t="zaril.20101011074222"><vh>normalize bug</vh></v>
 </v>
-<v t="zaril.20101011023954" a="E"><vh>fix autoversion + deckdebuild from checkout</vh></v>
-<v t="zaril.20101014093949" a="TV"><vh>bug: lexical comparison in debversion is wrong</vh></v>
 </v>
-<v t="zaril.20101007151726" a="E"><vh>TODO</vh>
+<v t="zaril.20101018013654.1" a="E"><vh>unreleased</vh>
+<v t="zaril.20101011023841" a="EM"><vh>bug: deb_cmp_versions doesn't work correctly</vh></v>
+<v t="zaril.20101014093949" a="M"><vh>bug: lexical comparison in debversion is wrong</vh></v>
+</v>
+</v>
+<v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
+<v t="zaril.20101018013654.3" a="TV"><vh>pool-clean</vh></v>
+<v t="zaril.20101018013654.2" a="E"><vh>optimize pool-get</vh></v>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
 </v>
@@ -465,7 +469,8 @@ latest?
 
 
 A: the action is to generate, the outcome is an instance.</t>
-<t tx="zaril.20100906050211"></t>
+<t tx="zaril.20100906050211">
+</t>
 <t tx="zaril.20100906050211.1">initialize a new pool
 
 * init /path/to/build-chroot
@@ -1601,17 +1606,6 @@ IDEA: recreate comparison algorithm
 
 
         </t>
-<t tx="zaril.20101011023954">IDEAS:
-    pregenerate the version before copying to the build?
-
-    get autoversion HEAD to get the version from the changelog?
-
-    change the build process to get the version from the changelog?
-        if it can
-
-        verseek already created that for us
-
-        this way we don't need Git or autoversion as a build-dependency</t>
 <t tx="zaril.20101011042720">dpkg --compare-versions 0-2010.10.5-d6cbb928 lt 0-2010.10.10-a9ee521c; echo $?
 
 isolated bug:
@@ -1668,5 +1662,9 @@ python /usr/lib/python2.4/profile.py -s cumulative ./debversion.py</t>
 non-letters should sort earlier than letters
     'a' &lt; '@'
 </t>
+<t tx="zaril.20101018013654"></t>
+<t tx="zaril.20101018013654.1"></t>
+<t tx="zaril.20101018013654.2">git-t</t>
+<t tx="zaril.20101018013654.3"></t>
 </tnodes>
 </leo_file>
