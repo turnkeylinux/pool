@@ -20,16 +20,6 @@ class Error(Exception):
 class CircularDependency(Error):
     pass
 
-def deb_parse_filename(filename):
-    """Parses package filename -> (name, version)"""
-
-    if not filename.endswith(".deb"):
-        raise Error("not a package `%s'" % filename)
-    
-    name, version = filename.split("_")[:2]
-
-    return name, version
-
 def deb_get_packages(srcpath):
     controlfile = join(srcpath, "debian/control")
     return [ re.sub(r'^.*?:', '', line).strip()
@@ -44,6 +34,17 @@ class PackageCache:
     def __init__(self, path):
         self.path = path
 
+    @staticmethod
+    def _parse_filename(filename):
+        """Parses package filename -> (name, version)"""
+
+        if not filename.endswith(".deb"):
+            raise Error("not a package `%s'" % filename)
+
+        name, version = filename.split("_")[:2]
+
+        return name, version
+
     def getpath(self, name, version=None):
         """Returns path to package if it exists, or None otherwise.
         """
@@ -53,7 +54,7 @@ class PackageCache:
             if not isfile(filepath) or not filename.endswith(".deb"):
                 continue
 
-            cached_name, cached_version = deb_parse_filename(filename)
+            cached_name, cached_version = self._parse_filename(filename)
             if name == cached_name and (version is None or version == cached_version):
                 return filepath
 
@@ -87,7 +88,7 @@ class PackageCache:
         """List packages in package cache -> list of (package, version)"""
         arr = []
         for filename in os.listdir(self.path):
-            name, version = deb_parse_filename(filename)
+            name, version = self._parse_filename(filename)
             arr.append((name, version))
         return arr
 
