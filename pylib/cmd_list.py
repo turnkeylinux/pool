@@ -36,8 +36,8 @@ def filter_packages(packages, globs):
 
     return filtered
     
-def list_packages(opt_all_versions, globs=None):
-    packages = pool.Pool().list(opt_all_versions)
+def list_packages(all_versions, globs=None):
+    packages = pool.Pool().list(all_versions)
     if globs:
         packages = filter_packages(packages, globs)
 

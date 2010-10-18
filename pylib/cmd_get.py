@@ -113,7 +113,8 @@ def main():
             unresolved.append(package)
 
     if unresolved:
-        resolved += fmt_package_tuples(cmd_list.list_packages(False, unresolved))
+        resolved += fmt_package_tuples(cmd_list.list_packages(all_versions=False,
+                                                              globs=unresolved))
 
     packages = resolved
 
