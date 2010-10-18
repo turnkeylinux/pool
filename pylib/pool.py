@@ -65,13 +65,9 @@ class PackageCache:
     def __init__(self, path):
         self.path = path
 
-    def getpath(self, package):
+    def getpath(self, name, version=None):
         """Returns path to package if it exists, or None otherwise.
-
-        <package> := package-name[=package-version]
         """
-
-        name, version = parse_package_id(package)
         for filename in os.listdir(self.path):
             filepath = join(self.path, filename)
             
@@ -84,16 +80,16 @@ class PackageCache:
 
         return None
         
-    def exists(self, package):
-        """Returns True if <package> exists in cache.
+    def exists(self, name, version=None):
+        """Returns True if package exists in cache.
 
-        <package> := filename | package-name[=package-version]
+        <name> := filename | package-name
         """
 
-        if exists(join(self.path, basename(package))):
+        if exists(join(self.path, basename(name))):
             return True
 
-        return self.getpath(package) != None
+        return self.getpath(name, version) != None
 
     def add(self, path):
         """Add binary to cache. Hardlink if possible, copy otherwise."""
@@ -103,9 +99,9 @@ class PackageCache:
         cached_path = join(self.path, basename(path))
         hardlink_or_copy(path, cached_path)
 
-    def remove(self, package):
+    def remove(self, name, version=None):
         """Remove a specific package/version from the cache"""
-        path = self.getpath(package)
+        path = self.getpath(name, version)
         os.remove(path)
 
     def list(self):
@@ -526,10 +522,12 @@ class Pool(object):
     @sync
     def exists(self, package):
         """Check if package exists in pool -> Returns bool"""
-        if self.pkgcache.exists(package):
+
+        name, version = parse_package_id(package)
+        if self.pkgcache.exists(name, version):
             return True
 
-        if self.stocks.exists_source_version(*parse_package_id(package)):
+        if self.stocks.exists_source_version(name, version):
             return True
         
         for subpool in self.subpools:
@@ -570,10 +568,11 @@ class Pool(object):
         """Get path to package in pool if it exists or None if it doesn't.
         If package exists only in source, build and cache it first.
         """
-        if '=' not in package:
+        package_name, package_version = parse_package_id(package)
+        if package_version is None:
             raise Error("getpath_deb requires explicit version for `%s'" % package)
         
-        path = self.pkgcache.getpath(package)
+        path = self.pkgcache.getpath(package_name, package_version)
         if path:
             return path
 
@@ -582,7 +581,6 @@ class Pool(object):
             if path:
                 return path
 
-        package_name, package_version = parse_package_id(package)
         build_outputdir = tempfile.mkdtemp(dir=self.paths.tmp, prefix="%s-%s." % (package_name, package_version))
 
         source_path = self.stocks.get_source_path(package_name, package_version)
@@ -613,7 +611,7 @@ class Pool(object):
 
         shutil.rmtree(build_outputdir)
 
-        path = self.pkgcache.getpath(package)
+        path = self.pkgcache.getpath(package_name, package_version)
         if not path:
             raise Error("recently built package `%s' missing from cache" % package)
     
@@ -668,12 +666,12 @@ class Pool(object):
 
         whitelist = set()
         for stock, path, versions in self.stocks.get_source_versions():
-            package = basename(path)
-            whitelist |= set([ (package, version) for version in versions ])
+            name = basename(path)
+            whitelist |= set([ (name, version) for version in versions ])
 
         removelist = set(self.pkgcache.list()) - whitelist
-        for package, version in removelist:
-            self.pkgcache.remove(fmt_package_id(package, version))
+        for name, version in removelist:
+            self.pkgcache.remove(name, version)
 
         for stock in self.stocks:
             stock.sync_head = None
