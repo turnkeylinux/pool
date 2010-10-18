@@ -103,6 +103,11 @@ class PackageCache:
         cached_path = join(self.path, basename(path))
         hardlink_or_copy(path, cached_path)
 
+    def remove(self, package):
+        """Remove a specific package/version from the cache"""
+        path = self.getpath(package)
+        os.remove(path)
+
     def list(self):
         """List packages in package cache -> list of (package, version)"""
         arr = []
@@ -182,7 +187,11 @@ class Stock(StockBase):
 
         def __set__(self, obj, val):
             path = obj.paths.SYNC_HEAD
-            file(path, "w").write(val + "\n")
+            if val is None:
+                if exists(path):
+                    os.remove(path)
+            else:
+                file(path, "w").write(val + "\n")
 
     sync_head = SyncHead()
 
@@ -653,10 +662,26 @@ class Pool(object):
 
         return None
 
+    @sync
     def gc(self, recurse=True):
         """Garbage collect stale data from the pool's caches"""
-        print "gc recurse=" + `recurse`
-    
+
+        whitelist = set()
+        for stock, path, versions in self.stocks.get_source_versions():
+            package = basename(path)
+            whitelist |= set([ (package, version) for version in versions ])
+
+        removelist = set(self.pkgcache.list()) - whitelist
+        for package, version in removelist:
+            self.pkgcache.remove(fmt_package_id(package, version))
+
+        for stock in self.stocks:
+            stock.sync_head = None
+
+        if recurse:
+            for subpool in self.subpools:
+                subpool.gc(recurse)
+            
     def sync(self):
         """synchronise pool with registered stocks"""
         self.stocks.sync()

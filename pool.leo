@@ -91,7 +91,7 @@
 <v t="zaril.20101018013654.1" a="E"><vh>unreleased</vh>
 <v t="zaril.20101011023841" a="EM"><vh>bug: deb_cmp_versions doesn't work correctly</vh></v>
 <v t="zaril.20101014093949" a="M"><vh>bug: lexical comparison in debversion is wrong</vh></v>
-<v t="zaril.20101018013654.3" a="TV"><vh>pool-gc</vh></v>
+<v t="zaril.20101018013654.3" a="ETV"><vh>pool-gc</vh></v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
@@ -1676,7 +1676,7 @@ non-letters should sort earlier than letters
         if its a safe behavior it should be the default
 
 
-names
+alternative names
     clean
     refresh
     cleanstale
