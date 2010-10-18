@@ -26,7 +26,9 @@ COMMANDS_USAGE_ORDER = ['init',
                         '',
                         'register', 'unregister', 'info', 'info-build',
                         '',
-                        'exists', 'list', 'get']
+                        'exists', 'list', 'get',
+                        '',
+                        'gc']
 
 def get_copyright():
     return COPYRIGHT % version.get_version()

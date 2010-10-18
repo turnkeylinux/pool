@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.544025157233">
-	<global_window_position top="0" left="538" height="954" width="732"/>
+<globals body_outline_ratio="0.316561844864">
+	<global_window_position top="0" left="450" height="954" width="820"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -91,10 +91,10 @@
 <v t="zaril.20101018013654.1" a="E"><vh>unreleased</vh>
 <v t="zaril.20101011023841" a="EM"><vh>bug: deb_cmp_versions doesn't work correctly</vh></v>
 <v t="zaril.20101014093949" a="M"><vh>bug: lexical comparison in debversion is wrong</vh></v>
+<v t="zaril.20101018013654.3" a="TV"><vh>pool-gc</vh></v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
-<v t="zaril.20101018013654.3" a="TV"><vh>pool-clean</vh></v>
 <v t="zaril.20101018013654.2" a="E"><vh>optimize pool-get</vh></v>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
@@ -1665,6 +1665,37 @@ non-letters should sort earlier than letters
 <t tx="zaril.20101018013654"></t>
 <t tx="zaril.20101018013654.1"></t>
 <t tx="zaril.20101018013654.2">git-t</t>
-<t tx="zaril.20101018013654.3"></t>
+<t tx="zaril.20101018013654.3">logic
+    clear everything out of the cache except binary packages/versions that we have sources for
+        create a whitelist of package versions, delete from the cache everything not on the whitelist
+
+    clear the SYNC_HEAD of stocks so they get rescanned and we get binaries
+
+    clean all subpools
+        optionally?
+        if its a safe behavior it should be the default
+
+
+names
+    clean
+    refresh
+    cleanstale
+    refreshcache
+    updatecache
+    clear
+    sync
+    gc
+
+IDEA:
+    remove cached packages when we unregister a pool?
+        auto-cleaning
+            won't work for binary imports
+
+
+
+
+
+
+</t>
 </tnodes>
 </leo_file>

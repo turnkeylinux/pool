@@ -652,6 +652,10 @@ class Pool(object):
                 return path
 
         return None
+
+    def gc(self, recurse=True):
+        """Garbage collect stale data from the pool's caches"""
+        print "gc recurse=" + `recurse`
     
     def sync(self):
         """synchronise pool with registered stocks"""
