@@ -36,27 +36,6 @@ def deb_get_packages(srcpath):
              for line in file(controlfile).readlines()
              if re.match(r'^Package:', line, re.I) ]
 
-def parse_package_id(package):
-    """Parse package_id string
-
-    <package> := package-name[=package-version]
-
-    Returns (name, version)
-    Returns (name, None) if no version is provided
-    """
-    if "=" in package:
-        name, version = package.split("=", 1)
-    else:
-        name = package
-        version = None
-
-    return name, version
-
-def fmt_package_id(name, version):
-    if version:
-        return "%s=%s" % (name, version)
-    return name
-
 def mkargs(*args):
     return tuple(map(commands.mkarg, args))
 
@@ -487,6 +466,23 @@ class Pool(object):
 
     subpools = Subpools()
 
+    @staticmethod
+    def parse_package_id(package):
+        """Parse package_id string
+
+        <package> := package-name[=package-version]
+
+        Returns (name, version)
+        Returns (name, None) if no version is provided
+        """
+        if "=" in package:
+            name, version = package.split("=", 1)
+        else:
+            name = package
+            version = None
+
+        return name, version
+
     @classmethod
     def init_create(cls, buildroot, path=None):
         paths = PoolPaths(path)
@@ -523,7 +519,7 @@ class Pool(object):
     def exists(self, package):
         """Check if package exists in pool -> Returns bool"""
 
-        name, version = parse_package_id(package)
+        name, version = self.parse_package_id(package)
         if self.pkgcache.exists(name, version):
             return True
 
@@ -568,7 +564,7 @@ class Pool(object):
         """Get path to package in pool if it exists or None if it doesn't.
         If package exists only in source, build and cache it first.
         """
-        package_name, package_version = parse_package_id(package)
+        package_name, package_version = self.parse_package_id(package)
         if package_version is None:
             raise Error("getpath_deb requires explicit version for `%s'" % package)
         
@@ -633,7 +629,7 @@ class Pool(object):
         """Returns build log of specific version requested.
         If no specific version is requested, returns build-log of latest version"""
 
-        name, version = parse_package_id(source_package)
+        name, version = self.parse_package_id(source_package)
         log_versions = []
 
         def get_log_path(log_name, log_version):
