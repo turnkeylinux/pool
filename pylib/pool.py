@@ -401,6 +401,16 @@ class Stocks:
         del self.stocks[stock.name]
         if stock.name in self.subpools:
             del self.subpools[stock.name]
+        else:
+            # remove cached binaries compiled from this stock
+            blacklist = set()
+            for path, versions in stock.source_versions.items():
+                name = basename(path)
+                blacklist |= set([ (name, version) for version in versions ])
+
+            removelist = set(self.pkgcache.list()) & blacklist
+            for name, version in removelist:
+                self.pkgcache.remove(name, version)
 
     def sync(self):
         """sync all non-subpool stocks"""

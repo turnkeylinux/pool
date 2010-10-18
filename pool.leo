@@ -91,7 +91,8 @@
 <v t="zaril.20101018013654.1" a="E"><vh>unreleased</vh>
 <v t="zaril.20101011023841" a="EM"><vh>bug: deb_cmp_versions doesn't work correctly</vh></v>
 <v t="zaril.20101014093949" a="M"><vh>bug: lexical comparison in debversion is wrong</vh></v>
-<v t="zaril.20101018013654.3" a="ETV"><vh>pool-gc</vh></v>
+<v t="zaril.20101018013654.3" a="EM"><vh>pool-gc</vh></v>
+<v t="zaril.20101018204912" a="MTV"><vh>remove cached packages when we unregister a stock</vh></v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
@@ -1686,16 +1687,13 @@ alternative names
     sync
     gc
 
-IDEA:
-    remove cached packages when we unregister a pool?
-        auto-cleaning
-            won't work for binary imports
 
 
 
-
-
-
+</t>
+<t tx="zaril.20101018204912">auto-cleaning
+    won't work for binary imports
+        you'll need to invoke pool-gc to clean up those
 </t>
 </tnodes>
 </leo_file>
