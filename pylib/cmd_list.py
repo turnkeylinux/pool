@@ -64,7 +64,7 @@ def main():
 
     globs = args
     packages = list_packages(opt_all_versions, globs)
-    packages.sort()
+    packages.sort(reverse=True)
 
     if opt_name_only:
         names = set()
