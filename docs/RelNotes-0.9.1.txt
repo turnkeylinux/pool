@@ -1,0 +1,14 @@
+v0.9.1 Release Notes
+====================
+
+* fixed broken Debian version comparison
+  implementation: developed fast and correct comparison module (debversion.py)
+
+* significant optimizations to pool-get operation
+  implementation: rewrote PackageCache class and batched syncs for pool-get
+
+* new command: pool-gc which garbage collects stale data from the pool's caches
+
+* pool-unregister removes cached binaries compiled from the unregistered stock
+
+* misc code refactorings
