@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.316561844864">
+<globals body_outline_ratio="0.14570230608">
 	<global_window_position top="0" left="450" height="954" width="820"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -92,11 +92,14 @@
 <v t="zaril.20101011023841" a="EM"><vh>bug: deb_cmp_versions doesn't work correctly</vh></v>
 <v t="zaril.20101014093949" a="M"><vh>bug: lexical comparison in debversion is wrong</vh></v>
 <v t="zaril.20101018013654.3" a="EM"><vh>pool-gc</vh></v>
-<v t="zaril.20101018204912" a="MTV"><vh>remove cached packages when we unregister a stock</vh></v>
+<v t="zaril.20101018204912" a="M"><vh>remove cached packages when we unregister a stock</vh></v>
+<v t="zaril.20101018013654.2" a="E"><vh>optimize pool-get of cached binary</vh>
+<v t="zaril.20101019010153" a="TV"><vh>add internal cache to PackageCache</vh></v>
+<v t="zaril.20101019010223"><vh>make syncing optional</vh></v>
+</v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
-<v t="zaril.20101018013654.2" a="E"><vh>optimize pool-get</vh></v>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
 </v>
@@ -1665,7 +1668,18 @@ non-letters should sort earlier than letters
 </t>
 <t tx="zaril.20101018013654"></t>
 <t tx="zaril.20101018013654.1"></t>
-<t tx="zaril.20101018013654.2">git-t</t>
+<t tx="zaril.20101018013654.2">IDEAS
+    PackageCache should precache contents of .pool/pkgcache
+        PackageCache.getpath is where most of the time is being spent
+
+    sync as a parameter to the pool?
+        
+    test in p4 (lots of packages)
+
+Q: why is providing a list so much slower?
+A: because the list is verified through pool.exists
+
+</t>
 <t tx="zaril.20101018013654.3">logic
     clear everything out of the cache except binary packages/versions that we have sources for
         create a whitelist of package versions, delete from the cache everything not on the whitelist
@@ -1695,5 +1709,51 @@ alternative names
     won't work for binary imports
         you'll need to invoke pool-gc to clean up those
 </t>
+<t tx="zaril.20101019010153">logic
+    create cache at init
+    append cache on add
+    remove from cache on remove
+    list cache on list
+
+data structure
+    map_filenames
+        (name, version) =&gt; filename
+
+    map_versions
+        name =&gt; [version1, version2...]
+
+* before
+
+    $ time pool-get out $(pool-list)
+    
+    real    0m13.066s
+    user    0m9.981s
+    sys     0m3.052s
+    
+    $ time pool-get out
+    
+    real    0m6.752s
+    user    0m5.292s
+    sys     0m1.340s
+    
+* after 
+
+    52X speedup
+
+    $ time pool-get repo/ $(pool-list)
+    
+    real    0m0.255s
+    user    0m0.176s
+    sys     0m0.044s
+    
+    44X
+
+    $ time pool-get repo/
+    
+    real    0m0.156s
+    user    0m0.112s
+    sys     0m0.008s
+    </t>
+<t tx="zaril.20101019010223"></t>
 </tnodes>
 </leo_file>

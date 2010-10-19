@@ -31,8 +31,6 @@ def mkargs(*args):
 
 class PackageCache:
     """Class representing the pool's package cache"""
-    def __init__(self, path):
-        self.path = path
 
     @staticmethod
     def _parse_filename(filename):
@@ -45,19 +43,40 @@ class PackageCache:
 
         return name, version
 
-    def getpath(self, name, version=None):
-        """Returns path to package if it exists, or None otherwise.
-        """
+    def _list_binaries(self):
+        """List binaries in package cache -> list of package filenames"""
         for filename in os.listdir(self.path):
             filepath = join(self.path, filename)
-            
+
             if not isfile(filepath) or not filename.endswith(".deb"):
                 continue
 
-            cached_name, cached_version = self._parse_filename(filename)
-            if name == cached_name and (version is None or version == cached_version):
-                return filepath
+            yield filename
+            
+    def _register(self, filename):
+        name, version = self._parse_filename(filename)
+        self.filenames[(name, version)] = filename
+        self.packagelist.add(name)
 
+    def _unregister(self, name, version):
+        del self.filenames[(name, version)]
+        self.packagelist.remove(name)
+    
+    def __init__(self, path):
+        self.path = path
+
+        self.filenames = {}
+        self.packagelist = set()
+        
+        for filename in self._list_binaries():
+            self._register(filename)
+
+    def getpath(self, name, version):
+        """Returns path to package if it exists, or None otherwise.
+        """
+        filename = self.filenames.get((name, version))
+        if filename:
+            return join(self.path, filename)
         return None
         
     def exists(self, name, version=None):
@@ -66,31 +85,44 @@ class PackageCache:
         <name> := filename | package-name
         """
 
+        if version:
+            if (name, version) in self.filenames:
+                return True
+            else:
+                return False
+
+        if name in self.packagelist:
+            return True
+
         if exists(join(self.path, basename(name))):
             return True
 
-        return self.getpath(name, version) != None
+        return False
 
     def add(self, path):
         """Add binary to cache. Hardlink if possible, copy otherwise."""
-        if self.exists(basename(path)):
+        filename = basename(path)
+        name, version = self._parse_filename(filename)
+
+        if self.exists(name, version):
             return
 
-        cached_path = join(self.path, basename(path))
-        hardlink_or_copy(path, cached_path)
+        path_cached = join(self.path, filename)
+        hardlink_or_copy(path, path_cached)
 
-    def remove(self, name, version=None):
+        self._register(filename)
+
+    def remove(self, name, version):
         """Remove a specific package/version from the cache"""
         path = self.getpath(name, version)
+        if not path:
+            return
         os.remove(path)
+        self._unregister(name, version)
 
     def list(self):
         """List packages in package cache -> list of (package, version)"""
-        arr = []
-        for filename in os.listdir(self.path):
-            name, version = self._parse_filename(filename)
-            arr.append((name, version))
-        return arr
+        return self.filenames.keys()
 
 def make_relative(root, path):
     """Return <path> relative to <root>.
