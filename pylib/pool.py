@@ -496,7 +496,8 @@ class PoolPaths(Paths):
 
 def sync(method):
     def wrapper(self, *args, **kws):
-        self.sync()
+        if self.autosync:
+            self.sync()
         return method(self, *args, **kws)
     return wrapper
 
@@ -541,7 +542,11 @@ class Pool(object):
 
         return cls(path)
     
-    def __init__(self, path=None, recursed_paths=[]):
+    def __init__(self, path=None, recursed_paths=[], autosync=True):
+        """Initialize pool instance.
+
+        if <autosync> is False, the user is expected to control syncing manually.
+        """
         self.paths = PoolPaths(path)
         self.path = dirname(self.paths.path)
         if not exists(self.paths.path):
@@ -551,6 +556,7 @@ class Pool(object):
         self.stocks = Stocks(self.paths.stocks, self.pkgcache,
                              recursed_paths + [ self.path ])
         mkdir(self.paths.tmp)
+        self.autosync = autosync
     
     def register(self, stock):
         self.stocks.register(stock)

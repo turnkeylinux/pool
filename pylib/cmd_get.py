@@ -93,7 +93,9 @@ def main():
             opt_tree = True
 
 
-    p = pool.Pool()
+    p = pool.Pool(autosync=False)
+    p.sync()
+    
     if input:
         packages += read_packages(input)
 
