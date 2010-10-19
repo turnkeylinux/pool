@@ -14,6 +14,8 @@ import pool
 
 from fnmatch import fnmatch
 
+import debversion
+
 @help.usage(__doc__)
 def usage():
     print >> sys.stderr, "Syntax: %s [ <package-glob> ... ]" % sys.argv[0]
@@ -64,7 +66,14 @@ def main():
 
     globs = args
     packages = list_packages(opt_all_versions, globs)
-    packages.sort(reverse=True)
+
+    def _cmp(a, b):
+        val = cmp(b[0], a[0])
+        if val != 0:
+            return val
+        return debversion.compare(a[1], b[1])
+        
+    packages.sort(cmp=_cmp, reverse=True)
 
     if opt_name_only:
         names = set()
