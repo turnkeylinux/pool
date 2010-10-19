@@ -56,17 +56,22 @@ class PackageCache:
     def _register(self, filename):
         name, version = self._parse_filename(filename)
         self.filenames[(name, version)] = filename
-        self.packagelist.add(name)
+        if name in self.namerefs:
+            self.namerefs[name] += 1
+        else:
+            self.namerefs[name] = 1
 
     def _unregister(self, name, version):
         del self.filenames[(name, version)]
-        self.packagelist.remove(name)
+        self.namerefs[name] -= 1
+        if not self.namerefs[name]:
+            del self.namerefs[name]
     
     def __init__(self, path):
         self.path = path
 
         self.filenames = {}
-        self.packagelist = set()
+        self.namerefs = {}
         
         for filename in self._list_binaries():
             self._register(filename)
@@ -91,7 +96,7 @@ class PackageCache:
             else:
                 return False
 
-        if name in self.packagelist:
+        if name in self.namerefs:
             return True
 
         if exists(join(self.path, basename(name))):
