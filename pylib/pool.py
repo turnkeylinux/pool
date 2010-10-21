@@ -532,6 +532,15 @@ class Pool(object):
 
         return name, version
 
+    @staticmethod
+    def fmt_package_id(name, version):
+        """Format package_id string -> string"""
+
+        if not version:
+            raise Error("can't format package_id with unspecified version")
+
+        return name + "=" + version
+
     @classmethod
     def init_create(cls, buildroot, path=None):
         paths = PoolPaths(path)
@@ -613,6 +622,35 @@ class Pool(object):
 
         return newest.items()
 
+    def resolve(self, unresolved):
+        """Resolve a list of unresolved packages.
+        If unresolved is a single unresolved package,
+        return a single resolved package.
+        
+        If unresolved is a tuple or list of unresolved packages,
+        return a list of resolved packages"""
+
+        args = unresolved
+        if not isinstance(args, (tuple, list)):
+            args = (args,)
+
+        packages = dict(self.list())
+        resolved = []
+
+        for arg in args:
+            name, version = self.parse_package_id(arg)
+            if not version:
+                if name not in packages:
+                    raise Error("can't resolve non-existent package `%s'" % name)
+                version = packages[name]
+
+            resolved.append(self.fmt_package_id(name, version))
+        
+        if not isinstance(unresolved, (tuple, list)):
+            return resolved[0]
+
+        return resolved
+            
     @sync
     def getpath_deb(self, package):
         """Get path to package in pool if it exists or None if it doesn't.

@@ -22,7 +22,6 @@ import re
 
 import pool
 
-import cmd_list
 from common import *
 
 @help.usage(__doc__)
@@ -56,10 +55,6 @@ def get_treedir(pkgname):
         return join(pkgname[:4], pkgname)
     else:
         return join(pkgname[:1], pkgname)
-
-def fmt_package_tuples(package_tuples):
-    return [ name + "=" + version
-             for name, version in package_tuples ]
 
 def main():
     try:
@@ -115,14 +110,13 @@ def main():
             unresolved.append(package)
 
     if unresolved:
-        resolved += fmt_package_tuples(cmd_list.list_packages(all_versions=False,
-                                                              globs=unresolved))
+        resolved += p.resolve(unresolved)
 
     packages = resolved
 
     if not args[1:] and not input:
         # if no packages specified, get all the newest versions
-        packages = fmt_package_tuples(p.list())
+        packages = [ p.fmt_package_id(name, version) for name, version in p.list() ]
 
     for package in packages:
         path_from = p.getpath_deb(package)
