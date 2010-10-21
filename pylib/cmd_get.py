@@ -20,7 +20,7 @@ import getopt
 from os.path import *
 import re
 
-import pool
+from pool import Pool
 
 from common import *
 
@@ -88,8 +88,8 @@ def main():
             opt_tree = True
 
 
-    p = pool.Pool(autosync=False)
-    p.sync()
+    pool = Pool(autosync=False)
+    pool.sync()
     
     if input:
         packages += read_packages(input)
@@ -97,7 +97,7 @@ def main():
     resolved = []
     unresolved = []
     for package in packages:
-        if not p.exists(package):
+        if not pool.exists(package):
             if opt_strict:
                 fatal("%s: no such package" % package)
             if not opt_quiet:
@@ -110,16 +110,16 @@ def main():
             unresolved.append(package)
 
     if unresolved:
-        resolved += p.resolve(unresolved)
+        resolved += pool.resolve(unresolved)
 
     packages = resolved
 
     if not args[1:] and not input:
         # if no packages specified, get all the newest versions
-        packages = [ p.fmt_package_id(name, version) for name, version in p.list() ]
+        packages = [ pool.fmt_package_id(name, version) for name, version in pool.list() ]
 
     for package in packages:
-        path_from = p.getpath_deb(package)
+        path_from = pool.getpath_deb(package)
         fname = basename(path_from)
         
         if opt_tree:
