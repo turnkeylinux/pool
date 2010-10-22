@@ -10,7 +10,7 @@ Options:
 import sys
 import help
 import getopt
-import pool
+from pool import Pool
 
 from fnmatch import fnmatch
 
@@ -39,7 +39,7 @@ def filter_packages(packages, globs):
     return filtered
     
 def list_packages(all_versions, globs=None):
-    packages = pool.Pool().list(all_versions)
+    packages = Pool().list(all_versions)
     if globs:
         packages = filter_packages(packages, globs)
 
