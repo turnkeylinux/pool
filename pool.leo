@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.14570230608">
+<globals body_outline_ratio="0.309224318658">
 	<global_window_position top="0" left="450" height="954" width="820"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -93,13 +93,15 @@
 <v t="zaril.20101014093949" a="M"><vh>bug: lexical comparison in debversion is wrong</vh></v>
 <v t="zaril.20101018013654.3" a="EM"><vh>pool-gc</vh></v>
 <v t="zaril.20101018204912" a="M"><vh>remove cached packages when we unregister a stock</vh></v>
-<v t="zaril.20101018013654.2" a="E"><vh>optimize pool-get of cached binary</vh>
-<v t="zaril.20101019010153" a="TV"><vh>add internal cache to PackageCache</vh></v>
+<v t="zaril.20101018013654.2" a="M"><vh>optimize pool-get'ing a cached binary</vh>
+<v t="zaril.20101019010153"><vh>add internal cache to PackageCache</vh></v>
 <v t="zaril.20101019010223"><vh>make syncing optional</vh></v>
 </v>
+<v t="zaril.20101021175833" a="EMTV"><vh>bug: pool-info-build broken</vh></v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
+<v t="zaril.20101022061317"><vh>bug: pool assumes that packages have always existed in all versions</vh></v>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
 </v>
@@ -1755,5 +1757,49 @@ data structure
     sys     0m0.008s
     </t>
 <t tx="zaril.20101019010223"></t>
+<t tx="zaril.20101021175833">test cases
+    pool-info-build source
+    pool-info-build source=1.2.3
+
+    pool-info-build binary
+    pool-info-build binary=1.2.3
+
+Q: how do we get the newest version of a binary?
+A:
+    we have to list all packages in all subpools, and then select the newest
+        (this is done via list)
+
+
+resolve
+    input: unresolve package[s] 
+    output: resolved package
+
+rewritten logic
+    try to lookup a build log for the package id provided
+        this will work if the package's source name is the same as the binary name
+
+    otherwise, try to lookup the source name for the binary package id spec
+        if the package spec has a version component 
+            lookup that exact name=version in the pool's pkgcache
+                extract the source_name from the binary deb
+
+        else:
+            extract source name from the newest cached binary package with that name
+
+    afer we have the source_name, try to lookup a build log again (under source_name)
+
+
+
+        </t>
+<t tx="zaril.20101022061317">if you add a package to the control file:
+    pool-list will show versions of the package that never existed
+
+if you remove a package from the control file:
+    pool-list won't show package versions that had previously existed
+
+workaround: don't add/remove packages in an existing project - change the name?
+
+so it shows autoversions for packages that never existed
+and if you change the packag</t>
 </tnodes>
 </leo_file>

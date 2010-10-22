@@ -2,9 +2,11 @@
 """Prints source build log for package"""
 import re
 import sys
-import pool
 import help
 import commands
+
+from pool import Pool
+import debversion
 
 def fatal(s):
     print >> sys.stderr, "error: " + str(s)
@@ -29,44 +31,85 @@ def extract_source_name(path):
 
     return None
 
-def getpath_cached(p, package):
-    """get path of cached package, whether in the pool or in a subpool"""
-    path = p.pkgcache.getpath(package)
+def pkgcache_list_versions(pool, name):
+    versions = [ pkgcache_version
+                 for pkgcache_name, pkgcache_version in pool.pkgcache.list()
+                 if pkgcache_name == name ]
+
+    for subpool in pool.subpools:
+        versions += pkgcache_list_versions(subpool, name)
+
+    return versions
+
+def pkgcache_getpath_newest(pool, name):
+    versions = pkgcache_list_versions(pool, name)
+    if not versions:
+        return None
+
+    versions.sort(debversion.compare)
+    version_newest = versions[-1]
+
+    package = pool.fmt_package_id(name, version_newest)
+    return pool.getpath_deb(package, build=False)
+
+def binary2source(pool, package):
+    """translate package from binary to source"""
+    name, version = pool.parse_package_id(package)
+    if version:
+        path = pool.getpath_deb(package, build=False)
+        if not path:
+            return None
+
+        source_name = extract_source_name(path)
+        if not source_name:
+            return package
+
+        return pool.fmt_package_id(source_name, version)
+
+    # no version, extract source from the most recent binary
+    path = pkgcache_getpath_newest(pool, name)
+    if not path:
+        return None
+    
+    source_name = extract_source_name(path)
+    if not source_name:
+        return name
+
+    return source_name
+
+def getpath_build_log(package):
+    try:
+        pool = Pool()
+    except Pool.Error, e:
+        fatal(e)
+
+    path = pool.getpath_build_log(package)
     if path:
         return path
 
-    for subpool in p.subpools:
-        path = getpath_cached(subpool, package)
-        if path:
-            return path
-
-    return None
+    # maybe package is a binary name?
+    # try mapping it to a source name and trying again
     
+    source_package = binary2source(pool, package)
+    if source_package:
+        path = pool.getpath_build_log(source_package)
+
+    if not path:
+        package_desc = `package`
+        if source_package:
+            package_desc += " (%s)" % source_package
+        fatal("no build log for " + package_desc)
+
+    return path
+
 def main():
     args = sys.argv[1:]
     if not args:
         usage()
 
     package = args[0]
-
-    try:
-        p = pool.Pool()
-    except pool.Error, e:
-        fatal(e)
+    path = getpath_build_log(package)
     
-    source_package = package
-    deb = getpath_cached(p, package)
-    if deb:
-        source_name = extract_source_name(deb)
-        if source_name:
-            source_package = source_name
-            if '=' in package:
-                source_package += "=" + package.split("=", 1)[1]
-
-    path = p.getpath_build_log(source_package)
-    if not path:
-        fatal("no build log for `%s' (%s)" % (package, source_package))
-        
     for line in file(path).readlines():
         print line,
 
