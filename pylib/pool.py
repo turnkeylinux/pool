@@ -650,36 +650,21 @@ class Pool(object):
             return resolved[0]
 
         return resolved
-            
-    @sync
-    def getpath_deb(self, package):
-        """Get path to package in pool if it exists or None if it doesn't.
-        If package exists only in source, build and cache it first.
-        """
-        package_name, package_version = self.parse_package_id(package)
-        if package_version is None:
-            raise Error("getpath_deb requires explicit version for `%s'" % package)
-        
-        path = self.pkgcache.getpath(package_name, package_version)
-        if path:
-            return path
 
-        for subpool in self.subpools:
-            path = subpool.getpath_deb(package)
-            if path:
-                return path
+    def _build_package_source(self, name, version):
+        build_outputdir = tempfile.mkdtemp(dir=self.paths.tmp, prefix="%s-%s." % (name, version))
 
-        build_outputdir = tempfile.mkdtemp(dir=self.paths.tmp, prefix="%s-%s." % (package_name, package_version))
-
-        source_path = self.stocks.get_source_path(package_name, package_version)
+        source_path = self.stocks.get_source_path(name, version)
         if not source_path:
             return None
+
+        package = self.fmt_package_id(name, version)
 
         print "### BUILDING PACKAGE: " + package
         print "###           SOURCE: " + source_path
         
         # seek to version, build the package, seek back
-        verseek.seek(source_path, package_version)
+        verseek.seek(source_path, version)
         error = os.system("cd %s && deckdebuild %s %s" % mkargs(source_path, self.buildroot, build_outputdir))
         verseek.seek(source_path)
         
@@ -699,7 +684,33 @@ class Pool(object):
 
         shutil.rmtree(build_outputdir)
 
-        path = self.pkgcache.getpath(package_name, package_version)
+
+    @sync
+    def getpath_deb(self, package, build=True):
+        """Get path to package in pool if it exists or None if it doesn't.
+
+        By default if package exists only in source, build and cache it first.
+        If build is False, we only return the path to packages in the cache.
+        """
+        name, version = self.parse_package_id(package)
+        if version is None:
+            raise Error("getpath_deb requires explicit version for `%s'" % package)
+        
+        path = self.pkgcache.getpath(name, version)
+        if path:
+            return path
+
+        for subpool in self.subpools:
+            path = subpool.getpath_deb(package, build)
+            if path:
+                return path
+
+        if not build:
+            return None
+
+        self._build_package_source(name, version)
+
+        path = self.pkgcache.getpath(name, version)
         if not path:
             raise Error("recently built package `%s' missing from cache" % package)
     
