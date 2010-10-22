@@ -167,7 +167,7 @@ class StockBase(object):
         self.name = basename(path)
         self.link = os.readlink(self.paths.link)
         if not isdir(self.link):
-            raise Error("stock link to non-directory `%s'" % stock.link)
+            raise Error("stock link to non-directory `%s'" % self.link)
 
 class StockPool(StockBase):
     """Class for managing a subpool-type stock"""
