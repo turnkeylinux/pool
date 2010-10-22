@@ -596,15 +596,11 @@ class Pool(object):
         return False
 
     @sync
-    def list(self, all_versions=False):
-        """List packages in pool -> list of (name, version) tuples.
-
-        If all_versions is True, returns all versions of packages,
-        otherwise, returns only the newest versions.
-        """
+    def _list(self, all_versions):
+        """List packages in pool -> list of (name, version) tuples."""
         packages = set()
         for subpool in self.subpools:
-            packages |= set(subpool.list(all_versions))
+            packages |= set(subpool._list(all_versions))
             
         packages |= set(self.pkgcache.list())
         for stock, path, versions in self.stocks.get_source_versions():
@@ -622,6 +618,15 @@ class Pool(object):
 
         return newest.items()
 
+    def list(self, all_versions=False):
+        """List packages in pool -> list of packages.
+
+        If all_versions is True, returns all versions of packages,
+        otherwise, returns only the newest versions.
+        """
+        return [ self.fmt_package_id(name, version)
+                 for name, version in self._list(all_versions) ]
+
     def resolve(self, unresolved):
         """Resolve a list of unresolved packages.
         If unresolved is a single unresolved package,
@@ -634,7 +639,7 @@ class Pool(object):
         if not isinstance(args, (tuple, list)):
             args = (args,)
 
-        packages = dict(self.list())
+        packages = dict(self._list())
         resolved = []
 
         for arg in args:

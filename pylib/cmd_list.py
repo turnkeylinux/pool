@@ -28,8 +28,11 @@ def fatal(s):
 def filter_packages(packages, globs):
     filtered = []
     for glob in globs:
-        matches = [ (name, version) for name, version in packages
-                    if fnmatch(name, glob) ]
+        matches = []
+        for package in packages:
+            name, version = Pool.parse_package_id(package)
+            if fnmatch(name, glob):
+                matches.append(package)
 
         if not matches:
             print >> sys.stderr, "warning: %s: no matching packages" % glob
@@ -43,7 +46,7 @@ def list_packages(all_versions, globs=None):
     if globs:
         packages = filter_packages(packages, globs)
 
-    return packages
+    return [ Pool.parse_package_id(package) for package in packages ]
 
 def main():
     try:

@@ -116,7 +116,7 @@ def main():
 
     if not args[1:] and not input:
         # if no packages specified, get all the newest versions
-        packages = [ pool.fmt_package_id(name, version) for name, version in pool.list() ]
+        packages = pool.list()
 
     for package in packages:
         path_from = pool.getpath_deb(package)
