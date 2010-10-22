@@ -16,9 +16,10 @@ Options:
 """
 from os.path import *
 import sys
-import pool
 import help
 import getopt
+
+from pool import Pool
 
 def fatal(s):
     print >> sys.stderr, "error: " + str(s)
@@ -43,41 +44,41 @@ class RigidVal:
     def get(self):
         return self.val
 
-def print_registered(p):
-    if p.stocks:
+def print_registered(pool):
+    if pool.stocks:
         print "# stocks"
-    print_stocks(p)
+    print_stocks(pool)
 
-    if p.subpools:
-        if p.stocks:
+    if pool.subpools:
+        if pool.stocks:
             print
         print "# subpools"
-        print_subpools(p)
+        print_subpools(pool)
     
-def print_stocks(p):
-    for stock in p.stocks:
+def print_stocks(pool):
+    for stock in pool.stocks:
         addr = stock.link
         if stock.branch:
             addr += "#" + stock.branch
         print addr
 
-def print_subpools(p):
-    for subpool in p.subpools:
+def print_subpools(pool):
+    for subpool in pool.subpools:
         print subpool.path
 
-def print_build_root(p):
-    print p.buildroot
+def print_build_root(pool):
+    print pool.buildroot
 
-def print_pkgcache(p):
-    p.sync()
-    for name, version in p.pkgcache.list():
+def print_pkgcache(pool):
+    pool.sync()
+    for name, version in pool.pkgcache.list():
         print name + "=" + version
 
-def print_source_versions(p):
-    p.sync()
+def print_source_versions(pool):
+    pool.sync()
 
     output = []
-    for stock, path, versions in p.stocks.get_source_versions():
+    for stock, path, versions in pool.stocks.get_source_versions():
         for version in versions:
             package = basename(path) + "=" + version
             relative_path = dirname(path)
@@ -91,20 +92,20 @@ def print_source_versions(p):
             print "%s  %s  %s" % (package.ljust(package_width),
                                   stock_name.ljust(stock_name_width),
                                   relative_path)
-def print_build_logs(p):
-    for log_name, log_version in p.build_logs:
+def print_build_logs(pool):
+    for log_name, log_version in pool.build_logs:
         print log_name + "=" + log_version
 
-def info(func, recursive, p=None):
-    if p is None:
-        p = pool.Pool()
+def info(func, recursive, pool=None):
+    if pool is None:
+        pool = Pool()
 
     if recursive:
-        print "### POOL_DIR=" + p.path
+        print "### POOL_DIR=" + pool.path
 
-    func(p)
+    func(pool)
     if recursive:
-        for subpool in p.subpools:
+        for subpool in pool.subpools:
             print
             info(func, recursive, subpool)
 
@@ -161,7 +162,7 @@ def main():
 
     try:
         info(func, recursive)
-    except pool.Error, e:
+    except Pool.Error, e:
         fatal(e)
 
 if __name__ == "__main__":
