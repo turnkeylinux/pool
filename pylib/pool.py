@@ -229,15 +229,19 @@ class Stock(StockBase):
         else:
             checkout = Git(checkout_path)
 
-        # checkout latest changes
-        commit = orig.rev_parse(self.branch)
-        if not commit:
-            raise Error("no such branch `%s' at %s" % (self.branch, self.link))
-        
-        checkout.update_ref("refs/heads/" + self.branch, commit)
+        def dup_branch(branch):
+            # checkout latest changes
+            commit = orig.rev_parse(branch)
+            if not commit:
+                raise Error("no such branch `%s' at %s" % (branch, self.link))
+            checkout.update_ref("refs/heads/" + branch, commit)
+
+        dup_branch(self.branch)
         checkout.checkout("-q", "-f", self.branch)
 
         if exists(join(checkout_path, "arena.internals")):
+            dup_branch(self.branch + "-thin")
+
             command = "cd %s && sumo-open" % commands.mkarg(checkout_path)
             error = os.system(command)
             if error:
@@ -435,6 +439,14 @@ class Stocks:
             raise Error("multiple implicit matches for unregister")
 
         stock = matches[0]
+
+        checkout_path = stock.paths.checkout
+        if exists(join(checkout_path, "arena.internals")):
+            command = "cd %s && sumo-close" % commands.mkarg(checkout_path)
+            error = os.system(command)
+            if error:
+                raise Error("failed command: " + command)
+        
         shutil.rmtree(stock.paths.path)
         del self.stocks[stock.name]
         if stock.name in self.subpools:
@@ -509,6 +521,8 @@ def sync(method):
 class Pool(object):
     """Class for creating and controlling a Pool.
     This class's public methods map roughly to the pool's cli interface"""
+
+    Error = Error
     class Subpools(object):
         def __get__(self, obj, type):
             return obj.stocks.get_subpools()

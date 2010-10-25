@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.309224318658">
+<globals body_outline_ratio="0.557651991614">
 	<global_window_position top="0" left="450" height="954" width="820"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -97,7 +97,8 @@
 <v t="zaril.20101019010153"><vh>add internal cache to PackageCache</vh></v>
 <v t="zaril.20101019010223"><vh>make syncing optional</vh></v>
 </v>
-<v t="zaril.20101021175833" a="EMTV"><vh>bug: pool-info-build broken</vh></v>
+<v t="zaril.20101021175833" a="EM"><vh>bug: pool-info-build broken</vh></v>
+<v t="zaril.20101025111704" a="MTV"><vh>bug: pool doesn't reproduce thin branch</vh></v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
@@ -1801,5 +1802,6 @@ workaround: don't add/remove packages in an existing project - change the name?
 
 so it shows autoversions for packages that never existed
 and if you change the packag</t>
+<t tx="zaril.20101025111704"></t>
 </tnodes>
 </leo_file>
