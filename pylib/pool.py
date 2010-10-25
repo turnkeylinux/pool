@@ -639,7 +639,7 @@ class Pool(object):
         if not isinstance(args, (tuple, list)):
             args = (args,)
 
-        packages = dict(self._list())
+        packages = dict(self._list(all_versions=False))
         resolved = []
 
         for arg in args:
