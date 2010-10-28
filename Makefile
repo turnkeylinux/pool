@@ -82,8 +82,9 @@ _install: execproxy
 	([ -f debian/changelog ] && (dpkg-parsechangelog | awk '/^Version/ {print $$2 }') || \
 		autoversion HEAD) > $(PATH_INSTALL)/version.txt
 
-#	install -m 4755 _$(progname) $(PATH_BIN)/$(progname) # install SUID 
+	rm -f $(PATH_BIN)/$(progname)
 	install -m 755 _$(progname) $(PATH_BIN)/$(progname)
+#	install -m 4755 _$(progname) $(PATH_BIN)/$(progname) # install SUID 
 	-cp -P $(progname)-* $(PATH_BIN)	
 
 install-nodoc: pycompile-nodoc _install
