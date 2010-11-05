@@ -670,12 +670,8 @@ class Pool(object):
 
         return resolved
 
-    def _build_package_source(self, name, version):
+    def _build_package_source(self, source_path, name, version):
         build_outputdir = tempfile.mkdtemp(dir=self.paths.tmp, prefix="%s-%s." % (name, version))
-
-        source_path = self.stocks.get_source_path(name, version)
-        if not source_path:
-            return None
 
         package = self.fmt_package_id(name, version)
 
@@ -727,7 +723,11 @@ class Pool(object):
         if not build:
             return None
 
-        self._build_package_source(name, version)
+        source_path = self.stocks.get_source_path(name, version)
+        if not source_path:
+            return None
+
+        self._build_package_source(source_path, name, version)
 
         path = self.pkgcache.getpath(name, version)
         if not path:
