@@ -440,18 +440,18 @@ class Stocks:
 
         stock = matches[0]
 
-        checkout_path = stock.paths.checkout
-        if exists(join(checkout_path, "arena.internals")):
-            command = "cd %s && sumo-close" % commands.mkarg(checkout_path)
-            error = os.system(command)
-            if error:
-                raise Error("failed command: " + command)
-        
-        shutil.rmtree(stock.paths.path)
         del self.stocks[stock.name]
-        if stock.name in self.subpools:
+        if isinstance(stock, StockPool):
             del self.subpools[stock.name]
         else:
+            # close sumo arena if it exists
+            checkout_path = stock.paths.checkout
+            if exists(join(checkout_path, "arena.internals")):
+                command = "cd %s && sumo-close" % commands.mkarg(checkout_path)
+                error = os.system(command)
+                if error:
+                    raise Error("failed command: " + command)
+
             # remove cached binaries compiled from this stock
             blacklist = set()
             for path, versions in stock.source_versions.items():
@@ -461,6 +461,8 @@ class Stocks:
             removelist = set(self.pkgcache.list()) & blacklist
             for name, version in removelist:
                 self.pkgcache.remove(name, version)
+
+        shutil.rmtree(stock.paths.path)
 
     def sync(self):
         """sync all non-subpool stocks"""
