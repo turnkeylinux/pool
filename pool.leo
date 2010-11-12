@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.557651991614">
-	<global_window_position top="0" left="450" height="954" width="820"/>
+<globals body_outline_ratio="0.285115303983">
+	<global_window_position top="0" left="0" height="954" width="820"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -98,10 +98,15 @@
 <v t="zaril.20101019010223"><vh>make syncing optional</vh></v>
 </v>
 <v t="zaril.20101021175833" a="EM"><vh>bug: pool-info-build broken</vh></v>
-<v t="zaril.20101025111704" a="MTV"><vh>bug: pool doesn't reproduce thin branch</vh></v>
+<v t="zaril.20101025111704" a="M"><vh>bug: pool doesn't reproduce thin branch</vh></v>
+<v t="zaril.20101105195018" a="TV"><vh>setup regression testing suite</vh>
+<v t="zaril.20101112071603"><vh>setup pyhello</vh></v>
+</v>
+<v t="zaril.20101111222506"><vh>clean up pool code?</vh></v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
+<v t="zaril.20101101154405"><vh>bug: permission problems when root runs the pool</vh></v>
 <v t="zaril.20101022061317"><vh>bug: pool assumes that packages have always existed in all versions</vh></v>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
@@ -1803,5 +1808,73 @@ workaround: don't add/remove packages in an existing project - change the name?
 so it shows autoversions for packages that never existed
 and if you change the packag</t>
 <t tx="zaril.20101025111704"></t>
+<t tx="zaril.20101101154405">1) have the pool internal directories setuid to the user who initialized it? If root executes the pool, the pool should create a file inside the internals it should be owned by 
+2) have the pool temporarily drop privileges to the user who owns the pool (worse)</t>
+<t tx="zaril.20101105195018">IDEAS
+    perform all operations via subpool
+    test stock sources should be part of the suite
+    buildroot should also be part of the test suite
+        script that performs all of these operations
+    script should fail on error
+    tee script output and compare with reference?
+        minus random shit
+
+    create a tarball of the testsuite contents
+    unregister everything before deleting
+./
+
+* stock types
+    regular directory
+    git repository
+        non-checked out branch
+    git single
+    sumo repository
+    sub pool
+
+* operations
+init
+
+register
+unregister
+info
+    all options
+
+exists package &amp;&amp; exists package=version
+    binary that exists
+    source version
+    source version that doesn't exist
+    random non-existant foo package
+
+list 
+    should match specific number of versions
+list -a
+list -n
+
+get
+    info-build # should fail
+    get non-built package
+    info-build # should succeed    
+    get cached package
+    get binary package
+        add binary to regular repository
+
+commit to a package
+    exists: check that the new version exists?
+    list: check that we can see it?
+
+garblage collection
+    unregister branch with sources
+    gc
+    try to get previously cached binary # should fail
+
+
+    commit to all stocks and see if the new version is registered
+
+    </t>
+<t tx="zaril.20101111222506">IDEAS
+    sumo related code needs to be cleaned up?
+    detect a Sumo type Stock and create separate class for handling Sumo stocks?</t>
+<t tx="zaril.20101112071603">maybe start with plain test and move up?
+</t>
 </tnodes>
 </leo_file>
