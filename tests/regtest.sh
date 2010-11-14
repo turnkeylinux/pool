@@ -6,13 +6,16 @@ usage() {
     echo "  If no testing options are specified - test everything"
     echo
     echo "Options:"
-    echo "  --info    test pool-info"
-    echo "  --list    test pool-list"
-    echo "  --exists  test pool-exists"
-    echo "  --commit  test new version detection after committing to stocks"
-    echo "  --getnew  test pool-get of newest versions"
-    echo "  --getall  test pool-get of all versions (new and old)"
-    echo "  --gc      test garbage collection"
+    echo "  --nodelete  dont delete test pool at the end"
+    echo "              (default if test fails)"
+    echo 
+    echo "  --info      test pool-info"
+    echo "  --list      test pool-list"
+    echo "  --exists    test pool-exists"
+    echo "  --commit    test new version detection after committing to stocks"
+    echo "  --getnew    test pool-get of newest versions"
+    echo "  --getall    test pool-get of all versions (new and old)"
+    echo "  --gc        test garbage collection"
     
     exit 1
 }
@@ -23,6 +26,10 @@ fi
 
 for arg; do
     case "$arg" in
+	--nodelete)
+	    nodelete=yes
+	    ;;
+
         --info)
 	    test_info=yes
             ;;
@@ -184,14 +191,20 @@ pool-info -r --build-logs
 
 pool-gc
 
-echo === destroying test pool $testbase
+if [ -z "$nodelete" ]; then
+    echo === destroying test pool $testbase
 
-cd subpool
-for stock in $(pool-info --stocks; pool-info --subpools); do
-    pool-unregister $stock
-done
-cd ../
-pool-unregister subpool
-rm -rf subpool
-rm -rf $testbase
+    cd subpool
+    for stock in $(pool-info --stocks; pool-info --subpools); do
+	pool-unregister $stock
+    done
+    cd ../
+    pool-unregister subpool
+    rm -rf subpool
+    rm -rf $testbase
+else
+    echo
+    echo PRESERVING TEST POOL: $testbase
+fi
+
 
