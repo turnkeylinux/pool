@@ -38,10 +38,19 @@ def forked(method):
             raise val
         return val
     return wrapper
-    
+
+def drop_privileges(method):
+    def wrapper(*args, **kws):
+        os.setgid(1000)
+        os.setuid(1000)
+        return method(*args, **kws)
+    return wrapper
 @forked
+@drop_privileges
 def test(s):
     print "test pid: " + `os.getpid()`
+    print "uid=%d gid=%d" % (os.getuid(), os.getgid())
+    
     # raise Error("foo")
     return "test: " + str(s)
 
@@ -50,5 +59,9 @@ try:
     print `test("string")`
 except Error, e:
     print "caught Error: " + str(e)
+
+print os.getuid()
+print os.getgid()
+
 
     
