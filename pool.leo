@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.285115303983">
-	<global_window_position top="0" left="0" height="954" width="820"/>
+<globals body_outline_ratio="0.400419287212">
+	<global_window_position top="0" left="484" height="954" width="784"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -99,14 +99,16 @@
 </v>
 <v t="zaril.20101021175833" a="EM"><vh>bug: pool-info-build broken</vh></v>
 <v t="zaril.20101025111704" a="M"><vh>bug: pool doesn't reproduce thin branch</vh></v>
-<v t="zaril.20101105195018" a="TV"><vh>setup regression testing suite</vh>
+<v t="zaril.20101105195018" a="M"><vh>setup regression testing suite</vh>
 <v t="zaril.20101112071603"><vh>setup pyhello</vh></v>
 </v>
-<v t="zaril.20101111222506"><vh>clean up pool code?</vh></v>
+<v t="zaril.20101111222506" a="M"><vh>clean up pool code?</vh></v>
+<v t="zaril.20101101154405" a="E"><vh>bug: permission problems when root runs the pool</vh>
+<v t="zaril.20101114125827" a="TV"><vh>bug: pool-list delayed</vh></v>
+</v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
-<v t="zaril.20101101154405"><vh>bug: permission problems when root runs the pool</vh></v>
 <v t="zaril.20101022061317"><vh>bug: pool assumes that packages have always existed in all versions</vh></v>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
@@ -1808,8 +1810,49 @@ workaround: don't add/remove packages in an existing project - change the name?
 so it shows autoversions for packages that never existed
 and if you change the packag</t>
 <t tx="zaril.20101025111704"></t>
-<t tx="zaril.20101101154405">1) have the pool internal directories setuid to the user who initialized it? If root executes the pool, the pool should create a file inside the internals it should be owned by 
-2) have the pool temporarily drop privileges to the user who owns the pool (worse)</t>
+<t tx="zaril.20101101154405">logic
+    if running as root
+        drop privileges to user that owns the pool directory
+
+    GOTCHA: programs running under seteuid don't get the dropped privileges
+        they get the full privileges
+            we could implement our own system
+
+    IDEA: dedicated code for dropping privileges transparently in a sub-process
+
+    
+IDEAS
+    drop privileges via decorator
+    stress test pool as root
+
+
+
+E: have the pool internal directories setuid to the user who initialized it? If root executes the pool, the pool should create a file inside the internals it should be owned by 
+R: doesn't work
+
+E: have the pool temporarily drop privileges to the user who owns the pool
+R: 
+
+
+Q: which files are owned by root after pool-get?
+A:
+find .pool -user root
+
+./build/logs/pyproject_0+2010.11.12+05.32.34+58133553.build
+./pkgcache/pyproject_0+2010.11.12+05.32.34+58133553_i386.deb
+./stocks/pyproject#master/checkout/.git/HEAD
+./stocks/pyproject#master/checkout/.git/index
+
+to drop privileges temporarily
+    os.seteuid(1000)
+        you can regain privileges with os.seteuid(0)
+
+to drop privileges permanently
+    os.setuid(1000)
+    os.setreuid(1000, 1000)
+
+to reset effective uid = 0, real uid != 0 (simulate suid): 
+    os.setreuid(1000, 0)</t>
 <t tx="zaril.20101105195018">IDEAS
     perform all operations via subpool
     test stock sources should be part of the suite
@@ -1871,10 +1914,42 @@ garblage collection
     commit to all stocks and see if the new version is registered
 
     </t>
-<t tx="zaril.20101111222506">IDEAS
+<t tx="zaril.20101111222506">SUMMARY
+    not important enough to warrant the extra complexity
+
+IDEAS
     sumo related code needs to be cleaned up?
-    detect a Sumo type Stock and create separate class for handling Sumo stocks?</t>
+    detect a Sumo type Stock and create separate class for handling Sumo stocks?
+
+where do we have Sumlo specific code?
+
+Stock._get_workdir
+    if its a sumo arena then
+        then thin branch is also dupped
+        sumo arena is opened
+
+    IDEA: we could do the sumo check in an overriden _get_workdir
+
+Stock.unregister
+    if its a sumo arena then we close it
+        we can't implement that by overriding the method
+
+    unless we implemented a special cleanup hook
+
+
+
+
+
+</t>
 <t tx="zaril.20101112071603">maybe start with plain test and move up?
+</t>
+<t tx="zaril.20101114125827">PROBLEM: the data structures aren't being updated by sync because they're in a subprocess
+
+SOLUTION: we need to reload them in the parent process
+
+test
+    pool-unregister /turnkey/projects/pyproject/; pool-register /turnkey/projects/pyproject/; pool-info --source-versions
+
 </t>
 </tnodes>
 </leo_file>

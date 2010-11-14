@@ -13,6 +13,7 @@ import verseek
 import debversion
 
 from git import Git
+from forked import forked
 
 class Error(Exception):
     pass
@@ -349,7 +350,7 @@ class Stocks:
 
     Iterating an instance of this class produces all non-subpool type stocks.
     """
-    def _init_stock(self, path_stock):
+    def _load_stock(self, path_stock):
         stock = None
         try:
             stock = StockPool(path_stock, self.recursed_paths)
@@ -363,21 +364,27 @@ class Stocks:
             stock = Stock(path_stock, self.pkgcache)
 
         self.stocks[stock.name] = stock
+
+    def _load_stocks(self):
+        self.stocks = {}
+        self.subpools = {}
+        
+        for stock_name in os.listdir(self.path):
+            path_stock = join(self.path, stock_name)
+            if not isdir(path_stock):
+                continue
+
+            self._load_stock(path_stock)
     
     def __init__(self, path, pkgcache, recursed_paths=[]):
         self.path = path
         self.pkgcache = pkgcache
-
-        self.stocks = {}
-        self.subpools = {}
         self.recursed_paths = recursed_paths
-        
-        for stock_name in os.listdir(path):
-            path_stock = join(path, stock_name)
-            if not isdir(path_stock):
-                continue
 
-            self._init_stock(path_stock)
+        self._load_stocks()
+
+    def reload(self):
+        self._load_stocks()
             
     def __iter__(self):
         # iterate across all stocks except subpools
@@ -422,7 +429,7 @@ class Stocks:
 
         stock_path = join(self.path, stock_name)
         Stock.create(stock_path, dir)
-        self._init_stock(stock_path)
+        self._load_stock(stock_path)
         
     def unregister(self, stock):
         dir, branch = self._parse_stock(stock)
@@ -520,6 +527,29 @@ def sync(method):
         return method(self, *args, **kws)
     return wrapper
 
+def drop_privileges(method):
+    def wrapper(self, *args, **kws):
+        owner_uid = os.stat(self.paths.path).st_uid
+        owner_gid = os.stat(self.paths.path).st_gid
+
+        uid = os.getuid()
+
+        if uid == owner_uid or uid != 0:
+            return method(self, *args, **kws)
+
+        def f():
+            os.setgid(owner_gid)
+            os.setuid(owner_uid)
+            return method(self, *args, **kws)
+
+        f = forked(f)
+        ret = f()
+        
+        self.stocks.reload()
+        return ret
+    
+    return wrapper
+
 class Pool(object):
     """Class for creating and controlling a Pool.
     This class's public methods map roughly to the pool's cli interface"""
@@ -588,12 +618,15 @@ class Pool(object):
         mkdir(self.paths.tmp)
         self.autosync = autosync
     
+    @drop_privileges
     def register(self, stock):
         self.stocks.register(stock)
-        
+
+    @drop_privileges
     def unregister(self, stock):
         self.stocks.unregister(stock)
 
+    @drop_privileges
     @sync
     def exists(self, package):
         """Check if package exists in pool -> Returns bool"""
@@ -702,6 +735,7 @@ class Pool(object):
         shutil.rmtree(build_outputdir)
 
 
+    @drop_privileges
     @sync
     def getpath_deb(self, package, build=True):
         """Get path to package in pool if it exists or None if it doesn't.
@@ -800,6 +834,7 @@ class Pool(object):
             for subpool in self.subpools:
                 subpool.gc(recurse)
             
+    @drop_privileges
     def sync(self):
         """synchronise pool with registered stocks"""
         self.stocks.sync()
