@@ -1,4 +1,70 @@
 #!/bin/sh
+
+usage() {
+    echo "syntax: $0 [ --options ]"
+    echo 
+    echo "  If no testing options are specified - test everything"
+    echo
+    echo "Options:"
+    echo "  --info    test pool-info"
+    echo "  --list    test pool-list"
+    echo "  --exists  test pool-exists"
+    echo "  --commit  test new version detection after committing to stocks"
+    echo "  --getnew  test pool-get of newest versions"
+    echo "  --getall  test pool-get of all versions (new and old)"
+    echo "  --gc      test garbage collection"
+    
+    exit 1
+}
+
+if [ "$1" == "-h" ]; then
+    usage
+fi
+
+for arg; do
+    case "$arg" in
+        --info)
+	    test_info=yes
+            ;;
+        --list)
+	    test_list=yes
+            ;;
+        --exists)
+	    test_exists=yes
+            ;;
+        --commit)
+	    test_commit=yes
+            ;;
+        --getnew)
+	    test_getnew=yes
+            ;;
+        --getall)
+	    test_getall=yes
+            ;;
+        --gc)
+	    test_gc=yes
+            ;;
+	    
+        *)
+	    usage
+    esac
+done
+
+OPTS="info list exists commit getnew getall gc"
+
+noopts=yes
+for opt in $OPTS; do
+    if [ -n "$(eval echo \$test_$opt)" ]; then
+	noopts=no
+    fi
+done
+
+if [ "$noopts" = "yes" ]; then
+    for opt in $OPTS; do
+	eval test_$opt=yes
+    done
+fi
+
 set -ex
 base=$(pwd)
 
@@ -9,7 +75,6 @@ testbase=$(mktemp -d -t test.XXXXXX)
 
 cd $testbase
 pool-init /turnkey/fab/buildroots/jaunty
-pool-info --build-root
 
 mkdir subpool
 tar -C subpool -xvf $base/regtest-stocks.tar.bz2 
