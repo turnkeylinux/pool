@@ -97,99 +97,112 @@ done
 cd ../
 pool-register subpool
 
-pool-info -r
-pool-info -r --stocks
-pool-info -r --subpools
-pool-info -r --source-versions
+if [ -n "$test_info" ]; then
+    pool-info -r
+    pool-info -r --stocks
+    pool-info -r --subpools
 
-pool-list
-pool-list -a
-pool-list -n
+    pool-info -r --build-root
+    pool-info -r --build-logs
+    
+    pool-info -r --pkgcache
+    pool-info -r --source-versions
+fi
 
-pool-list 'x*'
-pool-list -a '*'
+if [ -n "$test_list" ]; then
+    pool-list
+    pool-list -a
+    pool-list -n
 
-for pkg in $(pool-list -n); do
-    pool-exists $pkg
-done
+    pool-list 'x*'
+    pool-list -a '*'
+fi
 
-for pkg in $(pool-list -a); do
-    pool-exists $pkg
-done
+if [ -n "$test_exists" ]; then
+    for pkg in $(pool-list -n); do
+	pool-exists $pkg
+    done
 
-pool-exists nosuchpackage || true
-pool-exists nosuchpackage=1.1 || true
-pool-exists sumo=666 || true
+    for pkg in $(pool-list -a); do
+	pool-exists $pkg
+    done
 
-echo === testing committing to stocks
-pool-list 
+    pool-exists nosuchpackage || true
+    pool-exists nosuchpackage=1.1 || true
+fi
 
-# save previous versions in environment variables
-for pkg in plain git1 git2 gitsingle; do
-    eval $pkg=$(pool-list $pkg)
-done
+if [ -n "$test_commit" ]; then
+    echo === testing committing to stocks
+    pool-list 
 
-cd subpool/stocks/
-files="debian/changelog pylib/cmd_pyhello.py"
-cd plain/plain
-sed -i 's/1\.0/1.1/' $files
-cd ../../
+    # save previous versions in environment variables
+    for pkg in plain git1 git2 gitsingle; do
+	eval $pkg=$(pool-list $pkg)
+    done
 
-cd gitsingle
-echo '# foo' >> Makefile
-git-commit -v -m "increment autoversion" Makefile
-cd ../
+    cd subpool/stocks/
+    files="debian/changelog pylib/cmd_pyhello.py"
+    cd plain/plain
+    sed -i 's/1\.0/1.1/' $files
+    cd ../../
 
-cd git
-cd git1
-sed -i 's/1\.1/1.2/' $files
-git-commit -v -m "increment to version 1.2" $files
+    cd gitsingle
+    echo '# foo' >> Makefile
+    git-commit -v -m "increment autoversion" Makefile
+    cd ../
 
-cd ../git2
-sed -i 's/1\.2/1.3/' $files
-git-commit -v -m "increment to version 1.3" $files
-cd ../../
+    cd git
+    cd git1
+    sed -i 's/1\.1/1.2/' $files
+    git-commit -v -m "increment to version 1.2" $files
 
-cd ../../../
-pool-list
+    cd ../git2
+    sed -i 's/1\.2/1.3/' $files
+    git-commit -v -m "increment to version 1.3" $files
+    cd ../../
 
-# if any of the versions haven't changed, raise the alarm
-for pkg in plain git1 git2 gitsingle; do
-    [ "$(pool-list $pkg)" != "$(eval echo \$$pkg)" ] || false
-done
-pwd
+    cd ../../../
+    pool-list
 
-echo "=== getting all packages (building from source)"
-pool-get .
-rm *.deb
+    # if any of the versions haven't changed, raise the alarm
+    for pkg in plain git1 git2 gitsingle; do
+	[ "$(pool-list $pkg)" != "$(eval echo \$$pkg)" ] || false
+    done
+fi
 
-echo "=== getting all packages (cached)"
-pool-get .
-rm *.deb
+if [ -n "$test_getall" ] || [ -n "$test_getnew" ]; then
+    echo "=== getting all packages (building from source)"
+    pool-get .
+    rm *.deb
 
-echo "=== getting all packages into tree (cached)"
-mkdir tree
-pool-get -t tree
-find tree/
+    echo "=== getting all packages (cached)"
+    pool-get .
+    rm *.deb
 
-echo "=== get newest packages by name"
-for pkg in $(pool-list -n); do
-    pool-get . $pkg
-done
+    echo "=== getting all packages into tree (cached)"
+    mkdir tree
+    pool-get -t tree
+    find tree/
 
-rm *.deb
-pool-info -r --pkgcache
-pool-info -r --build-logs
+    echo "=== get newest packages by name"
+    for pkg in $(pool-list -n); do
+	pool-get . $pkg
+    done
 
-echo "=== get historical versions of packages"
-for pkg in $(pool-list -a); do
-    pool-get . $pkg
-done
+    rm *.deb
+    pool-info -r --pkgcache
+    pool-info -r --build-logs
+fi
 
-pool-info -r --pkgcache
-pool-info -r --build-logs
+if [ -n "$test_getall" ]; then
+    echo "=== get historical versions of packages"
+    for pkg in $(pool-list -a); do
+	pool-get . $pkg
+    done
 
-pool-gc
+    pool-info -r --pkgcache
+    pool-info -r --build-logs
+fi
 
 if [ -z "$nodelete" ]; then
     echo === destroying test pool $testbase
@@ -206,5 +219,10 @@ else
     echo
     echo PRESERVING TEST POOL: $testbase
 fi
+
+
+
+
+
 
 
