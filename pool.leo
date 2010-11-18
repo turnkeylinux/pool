@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.400419287212">
-	<global_window_position top="0" left="484" height="954" width="784"/>
+<globals body_outline_ratio="0.489517819706">
+	<global_window_position top="0" left="0" height="954" width="986"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -104,11 +104,12 @@
 </v>
 <v t="zaril.20101111222506" a="M"><vh>clean up pool code?</vh></v>
 <v t="zaril.20101101154405" a="E"><vh>bug: permission problems when root runs the pool</vh>
-<v t="zaril.20101114125827" a="TV"><vh>bug: pool-list delayed</vh></v>
+<v t="zaril.20101114125827"><vh>bug: pool-list delayed</vh></v>
 </v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
+<v t="zaril.20101118214921" a="TV"><vh>add pool-info command that shows the source of binary packages</vh></v>
 <v t="zaril.20101022061317"><vh>bug: pool assumes that packages have always existed in all versions</vh></v>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
@@ -1949,6 +1950,10 @@ SOLUTION: we need to reload them in the parent process
 
 test
     pool-unregister /turnkey/projects/pyproject/; pool-register /turnkey/projects/pyproject/; pool-info --source-versions
+
+</t>
+<t tx="zaril.20101118214921">use case: Alon wants to figure out from which stock the aufs-modules package came from, how does he do this?
+
 
 </t>
 </tnodes>
