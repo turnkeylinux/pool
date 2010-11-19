@@ -50,16 +50,18 @@ def setup(method):
         
     return wrapper
 
+class Error(Exception):
+    def __str__(self):
+        return str(self.args[0])
+
 class Git(object):
     """Class for interfacing with a git repository.
 
     Most methods that are documented to return values raise an exception on error,
     except if the method is documented to return None on error.
     """
-    class Error(Exception):
-        def __str__(self):
-            return str(self.args[0])
-
+    Error = Error
+    
     class MergeMsg(object):
         """Magical attribute.
 
