@@ -30,7 +30,7 @@ def fatal(s):
 def main():
     args = sys.argv[1:]
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'Rh', ['disable-recursion'])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], 'Rh', ['disable-recursion'])
     except getopt.GetoptError, e:
         usage(e)
 

@@ -50,7 +50,7 @@ def list_packages(all_versions, globs=None):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'an',
+        opts, args = getopt.gnu_getopt(sys.argv[1:], 'an',
                                    ['all-versions', 'name-only'])
     except getopt.GetoptError, e:
         usage(e)

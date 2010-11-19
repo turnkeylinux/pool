@@ -58,7 +58,7 @@ def get_treedir(pkgname):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'i:sqt',
+        opts, args = getopt.gnu_getopt(sys.argv[1:], 'i:sqt',
                                    ['input=', 'strict', 'quiet', 'tree'])
     except getopt.GetoptError, e:
         usage(e)

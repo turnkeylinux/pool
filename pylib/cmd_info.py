@@ -111,7 +111,7 @@ def info(func, recursive, pool=None):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hr',
+        opts, args = getopt.gnu_getopt(sys.argv[1:], 'hr',
                                    ['registered',
                                     'stocks',
                                     'subpools',
