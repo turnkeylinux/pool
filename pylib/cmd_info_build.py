@@ -6,6 +6,7 @@ import help
 import commands
 
 from pool import Pool
+import deb
 import debversion
 
 def fatal(s):
@@ -17,15 +18,7 @@ def usage():
     print >> sys.stderr, "Syntax: %s package[=version]" % sys.argv[0]
 
 def extract_source_name(path):
-    def extract_control(path):
-        return commands.getoutput("ar -p %s control.tar.gz | zcat | tar -O -xf - control ./control 2>/dev/null" % path)
-
-    def parse_control(contents):
-        return dict([ re.split("\s*:\s+", line.strip(), 1)
-                      for line in contents.split("\n")
-                      if line.strip() and not line.startswith(" ") ])
-
-    fields = parse_control(extract_control(path))
+    fields = deb.extract_control_fields(path)
     if 'Source' in fields:
         return fields['Source']
 
