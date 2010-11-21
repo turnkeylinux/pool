@@ -15,6 +15,8 @@ import debversion
 from git import Git
 from forked import forked
 
+import deb
+
 class Error(Exception):
     pass
 
@@ -107,12 +109,15 @@ class PackageCache:
 
     def add(self, path):
         """Add binary to cache. Hardlink if possible, copy otherwise."""
-        filename = basename(path)
-        name, version = self._parse_filename(filename)
-
+        control_fields = deb.extract_control_fields(path)
+        name = control_fields['Package']
+        version = control_fields['Version']
+        
         if self.exists(name, version):
             return
 
+        arch = control_fields['Architecture']
+        filename = "%s_%s_%s.deb" % (name, version, arch)
         path_cached = join(self.path, filename)
         hardlink_or_copy(path, path_cached)
 

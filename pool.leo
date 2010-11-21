@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.489517819706">
-	<global_window_position top="0" left="0" height="954" width="986"/>
+<globals body_outline_ratio="0.0766045548654">
+	<global_window_position top="0" left="506" height="966" width="765"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -103,13 +103,15 @@
 <v t="zaril.20101112071603"><vh>setup pyhello</vh></v>
 </v>
 <v t="zaril.20101111222506" a="M"><vh>clean up pool code?</vh></v>
-<v t="zaril.20101101154405" a="E"><vh>bug: permission problems when root runs the pool</vh>
+<v t="zaril.20101101154405"><vh>bug: permission problems when root runs the pool</vh>
 <v t="zaril.20101114125827"><vh>bug: pool-list delayed</vh></v>
 </v>
+<v t="zaril.20101120011327" a="ETV"><vh>bug: pool ignores epoch in versions</vh></v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
-<v t="zaril.20101118214921" a="TV"><vh>add pool-info command that shows the source of binary packages</vh></v>
+<v t="zaril.20101120203018"><vh>bug: mishandling udebs?</vh></v>
+<v t="zaril.20101118214921"><vh>add pool-info command that shows the source of binary packages</vh></v>
 <v t="zaril.20101022061317"><vh>bug: pool assumes that packages have always existed in all versions</vh></v>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
@@ -1955,6 +1957,54 @@ test
 <t tx="zaril.20101118214921">use case: Alon wants to figure out from which stock the aufs-modules package came from, how does he do this?
 
 
+</t>
+<t tx="zaril.20101120011327">* IDEAS
+experiment with a package that has a version in its epoch
+
+when we import a package into the cache, set the filename to includes epoch appropriately
+    cache package information so we don't have to re-extract it?
+        optimize later - test it works first! (and then test performance first)
+            md5sum should be much much faster
+            
+also set arch
+    Architecture field
+
+* SCRATCH
+packages with epochs
+    1:
+        xwd
+        xutils
+    
+    2:    
+        cdrecord
+
+Q: where are packages imported?
+A: pkgcache.add
+
+    
+Q: why don't package's have version epochs in the filename?
+    E: try renaming a package to include epoch
+
+    dpkg -f package.deb 
+        shows control fields
+    dpkg -I package.deb
+        shows info/summary
+
+    dpkg -e package.deb
+        extracts DEBIAN
+A:
+    it seems to work
+    we would 
+
+
+TEST:
+    pool-gc; pool-list xwd
+
+
+
+
+</t>
+<t tx="zaril.20101120203018">lsb-release-udeb missing?
 </t>
 </tnodes>
 </leo_file>
