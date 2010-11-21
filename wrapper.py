@@ -2,7 +2,8 @@
 # Copyright (c) 2010 TurnKey Linux - all rights reserved
 """
 Environment variables:
-    POOL_DIR		Location of pool (defaults to `.')
+    POOL_DIR            Location of pool (defaults to `.')
+    DEBINFO_DIR         Location of debinfo cache (default: $HOME/.debinfo)
 """
 
 import re

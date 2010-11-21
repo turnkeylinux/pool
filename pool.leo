@@ -106,7 +106,18 @@
 <v t="zaril.20101101154405"><vh>bug: permission problems when root runs the pool</vh>
 <v t="zaril.20101114125827"><vh>bug: pool-list delayed</vh></v>
 </v>
-<v t="zaril.20101120011327" a="ETV"><vh>bug: pool ignores epoch in versions</vh></v>
+<v t="zaril.20101120011327" a="E"><vh>bug: pool ignores epoch in versions</vh>
+<v t="zaril.20101121151810" a="ETV"><vh>optimize</vh>
+<v t="zaril.20101121190053"><vh>optimize parse_control</vh></v>
+<v t="zaril.20101121170651" a="E"><vh>implement a generic key/value filesystem cache</vh></v>
+<v t="zaril.20101121182502"><vh>profile optimization</vh></v>
+</v>
+<v t="zaril.20101121151810"><vh>optimize</vh>
+<v t="zaril.20101121190053"><vh>optimize parse_control</vh></v>
+<v t="zaril.20101121170651" a="E"><vh>implement a generic key/value filesystem cache</vh></v>
+<v t="zaril.20101121182502"><vh>profile optimization</vh></v>
+</v>
+</v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
@@ -2005,6 +2016,141 @@ TEST:
 
 </t>
 <t tx="zaril.20101120203018">lsb-release-udeb missing?
+</t>
+<t tx="zaril.20101121151810">SUMMARY:
+    using debinfo, the first time is more expensive
+
+    when we can cache the debinfo key, looking up the control file in a cache is 120X faster than extracting it every time by a subcommand
+
+    if we can't cache the debinfo key, then we need to calculate 
+
+    
+
+* TEST #1
+cd pools/rocky; pool-gc; pool-list 
+
+BEFORE:
+real    0m45.550s
+user    0m6.052s
+sys     0m5.028s
+
+AFTER:
+cd real    0m57.015s
+user    0m11.713s
+sys     0m11.021s
+
+GOTCHA: we need to isolate the overhead more
+
+* TEST #1
+
+dumped rocky packages to a plain directory
+created p13 registered that plain directory
+
+pool-list
+    reminder - has to be rescanned on every invocation
+
+BEFORE:
+real    0m6.443s
+user    0m3.136s
+sys     0m3.192s
+
+AFTER: 
+(cached)
+real    0m3.250s
+user    0m3.140s
+sys     0m0.248s
+
+(not cached)
+real    0m9.743s
+user    0m5.940s
+sys     0m3.744s
+
+
+IDEA: implement a generic filesystem based cache
+    key / value
+
+IDEA:
+    pool's control cache should be generic
+        maybe shared with other programs (like fab and chanko)
+
+    $HOME/.debinfo
+
+Q: is caching the control file effective?
+A: the bottleneck is in IO for the digest. 
+For small files it is much much more efficient:
+    bench(lambda: get_control_by_path(package), 500)
+    500 runs in 0.1935 seconds (2584.15 per/sec)
+    
+    bench(lambda: get_control_by_path(package, usecache=False), 500)
+    500 runs in 4.9849 seconds (100.30 per/sec)
+    
+    
+If we can we batch IO expensive key calculation, then just looking up the control file purely
+by key is 4 times faster:
+
+    package_key = get_key(package)
+
+    bench(lambda: get_control_by_key(package_key), 5000)
+    5000 runs in 0.4246 seconds (11774.73 per/sec)
+</t>
+<t tx="zaril.20101121170651">* SCRATCH
+support generic keys
+identify when the key is already a hash
+
+Q: what do we call it?
+
+Q: do we allow generic key listing?
+A: we could, but only hashes
+
+* hashstore
+others
+
+    hashdir
+    dirstore
+    dircache
+    hashdir
+    dir
+    objectstore
+    
+
+
+
+file structure
+    XX/XXXXX
+        contians value
+
+    
+with </t>
+<t tx="zaril.20101121182502">   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    5.670    5.670 profile:0(command.module.main())
+        1    0.000    0.000    5.670    5.670 &lt;string&gt;:1(?)
+        1    0.040    0.040    5.670    5.670 cmd_list.py:51(main)
+        1    0.000    0.000    5.550    5.550 cmd_list.py:44(list_packages)
+        1    0.000    0.000    5.350    5.350 pool.py:529(wrapper)
+        1    0.000    0.000    5.350    5.350 pool.py:675(list)
+        1    0.000    0.000    5.310    5.310 pool.py:479(sync)
+        1    0.000    0.000    5.310    5.310 pool.py:842(sync)
+        1    0.000    0.000    5.310    5.310 pool.py:536(wrapper)
+        1    0.000    0.000    5.310    5.310 pool.py:335(sync)
+        1    0.030    0.030    5.310    5.310 pool.py:317(_sync)
+      595    0.230    0.000    5.090    0.009 debinfo.py:54(extract_control_fields)
+      595    0.000    0.000    5.090    0.009 pool.py:110(add)
+      595    0.020    0.000    4.360    0.007 debinfo.py:44(extract_control)
+      595    0.660    0.001    4.150    0.007 debinfo.py:22(hashfile)
+    33456    2.890    0.000    2.890    0.000 :0(update)
+    34646    0.620    0.000    0.620    0.000 :0(read)
+     6957    0.100    0.000    0.330    0.000 sre.py:154(split)
+      595    0.030    0.000    0.190    0.000 hashstore.py:20(get)
+      2/1    0.000    0.000    0.170    0.170 pool.py:610(__init__)
+        1    0.010    0.010    0.150    0.150 pool.py:73(__init__)
+     6976    0.100    0.000    0.140    0.000 sre.py:213(_compile)
+     9101    0.130    0.000    0.130    0.000 :0(split)
+
+
+</t>
+<t tx="zaril.20101121190053">before optimization: 3.5K/sec
+after: 23K/sec
+
 </t>
 </tnodes>
 </leo_file>
