@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.0766045548654">
+<globals body_outline_ratio="0.373706004141">
 	<global_window_position top="0" left="506" height="966" width="765"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -107,15 +107,12 @@
 <v t="zaril.20101114125827"><vh>bug: pool-list delayed</vh></v>
 </v>
 <v t="zaril.20101120011327" a="E"><vh>bug: pool ignores epoch in versions</vh>
-<v t="zaril.20101121151810" a="ETV"><vh>optimize</vh>
+<v t="zaril.20101121151810" a="E"><vh>optimize</vh>
 <v t="zaril.20101121190053"><vh>optimize parse_control</vh></v>
 <v t="zaril.20101121170651" a="E"><vh>implement a generic key/value filesystem cache</vh></v>
 <v t="zaril.20101121182502"><vh>profile optimization</vh></v>
-</v>
-<v t="zaril.20101121151810"><vh>optimize</vh>
-<v t="zaril.20101121190053"><vh>optimize parse_control</vh></v>
-<v t="zaril.20101121170651" a="E"><vh>implement a generic key/value filesystem cache</vh></v>
-<v t="zaril.20101121182502"><vh>profile optimization</vh></v>
+<v t="zaril.20101121203823" a="TV"><vh>use md5sum instead of sha1?</vh></v>
+<v t="zaril.20101121195130"><vh>calculate key just by the hash of the control</vh></v>
 </v>
 </v>
 </v>
@@ -2152,5 +2149,19 @@ with </t>
 after: 23K/sec
 
 </t>
+<t tx="zaril.20101121195130">should save us quite a bit of IO time
+
+but we need to extract it from Python
+
+    maybe there is python code to do this?
+
+linux-image-2.6.20-15
+linux-hardened-image
+libgl1-mesa-dri
+mozilla-thunderbird
+firefox
+
+</t>
+<t tx="zaril.20101121203823">md5 is much faster</t>
 </tnodes>
 </leo_file>

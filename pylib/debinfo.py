@@ -7,7 +7,7 @@ import os
 from os.path import *
 
 from hashstore import HashStore
-import sha
+import md5
 
 class Error(Exception):
     pass
@@ -23,9 +23,9 @@ def _init_debinfo_cache():
 _cache = _init_debinfo_cache()
 
 def _hashfile(path, size=65536):
-    """slurp in file at <path> into a SHA-1 hash function.
+    """slurp in file at <path> into a MD5 hash function.
     Return a hex encoded digest"""
-    hash = sha.new()
+    hash = md5.new()
 
     fh = file(path)
     while True:
