@@ -6,8 +6,12 @@ import commands
 import os
 from os.path import *
 
-from hashstore import HashStore
 import md5
+import tarfile
+from cStringIO import StringIO
+
+import ar
+from hashstore import HashStore
 
 class Error(Exception):
     pass
@@ -37,13 +41,10 @@ def _hashfile(path, size=65536):
     return hash.hexdigest()
 
 def _extract_control(path):
-    """extract the control file directly from the Debian binary package (no caching)"""
-    command = "ar -p %s control.tar.gz | zcat | tar -O -xf - ./control 2>/dev/null" % path
-    error, output = commands.getstatusoutput(command)
-    if error:
-        raise Error("failed to extract control file with `%s`" % command)
-
-    return output
+    control_tar_gz = ar.extract(path, "control.tar.gz")
+    fh = StringIO(control_tar_gz)
+    tar = tarfile.open("control.tar.gz", mode="r:gz", fileobj=fh)
+    return tar.extractfile("control").read()
 
 def get_key(path):
     """calculate the debinfo key for a Debian binary package at <path>"""
