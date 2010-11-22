@@ -26,20 +26,6 @@ def _init_debinfo_cache():
 
 _cache = _init_debinfo_cache()
 
-def _hashfile(path, size=65536):
-    """slurp in file at <path> into a MD5 hash function.
-    Return a hex encoded digest"""
-    hash = md5.new()
-
-    fh = file(path)
-    while True:
-        block = fh.read(size)
-        if not block:
-            break
-        hash.update(block)
-
-    return hash.hexdigest()
-
 def _extract_control(path):
     control_tar_gz = ar.extract(path, "control.tar.gz")
     fh = StringIO(control_tar_gz)
@@ -48,7 +34,7 @@ def _extract_control(path):
 
 def get_key(path):
     """calculate the debinfo key for a Debian binary package at <path>"""
-    return _hashfile(path)
+    return md5.md5(ar.extract(path, "control.tar.gz")).hexdigest()
 
 def get_control_by_key(key):
     """get control data from debinfo cache by <key> -> str"""
