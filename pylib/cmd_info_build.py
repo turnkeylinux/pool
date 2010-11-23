@@ -6,7 +6,7 @@ import help
 import commands
 
 from pool import Pool
-import deb
+import debinfo
 import debversion
 
 def fatal(s):
@@ -18,7 +18,7 @@ def usage():
     print >> sys.stderr, "Syntax: %s package[=version]" % sys.argv[0]
 
 def extract_source_name(path):
-    fields = deb.extract_control_fields(path)
+    fields = debinfo.get_control_fields(path)
     if 'Source' in fields:
         return fields['Source']
 
