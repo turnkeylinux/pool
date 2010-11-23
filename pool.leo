@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.298136645963">
+<globals body_outline_ratio="0.350931677019">
 	<global_window_position top="-3" left="633" height="966" width="637"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -119,11 +119,14 @@
 </v>
 <v t="zaril.20101122225546"><vh>optimization: implement extraction of control file fully in Python</vh></v>
 </v>
-<v t="zaril.20101120203018" a="ETV"><vh>bug: mishandling udebs?</vh></v>
+<v t="zaril.20101120203018"><vh>bug: mishandling udebs?</vh></v>
+<v t="zaril.20101118214921" a="ETV"><vh>add pool-info command that shows the source of binary packages</vh>
+<v t="zaril.20101123043551"><vh>add --binary-versions option to pool-info command</vh></v>
+<v t="zaril.20101123051529"><vh>update auto-gc on unregister</vh></v>
+</v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
-<v t="zaril.20101118214921"><vh>add pool-info command that shows the source of binary packages</vh></v>
 <v t="zaril.20101022061317"><vh>bug: pool assumes that packages have always existed in all versions</vh></v>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
@@ -239,6 +242,10 @@ A:
             source-versions/
                 &lt;relative-path&gt;/&lt;package&gt;
                     contains cached list of versions
+
+            binary-versions/
+                &lt;relative-path&gt;/&lt;package-filename&gt;
+                    zero size
 
             SYNC_HEAD # contains the last checkout/.git/HEAD we synced against
             checkout/
@@ -1966,13 +1973,19 @@ test
     pool-unregister /turnkey/projects/pyproject/; pool-register /turnkey/projects/pyproject/; pool-info --source-versions
 
 </t>
-<t tx="zaril.20101118214921">use case: Alon wants to figure out from which stock the aufs-modules package came from, how does he do this?
-
-INSIGHT: implementing this would allow us to eliminate a use case for garbage collection
+<t tx="zaril.20101118214921">INSIGHT: implementing this would allow us to eliminate a use case for garbage collection
 
     when we unregister a stock it would clear any binaries from that stock
         don't need to run gc
 
+Q: how do we store it?
+
+Q: are source versions for plain identified?
+A: yes they are
+
+
+IDEAS:
+    same principle as source versions but only for binaries?
 
 </t>
 <t tx="zaril.20101120011327">* IDEAS
@@ -2335,5 +2348,9 @@ E: how much of an improvement if we turn on psyco?
 
     
 </t>
+<t tx="zaril.20101123043551">use case: Alon wants to figure out from which stock the aufs-modules package came from, how does he do this?
+
+</t>
+<t tx="zaril.20101123051529"></t>
 </tnodes>
 </leo_file>

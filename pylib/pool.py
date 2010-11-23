@@ -199,7 +199,7 @@ class Stock(StockBase):
     """Class for managing a non-subpool-type stock."""
 
     class Paths(StockBase.Paths):
-        files = [ 'source-versions', 'SYNC_HEAD', 'checkout' ]
+        files = [ 'source-versions', 'binary-versions', 'SYNC_HEAD', 'checkout' ]
                 
     class SyncHead(object):
         """Magical attribute.
@@ -323,6 +323,12 @@ class Stock(StockBase):
             fh.close()
 
             self.source_versions[join(relative_path, package)] = versions
+
+    def _sync_update_binary_versions(self, path):
+        relative_path = make_relative(self.workdir, path)
+        binary_version_path = join(self.paths.binary_versions, relative_path)
+        mkdir(dirname(binary_version_path))
+        file(binary_version_path, "w").truncate() # create zero length file
     
     def _sync(self, dir=None):
         """recursive sync back-end.
@@ -338,9 +344,21 @@ class Stock(StockBase):
             fpath = join(dir, fname)
             if not islink(fpath) and isfile(fpath) and get_suffix(fname) in ('deb', 'udeb'):
                 self.pkgcache.add(fpath)
+                self._sync_update_binary_versions(fpath)
 
             if isdir(fpath):
                 self._sync(fpath)
+
+    def binary_versions(self):
+        relative_paths = []
+        for dpath, dnames, fnames in os.walk(self.paths.binary_versions):
+            for fname in fnames:
+                fpath = join(dpath, fname)
+                relative_paths.append(make_relative(self.paths.binary_versions, fpath))
+
+        return relative_paths
+            
+    binary_versions = property(binary_versions)
         
     def sync(self):
         """sync stock by updating source versions and importing binaries into the cache"""
@@ -350,9 +368,11 @@ class Stock(StockBase):
                 return
 
         # delete old cached versions
-        if exists(self.paths.source_versions):
-            shutil.rmtree(self.paths.source_versions)
-            mkdir(self.paths.source_versions)
+        for path in (self.paths.source_versions, self.paths.binary_versions):
+            if exists(path):
+                shutil.rmtree(path)
+                mkdir(path)
+
         self.source_versions = {}
         
         self._sync()
