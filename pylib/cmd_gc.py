@@ -2,13 +2,13 @@
 """Garbage collect stale data from the pool's caches
 
 Stale data includes:
-A) A binary that does not have a corresponding source in any of the
+A) A binary in the package cache that does not belong in any of the
    registered stocks.
 
-   This deletes imported binary packages from registered stocks as well,
-   which will be subsequently re-imported at the next pool operation.
-   
-B) Cached package versions.
+   This includes binary packages which have since been removed from a
+   registered stock.
+
+B) Cached binary and source package versions.
 
 Options:
   -R --disable-recursion    Disable recursive garbage collection of subpools

@@ -29,8 +29,15 @@ def deb_get_packages(srcpath):
              for line in file(controlfile).readlines()
              if re.match(r'^Package:', line, re.I) ]
 
-def mkargs(*args):
-    return tuple(map(commands.mkarg, args))
+def parse_package_filename(filename):
+    """Parses package filename -> (name, version)"""
+
+    if not get_suffix(filename) in ('deb', 'udeb'):
+        raise Error("not a package `%s'" % filename)
+
+    name, version = filename.split("_")[:2]
+
+    return name, version
 
 def get_suffix(filename):
     try:
@@ -40,17 +47,6 @@ def get_suffix(filename):
 
 class PackageCache:
     """Class representing the pool's package cache"""
-
-    @staticmethod
-    def _parse_filename(filename):
-        """Parses package filename -> (name, version)"""
-
-        if not get_suffix(filename) in ('deb', 'udeb'):
-            raise Error("not a package `%s'" % filename)
-
-        name, version = filename.split("_")[:2]
-
-        return name, version
 
     def _list_binaries(self):
         """List binaries in package cache -> list of package filenames"""
@@ -63,7 +59,7 @@ class PackageCache:
             yield filename
             
     def _register(self, filename):
-        name, version = self._parse_filename(filename)
+        name, version = parse_package_filename(filename)
         self.filenames[(name, version)] = filename
         if name in self.namerefs:
             self.namerefs[name] += 1
@@ -505,6 +501,9 @@ class Stocks:
                 name = basename(path)
                 blacklist |= set([ (name, version) for version in versions ])
 
+            blacklist |= set([ parse_package_filename(basename(path))
+                               for path in stock.binaries ])
+
             removelist = set(self.pkgcache.list()) & blacklist
             for name, version in removelist:
                 self.pkgcache.remove(name, version)
@@ -745,6 +744,9 @@ class Pool(object):
         print "### BUILDING PACKAGE: " + package
         print "###           SOURCE: " + source_path
         
+        def mkargs(*args):
+            return tuple(map(commands.mkarg, args))
+
         # seek to version, build the package, seek back
         verseek.seek(source_path, version)
         error = os.system("cd %s && deckdebuild %s %s" % mkargs(source_path, self.buildroot, build_outputdir))
@@ -855,6 +857,9 @@ class Pool(object):
             for path, versions in stock.sources:
                 name = basename(path)
                 whitelist |= set([ (name, version) for version in versions ])
+
+            whitelist |= set([ parse_package_filename(basename(path))
+                               for path in stock.binaries ])
 
         removelist = set(self.pkgcache.list()) - whitelist
         for name, version in removelist:
