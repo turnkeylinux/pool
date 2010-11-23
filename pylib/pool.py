@@ -32,6 +32,12 @@ def deb_get_packages(srcpath):
 def mkargs(*args):
     return tuple(map(commands.mkarg, args))
 
+def get_suffix(filename):
+    try:
+        return filename.rsplit(".", 1)[1]
+    except IndexError:
+        return None
+
 class PackageCache:
     """Class representing the pool's package cache"""
 
@@ -39,7 +45,7 @@ class PackageCache:
     def _parse_filename(filename):
         """Parses package filename -> (name, version)"""
 
-        if not filename.endswith(".deb"):
+        if not get_suffix(filename) in ('deb', 'udeb'):
             raise Error("not a package `%s'" % filename)
 
         name, version = filename.split("_")[:2]
@@ -51,7 +57,7 @@ class PackageCache:
         for filename in os.listdir(self.path):
             filepath = join(self.path, filename)
 
-            if not isfile(filepath) or not filename.endswith(".deb"):
+            if not isfile(filepath) or not get_suffix(filename) in ('deb', 'udeb'):
                 continue
 
             yield filename
@@ -109,6 +115,10 @@ class PackageCache:
 
     def add(self, path):
         """Add binary to cache. Hardlink if possible, copy otherwise."""
+        suffix = get_suffix(path)
+        if not suffix in ('deb', 'udeb'):
+            raise Error("illegal package suffix (%s)" % suffix)
+        
         control_fields = debinfo.get_control_fields(path)
         name = control_fields['Package']
         version = control_fields['Version']
@@ -117,7 +127,7 @@ class PackageCache:
             return
 
         arch = control_fields['Architecture']
-        filename = "%s_%s_%s.deb" % (name, version, arch)
+        filename = "%s_%s_%s.%s" % (name, version, arch, suffix)
         path_cached = join(self.path, filename)
         hardlink_or_copy(path, path_cached)
 
@@ -326,7 +336,7 @@ class Stock(StockBase):
 
         for fname in os.listdir(dir):
             fpath = join(dir, fname)
-            if not islink(fpath) and isfile(fpath) and fname.endswith(".deb"):
+            if not islink(fpath) and isfile(fpath) and get_suffix(fname) in ('deb', 'udeb'):
                 self.pkgcache.add(fpath)
 
             if isdir(fpath):
@@ -732,7 +742,7 @@ class Pool(object):
         # copy *.debs and build output from output dir
         for fname in os.listdir(build_outputdir):
             fpath = join(build_outputdir, fname)
-            if fname.endswith(".deb"):
+            if get_suffix(fname) in ('deb', 'udeb'):
                 self.pkgcache.add(fpath)
             elif fname.endswith(".build"):
                 shutil.copyfile(fpath, join(self.paths.build.logs, fname))

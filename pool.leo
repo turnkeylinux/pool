@@ -3,7 +3,7 @@
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
 <globals body_outline_ratio="0.298136645963">
-	<global_window_position top="0" left="633" height="966" width="637"/>
+	<global_window_position top="-3" left="633" height="966" width="637"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -106,24 +106,23 @@
 <v t="zaril.20101101154405"><vh>bug: permission problems when root runs the pool</vh>
 <v t="zaril.20101114125827"><vh>bug: pool-list delayed</vh></v>
 </v>
-<v t="zaril.20101120011327" a="E"><vh>bug: pool ignores epoch in versions</vh>
-<v t="zaril.20101121151810" a="E"><vh>optimize extraction of control file from Debian package</vh>
+<v t="zaril.20101120011327" a="E"><vh>bug: pool ignores epoch in versions</vh></v>
+<v t="zaril.20101121151810"><vh>optimize extraction of control file from Debian package</vh>
 <v t="zaril.20101121190053"><vh>optimize parse_control</vh></v>
 <v t="zaril.20101121170651" a="E"><vh>implement a generic key/value filesystem cache</vh></v>
 <v t="zaril.20101121182502"><vh>profile optimization</vh></v>
 <v t="zaril.20101121203823"><vh>use md5sum instead of sha1?</vh></v>
-<v t="zaril.20101121195130" a="TV"><vh>calculate key just by the hash of the control</vh>
+<v t="zaril.20101121195130" a="E"><vh>calculate key just by the hash of the control</vh>
 <v t="zaril.20101121210322"><vh>extract control.tar.gz from python</vh>
 <v t="zaril.20101122221539"><vh>optimize?</vh></v>
 </v>
 </v>
 <v t="zaril.20101122225546"><vh>optimization: implement extraction of control file fully in Python</vh></v>
 </v>
-</v>
+<v t="zaril.20101120203018" a="ETV"><vh>bug: mishandling udebs?</vh></v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
-<v t="zaril.20101120203018"><vh>bug: mishandling udebs?</vh></v>
 <v t="zaril.20101118214921"><vh>add pool-info command that shows the source of binary packages</vh></v>
 <v t="zaril.20101022061317"><vh>bug: pool assumes that packages have always existed in all versions</vh></v>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
@@ -1969,6 +1968,11 @@ test
 </t>
 <t tx="zaril.20101118214921">use case: Alon wants to figure out from which stock the aufs-modules package came from, how does he do this?
 
+INSIGHT: implementing this would allow us to eliminate a use case for garbage collection
+
+    when we unregister a stock it would clear any binaries from that stock
+        don't need to run gc
+
 
 </t>
 <t tx="zaril.20101120011327">* IDEAS
@@ -2017,7 +2021,21 @@ TEST:
 
 
 </t>
-<t tx="zaril.20101120203018">lsb-release-udeb missing?
+<t tx="zaril.20101120203018">SOLUTION: 
+    import them as udeb into the pool
+        when we export them, export them as udeb
+
+    preserve suffix when we are importing the pkg into the pkgcache
+
+Q: what are udebs?
+A: stripped down regular packages for debian-instaler
+
+the u means 'micro'
+they have exactly the same structure as regular debs
+
+TEST:
+    pool-get . lsb-release-udeb
+
 </t>
 <t tx="zaril.20101121151810">SUMMARY:
     previously
