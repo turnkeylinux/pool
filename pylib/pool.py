@@ -199,7 +199,7 @@ class Stock(StockBase):
     """Class for managing a non-subpool-type stock."""
 
     class Paths(StockBase.Paths):
-        files = [ 'source-versions', 'binary-versions', 'SYNC_HEAD', 'checkout' ]
+        files = [ 'index-sources', 'index-binaries', 'SYNC_HEAD', 'checkout' ]
                 
     class SyncHead(object):
         """Magical attribute.
@@ -287,8 +287,8 @@ class Stock(StockBase):
 
     def _init_read_versions(self):
         source_versions = {}
-        for dpath, dnames, fnames in os.walk(self.paths.source_versions):
-            relative_path = make_relative(self.paths.source_versions, dpath)
+        for dpath, dnames, fnames in os.walk(self.paths.index_sources):
+            relative_path = make_relative(self.paths.index_sources, dpath)
             for fname in fnames:
                 fpath = join(dpath, fname)
                 versions = [ line.strip() for line in file(fpath).readlines() if line.strip() ]
@@ -313,7 +313,7 @@ class Stock(StockBase):
         versions = verseek.list(dir)
 
         relative_path = make_relative(self.workdir, dir)
-        source_versions_path = join(self.paths.source_versions, relative_path)
+        source_versions_path = join(self.paths.index_sources, relative_path)
         mkdir(source_versions_path)
         
         for package in packages:
@@ -326,7 +326,7 @@ class Stock(StockBase):
 
     def _sync_update_binary_versions(self, path):
         relative_path = make_relative(self.workdir, path)
-        binary_version_path = join(self.paths.binary_versions, relative_path)
+        binary_version_path = join(self.paths.index_binaries, relative_path)
         mkdir(dirname(binary_version_path))
         file(binary_version_path, "w").truncate() # create zero length file
     
@@ -349,16 +349,21 @@ class Stock(StockBase):
             if isdir(fpath):
                 self._sync(fpath)
 
-    def binary_versions(self):
+    def binaries(self):
+        """List package binaries for this stock -> [ relative/path/foo.deb, ... ]"""
         relative_paths = []
-        for dpath, dnames, fnames in os.walk(self.paths.binary_versions):
+        for dpath, dnames, fnames in os.walk(self.paths.index_binaries):
             for fname in fnames:
                 fpath = join(dpath, fname)
-                relative_paths.append(make_relative(self.paths.binary_versions, fpath))
+                relative_paths.append(make_relative(self.paths.index_binaries, fpath))
 
         return relative_paths
-            
-    binary_versions = property(binary_versions)
+    binaries = property(binaries)
+
+    def sources(self):
+        """List package sources for this stock -> [ (relative/path/foo, versions), ... ]"""
+        return self.source_versions.items()
+    sources = property(sources)
         
     def sync(self):
         """sync stock by updating source versions and importing binaries into the cache"""
@@ -368,7 +373,7 @@ class Stock(StockBase):
                 return
 
         # delete old cached versions
-        for path in (self.paths.source_versions, self.paths.binary_versions):
+        for path in (self.paths.index_sources, self.paths.index_binaries):
             if exists(path):
                 shutil.rmtree(path)
                 mkdir(path)
@@ -496,7 +501,7 @@ class Stocks:
 
             # remove cached binaries compiled from this stock
             blacklist = set()
-            for path, versions in stock.source_versions.items():
+            for path, versions in stock.sources:
                 name = basename(path)
                 blacklist |= set([ (name, version) for version in versions ])
 
@@ -511,21 +516,12 @@ class Stocks:
         for stock in self:
             stock.sync()
 
-    def get_source_versions(self):
-        """List all stock sources.
-        Returns an array of (stock, relative_path/package, versions) tuples"""
-        
-        source_versions = []
-        for stock in self:
-            for path, versions in stock.source_versions.items():
-                source_versions.append((stock, path, versions))
-        return source_versions
-    
     def get_source_path(self, name, version):
         """Return path of source package"""
-        for stock, path, versions in self.get_source_versions():
-            if basename(path) == name and version in versions:
-                return join(stock.workdir, dirname(path))
+        for stock in self:
+            for path, versions in stock.sources:
+                if basename(path) == name and version in versions:
+                    return join(stock.workdir, dirname(path))
 
         return None
 
@@ -534,7 +530,7 @@ class Stocks:
         If version is None (default), any version will match"""
 
         for stock in self:
-            for path, versions in stock.source_versions.items():
+            for path, versions in stock.sources:
                 if basename(path) == name:
                     if version is None:
                         return True
@@ -687,9 +683,10 @@ class Pool(object):
             packages |= set(subpool._list(all_versions))
             
         packages |= set(self.pkgcache.list())
-        for stock, path, versions in self.stocks.get_source_versions():
-            package = basename(path)
-            packages |= set([ (package, version) for version in versions ])
+        for stock in self.stocks:
+            for path, versions in stock.sources:
+                package = basename(path)
+                packages |= set([ (package, version) for version in versions ])
         
         if all_versions:
             return list(packages)
@@ -854,9 +851,10 @@ class Pool(object):
         """Garbage collect stale data from the pool's caches"""
 
         whitelist = set()
-        for stock, path, versions in self.stocks.get_source_versions():
-            name = basename(path)
-            whitelist |= set([ (name, version) for version in versions ])
+        for stock in self.stocks:
+            for path, versions in stock.sources:
+                name = basename(path)
+                whitelist |= set([ (name, version) for version in versions ])
 
         removelist = set(self.pkgcache.list()) - whitelist
         for name, version in removelist:

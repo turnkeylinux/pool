@@ -10,8 +10,8 @@ Options:
   --build-logs		Prints a list of build logs for source packages
   
   --pkgcache		Prints list of cached packages
-  --source-versions	Prints versions of package sources in registered stocks
-  --binary-versions	Prints versions of package binaries in registered stocks
+  --stock-sources	Prints list of package sources in registered stocks
+  --stock-binaries	Prints list of package binaries in registered stocks
 
   -r --recursive	Lookup pool info recursively in subpools
 """
@@ -84,25 +84,26 @@ def print_stock_inventory(stock_inventory):
                               stock_name.ljust(stock_name_width),
                               relative_path)
     
-def print_source_versions(pool):
-    pool.sync()
-
-    stock_inventory = []
-    for stock, path, versions in pool.stocks.get_source_versions():
-        for version in versions:
-            package = basename(path) + "=" + version
-            relative_path = dirname(path)
-            stock_inventory.append((package, stock.name, relative_path))
-
-    if stock_inventory:
-        print_stock_inventory(stock_inventory)
-
-def print_binary_versions(pool):
+def print_stock_sources(pool):
     pool.sync()
 
     stock_inventory = []
     for stock in pool.stocks:
-        for path in stock.binary_versions:
+        for path, versions in stock.sources:
+            for version in versions:
+                package = basename(path) + "=" + version
+                relative_path = dirname(path)
+                stock_inventory.append((package, stock.name, relative_path))
+
+    if stock_inventory:
+        print_stock_inventory(stock_inventory)
+
+def print_stock_binaries(pool):
+    pool.sync()
+
+    stock_inventory = []
+    for stock in pool.stocks:
+        for path in stock.binaries:
             package = basename(path)
             relative_path = dirname(path)
             stock_inventory.append((package, stock.name, relative_path))
@@ -136,8 +137,8 @@ def main():
                                     'build-root',
                                     'build-logs',
                                     'pkgcache',
-                                    'source-versions',
-                                    'binary-versions',
+                                    'stock-sources',
+                                    'stock-binaries',
                                     'recursive'])
     except getopt.GetoptError, e:
         usage(e)
@@ -170,11 +171,11 @@ def main():
             if opt == '--pkgcache':
                 rigid.set(print_pkgcache)
 
-            if opt == '--source-versions':
-                rigid.set(print_source_versions)
+            if opt == '--stock-sources':
+                rigid.set(print_stock_sources)
 
-            if opt == '--binary-versions':
-                rigid.set(print_binary_versions)
+            if opt == '--stock-binaries':
+                rigid.set(print_stock_binaries)
                 
     except RigidVal.AlreadySetError:
         fatal("conflicting options")

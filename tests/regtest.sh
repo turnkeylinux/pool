@@ -106,7 +106,8 @@ if [ -n "$test_info" ]; then
     pool-info -r --build-logs
     
     pool-info -r --pkgcache
-    pool-info -r --source-versions
+    pool-info -r --stock-sources
+    pool-info -r --stock-binaries
 fi
 
 if [ -n "$test_list" ]; then
