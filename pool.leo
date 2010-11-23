@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.373706004141">
-	<global_window_position top="0" left="506" height="966" width="765"/>
+<globals body_outline_ratio="0.298136645963">
+	<global_window_position top="0" left="633" height="966" width="637"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -107,12 +107,17 @@
 <v t="zaril.20101114125827"><vh>bug: pool-list delayed</vh></v>
 </v>
 <v t="zaril.20101120011327" a="E"><vh>bug: pool ignores epoch in versions</vh>
-<v t="zaril.20101121151810" a="E"><vh>optimize</vh>
+<v t="zaril.20101121151810" a="E"><vh>optimize extraction of control file from Debian package</vh>
 <v t="zaril.20101121190053"><vh>optimize parse_control</vh></v>
 <v t="zaril.20101121170651" a="E"><vh>implement a generic key/value filesystem cache</vh></v>
 <v t="zaril.20101121182502"><vh>profile optimization</vh></v>
-<v t="zaril.20101121203823" a="TV"><vh>use md5sum instead of sha1?</vh></v>
-<v t="zaril.20101121195130"><vh>calculate key just by the hash of the control</vh></v>
+<v t="zaril.20101121203823"><vh>use md5sum instead of sha1?</vh></v>
+<v t="zaril.20101121195130" a="TV"><vh>calculate key just by the hash of the control</vh>
+<v t="zaril.20101121210322"><vh>extract control.tar.gz from python</vh>
+<v t="zaril.20101122221539"><vh>optimize?</vh></v>
+</v>
+</v>
+<v t="zaril.20101122225546"><vh>optimization: implement extraction of control file fully in Python</vh></v>
 </v>
 </v>
 </v>
@@ -2015,34 +2020,25 @@ TEST:
 <t tx="zaril.20101120203018">lsb-release-udeb missing?
 </t>
 <t tx="zaril.20101121151810">SUMMARY:
+    previously
     using debinfo, the first time is more expensive
 
     when we can cache the debinfo key, looking up the control file in a cache is 120X faster than extracting it every time by a subcommand
 
-    if we can't cache the debinfo key, then we need to calculate 
+    if we can't cache the debinfo key, then we need to calculate  
 
+    bottom line: 60-80X improvement 
+        before: 70-90 packages a sec
+        after: 4000-7250 packages a sec
+
+* RESULTS PHASE #1
+
+optimization: cache control file by md5 of Debian package
+
+test setup
+    dumped rocky packages to a plain directory
+    created p13 registered that plain directory
     
-
-* TEST #1
-cd pools/rocky; pool-gc; pool-list 
-
-BEFORE:
-real    0m45.550s
-user    0m6.052s
-sys     0m5.028s
-
-AFTER:
-cd real    0m57.015s
-user    0m11.713s
-sys     0m11.021s
-
-GOTCHA: we need to isolate the overhead more
-
-* TEST #1
-
-dumped rocky packages to a plain directory
-created p13 registered that plain directory
-
 pool-list
     reminder - has to be rescanned on every invocation
 
@@ -2062,16 +2058,6 @@ real    0m9.743s
 user    0m5.940s
 sys     0m3.744s
 
-
-IDEA: implement a generic filesystem based cache
-    key / value
-
-IDEA:
-    pool's control cache should be generic
-        maybe shared with other programs (like fab and chanko)
-
-    $HOME/.debinfo
-
 Q: is caching the control file effective?
 A: the bottleneck is in IO for the digest. 
 For small files it is much much more efficient:
@@ -2081,15 +2067,81 @@ For small files it is much much more efficient:
     bench(lambda: get_control_by_path(package, usecache=False), 500)
     500 runs in 4.9849 seconds (100.30 per/sec)
     
+* RESULTS PHASE #2
+
+optimizations
+    pure Python extraction of control file
+    calculate cache key by hashing just the control.tar.gz
+
+BEFORE:
+(cached)
+real    0m3.250s
+user    0m3.140s
+sys     0m0.248s
+
+(not cached)
+real    0m9.743s
+user    0m5.940s
+sys     0m3.744s
+
+AFTER 
+(cached) 10X improvement
+real    0m0.335s
+user    0m0.232s
+sys     0m0.076s
+
+(not cached - I.e., rm -rf ~/.debinfo): 5X improvement
+real    0m2.513s
+user    0m2.156s
+sys     0m0.224s
+
+E: test unbuffered performance
+R:
+    Q: how do I clear the disk buffers?
+    A: read more than 1gb?
     
-If we can we batch IO expensive key calculation, then just looking up the control file purely
-by key is 4 times faster:
+    dd if=/dev/zero dd if=/dev/zero of=zero bs=1M count=1024
+    dd if=zero of=zero2 bs=1M count=1024
+    
+    test
+        p13
+        time pool-list
 
-    package_key = get_key(package)
+    optimized phase 2    
+        unbuffered
+            real    0m9.536s
+            user    0m0.228s
+            sys     0m0.160s
+            
+        buffered
+            real    0m0.362s
+            user    0m0.252s
+            sys     0m0.052s
+            
+    optimized phase 1
+        unbuffered
+            real    0m24.598s
+            user    0m1.700s
+            sys     0m0.504s
+            
+        buffered
+            real    0m1.742s
+            user    0m1.540s
+            sys     0m0.188s
+                        
+    non-optimized 
+        unbuffered
+            real    0m17.530s
+            user    0m3.164s
+            sys     0m3.428s
+    
+        buffered
+            real    0m6.380s
+            user    0m3.140s
+            sys     0m3.224s
+    
 
-    bench(lambda: get_control_by_key(package_key), 5000)
-    5000 runs in 0.4246 seconds (11774.73 per/sec)
-</t>
+                </t>
 <t tx="zaril.20101121170651">* SCRATCH
 support generic keys
 identify when the key is already a hash
@@ -2161,7 +2213,109 @@ libgl1-mesa-dri
 mozilla-thunderbird
 firefox
 
+E: does extracting the control file from a large deb take longer than extracting it from a small deb?
+R: no
+
+ar -p linux-hardened-image-2.6.19-7-grsec-386_2.6.19-7.10.2_i386.deb control.tar.gz &gt; control.tar.gz
+
+RESOURCE: ar(5)
+
 </t>
 <t tx="zaril.20101121203823">md5 is much faster</t>
+<t tx="zaril.20101121210322">SUMMARY
+    Python implementation of extraction: 4257 per/sec (non-optimized)
+        20X faster than executing ar
+
+    optimized version: 12K per/sec
+        54X faster than executing ar
+
+starts with 
+
+    !&lt;arch&gt;\n
+
+    filename/ &lt;space&gt; &lt;space&gt; &lt;space&gt; timestamp &lt;space&gt; &lt;space&gt;
+    
+Field Offset from 	Field Offset to 	Field Name 	Field Format
+0 	15 	File name 	ASCII
+16 	27 	File modification timestamp 	Decimal
+28 	33 	Owner ID 	Decimal
+34 	39 	Group ID 	Decimal
+40 	47 	File mode 	Octal
+48 	57 	File size in bytes 	Decimal
+    ar files limited to 953 MBs!
+58 	59 	File magic 	\140\012   `\n
+
+test
+    setup archive with three files
+        test ability to extract any of them
+
+
+
+* SCRATCH
+
+ar x file.deb control.tar.gz
+    extracts file
+ar p file.deb control.tar.gz
+    prints file
+
+ar t file.deb
+    shows file in archive
+
+ar d file.deb control.tar.gz
+    delete control file deb
+
+ar r file.deb control.tar.gz
+    add control.tar.gz to package
+
+ar rc archive file 
+    create archive with file in it
+
+ar rc fromscratch.deb debian-binary control.tar.gz data.tar.gz
+
+nm --print-armap archive
+    shows files in archive
+
+E: create deb from scratch and try to install it?
+R: it works!
+---
+E: try changing order of files
+R: it works!
+
+
+Q: how big is the entire header?
+A: 0x8 0x44
+    exactly 60 bytes
+---
+Q: is extracting the control file from a large deb file any slower than extracting the control file from a small deb file?
+A: no
+
+</t>
+<t tx="zaril.20101122221539">IDEAS
+    do everything as a function instead of a class
+    inline
+    no error checking
+    only parse the fields we need
+
+
+</t>
+<t tx="zaril.20101122225546">Python implementation shorter than command execution
+    4 lines of code after writing ar.py module
+
+performance improvement, depends on size of extracted control.tar.gz: 
+    with a 22K control.tar.gz: 2X improvement
+    with a &gt;1K control.tar.gz: 7X improvement
+
+DISCOVERY: tarfile is implemented in Python!
+    may be implemented in C in the future
+
+E: how much of an improvement if we turn on psyco?
+    2X improvement for the small file
+        similar improvement for the larger file
+
+
+
+
+    
+</t>
 </tnodes>
 </leo_file>
