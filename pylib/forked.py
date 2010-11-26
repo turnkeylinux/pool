@@ -27,6 +27,20 @@ Example usage:
 
     instance = ForkedAdder()
     print instance.add(1, 1)
+
+    # pass an existing instance into a separate process
+    class PidGetter:
+        def getpid(self):
+            return os.getpid()
+
+    pg = PidGetter()
+    
+    def dummy():
+        return pg
+    forkedpg = forked_constructor(dummy)()
+    print pg.getpid()
+    print forkedpg.getpid()
+
     
 """
 
@@ -165,6 +179,18 @@ def test():
 
     print ">>> instance.add(1, 1)"
     print instance.add(1, 1)
+
+    class PidGetter:
+        def getpid(self):
+            return os.getpid()
+
+    pg = PidGetter()
+    
+    def dummy():
+        return pg
+    forkedpg = forked_constructor(dummy)()
+    print pg.getpid()
+    print forkedpg.getpid()
 
 if __name__=="__main__":
     test()
