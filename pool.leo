@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.495859213251">
-	<global_window_position top="-3" left="552" height="966" width="718"/>
+<globals body_outline_ratio="0.150103519669">
+	<global_window_position top="0" left="552" height="966" width="718"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -15,7 +15,7 @@
 <v t="zaril.20100828060043"><vh>first draft</vh></v>
 </v>
 <v t="zaril.20100828055849"><vh>terminology</vh></v>
-<v t="loni.20100827184947.4" a="TV"><vh>file/data structure</vh></v>
+<v t="loni.20100827184947.4"><vh>file/data structure</vh></v>
 <v t="loni.20100827184947.5"><vh>cli syntax</vh></v>
 <v t="loni.20100827184947.6"><vh>usage examples</vh></v>
 </v>
@@ -124,6 +124,12 @@
 <v t="zaril.20101123043551"><vh>add --binary-versions option to pool-info command</vh></v>
 </v>
 <v t="zaril.20101123051529"><vh>patch unregister and gc to take advantage of binary-versions</vh></v>
+<v t="zaril.20101125202956" a="E"><vh>optimize pool privilege dropping</vh>
+<v t="zaril.20101126004951"><vh>implement POC master/slave RPC</vh></v>
+<v t="zaril.20101126092908"><vh>wildcard attribute access</vh></v>
+<v t="zaril.20101126225101"><vh>benchmark forked_constructor vs forked_func</vh></v>
+<v t="zaril.20101126092948" a="TV"><vh>communicate exception backtrace?</vh></v>
+</v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
@@ -2354,5 +2360,129 @@ E: how much of an improvement if we turn on psyco?
 <t tx="zaril.20101123051529">SUMMARY:
     on unregister, add binaries to package list
     on gc, add binaries in stocks in whitelist</t>
+<t tx="zaril.20101125202956">SUMMARY
+    the overhead is to to extensive forking
+        process creation overhead for each method invocation
+
+time pool-get tmp-z/ -i 10pkgs
+    real    0m0.429s
+    user    0m0.292s
+    sys     0m0.136s
+    
+time pool-get tmp/ -i 10pkgs
+    real    0m7.863s
+    user    0m7.448s
+    sys     0m0.384s
+
+IDEAS
+    maybe keep the entire object in reduced privileges?
+        we would communicate with the object in RPC
+
+    batch method invocation?
+
+    the pool would drop privileges on initialization
+        and run transparently in a separate process
+        only the proxy would run with root privileges
+
+drop privileges at the 
+    
+Q: how can we reduce how often drop_privileges is called?
+
+Q: what dropped pool methods does cmd_get call?
+
+    exists
+        shouldn't be because it doesn't sync
+
+    getpath_deb
+        forked each time
+
+
+
+</t>
+<t tx="zaril.20101126004951">Q: should we use XMLRPC?
+
+protocol:
+    
+    send
+        attr
+        args
+        kws
+
+    receive
+        ret / exception
+        serialized return value
+
+        (0, ret)
+        (1, exception)
+
+design of RPC mechanism
+
+communicate via pty
+the subprocess reads requests
+
+one method per socket connection 
+    e.g., HTTP/1.0 style
+
+writes back the return value
+
+write size and then the serialized message
+    we don't need to do that, since pickle will do the work for us
+
+fh = sock.makefile("rw", 0)
+
+closing the makefile fh not enough to close the connection
+
+pickle read/write
+    val = pickle.load(fh)
+    pickle.dump(obj, fh)
+  
+
+E: experiment with pickling things back and forth across a socket
+
+write will eventually block
+    when the buffer fills
+
+sockets support 
+    recv / send
+
+    don't block
+
+GOTCHA: ptys and pipes are NOT bi-directional
+    the only difference between a pipe and a pty is that pipes have termios control options
+
+Q: does fh.closing an fdopen'ed file close the pipe?
+A: yes
+
+* ROADMAP
+    foo.add
+        static structure in proxy and server
+
+* LOGIC
+wrapper function 
+    opens an anonymous pipe
+
+forks
+    child process creates instance, runs server
+    parent process return dummy proxy instance
+    
+    </t>
+<t tx="zaril.20101126092908">configure Proxy object as inheritable
+
+</t>
+<t tx="zaril.20101126092948"></t>
+<t tx="zaril.20101126225101">optimize if needed
+    cpickle instead of pickle
+
+benchmarks for forked_constructor
+    runs 2K/sec with pickle
+    runs 8.5K/sec with cPickle
+    
+    not proxied: 774K/sec (100X faster)
+
+benchmarks for forked_func
+    runs 236/sec (33X slower than forked_constructor)
+
+IDEA:
+    add examples</t>
 </tnodes>
 </leo_file>

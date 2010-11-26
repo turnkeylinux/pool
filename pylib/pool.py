@@ -13,7 +13,7 @@ import verseek
 import debversion
 
 from git import Git
-from forked import forked
+from forked import forked_func
 
 import debinfo
 
@@ -572,7 +572,7 @@ def drop_privileges(method):
             os.setuid(owner_uid)
             return method(self, *args, **kws)
 
-        f = forked(f)
+        f = forked_func(f)
         ret = f()
         
         self.stocks.reload()

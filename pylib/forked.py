@@ -1,21 +1,45 @@
 """Transparent forking module
 
-This module that implements a decorator that transparently executes
-the wrapper function in a separate `forked' process transparently.
+This module supports transparent forking by wrapping either:
+A) a regular function (forked_func method): creates a subprocess for
+every invocation of the function.
 
-Return values from the wrapper function are serialized.  Exceptions
-are also serialized and reraised in the parent process.
+B) an instance constructor (forked_constructor): creates a subprocess
+for every instance created, and proxies method calls to the instance
+into the subprocess.
+
+Return values from the wrapped function or wrapper instance methods
+are serialized.  Exceptions are also serialized and reraised in the
+parent process.
+
+Example usage:
+
+    def add(a, b):
+        return a + b
+
+    forkedadd = forked_func(add)
+    print forkedadd(1, 1)
+
+    class Adder:
+        def add(self, a, b):
+            return a + b
+    ForkedAdder = forked_constructor(Adder)
+
+    instance = ForkedAdder()
+    print instance.add(1, 1)
+    
 """
 
 import os
 import sys
 
-import pickle
+import cPickle as pickle
+import new
 
 class Error(Exception):
     pass
 
-def forked(func):
+def forked_func(func):
     def wrapper(*args, **kws):
         r_fd, w_fd = os.pipe()
         r_fh = os.fdopen(r_fd, "r", 0)
@@ -48,3 +72,99 @@ def forked(func):
         return val
     return wrapper
 
+class Pipe:
+    def __init__(self):
+        r, w = os.pipe()
+        self.r = os.fdopen(r, "r", 0)
+        self.w = os.fdopen(w, "w", 0)
+
+class ProxyInstance:
+    """This proxy class only proxies method invocations - no attributes"""
+    def __init__(self, r, w):
+        self.r = r
+        self.w = w
+
+    @staticmethod
+    def _proxy(attrname):
+        def method(self, *args, **kws):
+            pickle.dump((attrname, args, kws), self.w)
+            error, val = pickle.load(self.r)
+            if error:
+                raise val
+            return val
+        return method
+
+    def __getattr__(self, name):
+        unbound_method = self._proxy(name)
+        method = new.instancemethod(unbound_method,
+                                    self, self.__class__)
+        setattr(self, name, method)
+        return method
+
+def forkpipe():
+    """Forks and create a bi-directional pipe -> (pid, r, w)"""
+    pipe_input = Pipe()
+    pipe_output = Pipe()
+    
+    pid = os.fork()
+    if pid == 0:
+        pipe_output.r.close()
+        pipe_input.w.close()
+
+        return (pid, pipe_input.r, pipe_output.w)
+    else:
+        pipe_output.w.close()
+        pipe_input.r.close()
+        
+        return (pid, pipe_output.r, pipe_input.w)
+
+def forked_constructor(constructor):
+    """Wraps a constructor so that instances are created in a subprocess.
+    Returns a new constructor"""
+    def wrapper(*args, **kws):
+        pid, r, w = forkpipe()
+        if pid == 0:
+            obj = constructor(*args, **kws)
+            while True:
+                try:
+                    attrname, args, kws = pickle.load(r)
+                except EOFError:
+                    break
+
+                try:
+                    attr = getattr(obj, attrname)
+                    if not callable(attr):
+                        raise Error("'%s' is not callable" % attrname)
+
+                    ret = attr(*args, **kws)
+                    pickle.dump((False, ret), w)
+                except Exception, e:
+                    pickle.dump((True, e), w)
+
+            sys.exit(0)
+
+        return ProxyInstance(r, w)
+    return wrapper
+
+def test():
+    def add(a, b):
+        return a + b
+
+    forkedadd = forked_func(add)
+    print ">>> forkedadd(1, 1)"
+    print forkedadd(1, 1)
+
+    class Adder:
+        def add(self, a, b):
+            return a + b
+
+    ForkedAdder = forked_constructor(Adder)
+
+    print ">>> instance = ForkedAdder()"
+    instance = ForkedAdder()
+
+    print ">>> instance.add(1, 1)"
+    print instance.add(1, 1)
+
+if __name__=="__main__":
+    test()
