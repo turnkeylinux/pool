@@ -31,8 +31,8 @@ class FooProxy:
             raise val
         return val
 
-
-def Foo():
+def forkpipe():
+    """Forks and create a bi-directional pipe -> (pid, r, w)"""
     pipe_input = Pipe()
     pipe_output = Pipe()
     
@@ -41,10 +41,20 @@ def Foo():
         pipe_output.r.close()
         pipe_input.w.close()
 
+        return (pid, pipe_input.r, pipe_output.w)
+    else:
+        pipe_output.w.close()
+        pipe_input.r.close()
+        
+        return (pid, pipe_output.r, pipe_input.w)
+
+def Foo():
+    pid, r, w = forkpipe()
+    if pid == 0:
         obj = _Foo()
         while True:
             try:
-                attrname, args = pickle.load(pipe_input.r)
+                attrname, args = pickle.load(r)
             except EOFError:
                 break
 
@@ -54,16 +64,13 @@ def Foo():
 
             try:
                 ret = attr(*args)
-                pickle.dump((False, ret), pipe_output.w)
+                pickle.dump((False, ret), w)
             except Exception, e:
-                pickle.dump((True, e), pipe_output.w)
+                pickle.dump((True, e), w)
 
         sys.exit(0)
 
-    pipe_output.w.close()
-    pipe_input.r.close()
-    return FooProxy(pipe_output.r,
-                    pipe_input.w)
+    return FooProxy(r, w)
                     
         
 print "caller pid: %d" % os.getpid()
