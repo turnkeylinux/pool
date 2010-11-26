@@ -13,7 +13,7 @@ import verseek
 import debversion
 
 from git import Git
-from forked import forked_func
+from forked import forked_constructor
 
 import debinfo
 
@@ -557,30 +557,7 @@ def sync(method):
         return method(self, *args, **kws)
     return wrapper
 
-def drop_privileges(method):
-    def wrapper(self, *args, **kws):
-        owner_uid = os.stat(self.paths.path).st_uid
-        owner_gid = os.stat(self.paths.path).st_gid
-
-        uid = os.getuid()
-
-        if uid == owner_uid or uid != 0:
-            return method(self, *args, **kws)
-
-        def f():
-            os.setgid(owner_gid)
-            os.setuid(owner_uid)
-            return method(self, *args, **kws)
-
-        f = forked_func(f)
-        ret = f()
-        
-        self.stocks.reload()
-        return ret
-    
-    return wrapper
-
-class Pool(object):
+class _Pool(object):
     """Class for creating and controlling a Pool.
     This class's public methods map roughly to the pool's cli interface"""
 
@@ -648,15 +625,12 @@ class Pool(object):
         mkdir(self.paths.tmp)
         self.autosync = autosync
     
-    @drop_privileges
     def register(self, stock):
         self.stocks.register(stock)
 
-    @drop_privileges
     def unregister(self, stock):
         self.stocks.unregister(stock)
 
-    @drop_privileges
     @sync
     def exists(self, package):
         """Check if package exists in pool -> Returns bool"""
@@ -769,7 +743,6 @@ class Pool(object):
         shutil.rmtree(build_outputdir)
 
 
-    @drop_privileges
     @sync
     def getpath_deb(self, package, build=True):
         """Get path to package in pool if it exists or None if it doesn't.
@@ -872,7 +845,26 @@ class Pool(object):
             for subpool in self.subpools:
                 subpool.gc(recurse)
             
-    @drop_privileges
     def sync(self):
         """synchronise pool with registered stocks"""
         self.stocks.sync()
+
+def Pool(*args, **kws):
+    """wrapper that drops privileges in a sub-process if required"""
+    pool = _Pool(*args, **kws)
+    
+    owner_uid = os.stat(pool.paths.path).st_uid
+    owner_gid = os.stat(pool.paths.path).st_gid
+
+    uid = os.getuid()
+
+    if uid == owner_uid or uid != 0:
+        return pool
+
+    def f():
+        os.setgid(owner_gid)
+        os.setuid(owner_uid)
+        return pool
+
+    return forked_constructor(f)()
+    
