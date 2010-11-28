@@ -92,29 +92,115 @@ class Pipe:
         self.r = os.fdopen(r, "r", 0)
         self.w = os.fdopen(w, "w", 0)
 
-class ProxyInstance:
-    """This proxy class only proxies method invocations - no attributes"""
-    def __init__(self, r, w):
+class ObjProxyBase:
+    OP_CALL = "call"
+    OP_GET = "get"
+    OP_SET = "set"
+    ATTR_CALLABLE = "__attr_callable__"
+
+class ObjProxyServer(ObjProxyBase):
+    def __init__(self, r, w, obj):
         self.r = r
         self.w = w
+        self.obj = obj
 
-    @staticmethod
-    def _proxy(attrname):
-        def method(self, *args, **kws):
-            pickle.dump((attrname, args, kws), self.w)
-            error, val = pickle.load(self.r)
+    def run(self):
+        while True:
+            try:
+                op, params = pickle.load(self.r)
+            except EOFError:
+                break
+
+            if op == self.OP_CALL:
+                op_handler = self._handle_op_call
+            elif op == self.OP_GET:
+                op_handler = self._handle_op_get
+            elif op == self.OP_SET:
+                op_handler = self._handle_op_set
+            else:
+                raise Error("illegal ObjProxy operation (%s)" % op)
+                
+            op_handler(params)
+
+    def _write_result(method):
+        def wrapper(self, *args, **kws):
+            try:
+                ret = method(self, *args, **kws)
+                pickle.dump((False, ret), self.w)
+            except Exception, e:
+                pickle.dump((True, e), self.w)
+
+        return wrapper
+
+    @_write_result
+    def _handle_op_call(self, params):
+        attrname, args, kws = params
+        attr = getattr(self.obj, attrname)
+        if not callable(attr):
+            raise Error("'%s' is not callable" % attrname)
+        return attr(*args, **kws)
+    
+    @_write_result
+    def _handle_op_get(self, params):
+        attrname, = params
+        val = getattr(self.obj, attrname)
+        if callable(val):
+            return self.ATTR_CALLABLE
+        return val
+
+    @_write_result
+    def _handle_op_set(self, params):
+        attrname, val = params
+        setattr(self.obj, attrname, val)
+
+class ObjProxyClient(ObjProxyBase, object):
+    """This proxy class only proxies method invocations - no attributes"""
+    __local_attr__ = ['_r', '_w']
+
+    def __init__(self, r, w):
+        self._r = r
+        self._w = w
+
+    def _read_result(op_method):
+        def wrapper(self, *args, **kws):
+            op_method(self, *args, **kws)
+            error, val = pickle.load(self._r)
             if error:
                 raise val
             return val
-        return method
+        return wrapper
 
-    def __getattr__(self, name):
-        unbound_method = self._proxy(name)
+    @_read_result
+    def _op_call(self, attrname, args, kws):
+        pickle.dump((self.OP_CALL, (attrname, args, kws)), self._w)
+
+    @_read_result
+    def _op_get(self, attrname):
+        pickle.dump((self.OP_GET, (attrname,)), self._w)
+
+    @_read_result
+    def _op_set(self, attrname, val):
+        pickle.dump((self.OP_SET, (attrname, val)), self._w)
+
+    def __setattr__(self, attrname, val):
+        if attrname in self.__local_attr__:
+            return object.__setattr__(self, attrname, val)
+
+        return self._op_set(attrname, val)
+
+    def __getattr__(self, attrname):
+        val = self._op_get(attrname)
+        if val != self.ATTR_CALLABLE:
+            return val
+        
+        def unbound_method(self, *args, **kws):
+            return self._op_call(attrname, args, kws)
+
         method = new.instancemethod(unbound_method,
                                     self, self.__class__)
-        setattr(self, name, method)
+        object.__setattr__(self, attrname, method)
         return method
-
+    
 def forkpipe():
     """Forks and create a bi-directional pipe -> (pid, r, w)"""
     pipe_input = Pipe()
@@ -139,25 +225,10 @@ def forked_constructor(constructor):
         pid, r, w = forkpipe()
         if pid == 0:
             obj = constructor(*args, **kws)
-            while True:
-                try:
-                    attrname, args, kws = pickle.load(r)
-                except EOFError:
-                    break
-
-                try:
-                    attr = getattr(obj, attrname)
-                    if not callable(attr):
-                        raise Error("'%s' is not callable" % attrname)
-
-                    ret = attr(*args, **kws)
-                    pickle.dump((False, ret), w)
-                except Exception, e:
-                    pickle.dump((True, e), w)
-
+            ObjProxyServer(r, w, obj).run()
             sys.exit(0)
 
-        return ProxyInstance(r, w)
+        return ObjProxyClient(r, w)
     return wrapper
 
 def test():
@@ -189,8 +260,32 @@ def test():
     def dummy():
         return pg
     forkedpg = forked_constructor(dummy)()
-    print pg.getpid()
-    print forkedpg.getpid()
+    print "pg.getpid() = %d" % pg.getpid()
+    print "forkedpg.getpid() = %d" % forkedpg.getpid()
+    assert pg.getpid() != forkedpg.getpid()
+    
+    class Attr(object):
+        def __init__(self, attr):
+            self.attr = attr
+
+        def getattr(self):
+            return self.attr
+
+        def setattr(self, attr):
+            self.attr = attr
+
+    attr = forked_constructor(Attr)(666)
+    print ">>> attr.attr"
+    print attr.attr
+
+    attr.setattr(111)
+    assert attr.attr == 111
+
+    print ">>> attr.attr = 222"
+    attr.attr = 222
+    print ">>> attr.getattr()"
+    print attr.getattr()
+    assert attr.getattr() == 222
 
 if __name__=="__main__":
     test()
