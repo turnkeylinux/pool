@@ -1,16 +1,22 @@
 """Transparent forking module
 
 This module supports transparent forking by wrapping either:
-A) a regular function (forked_func method): creates a subprocess for
-every invocation of the function.
+A) a regular function (forked_func method): the wrapper creates a subprocess
+for every invocation of the function.
 
-B) an instance constructor (forked_constructor): creates a subprocess
-for every instance created, and proxies method calls to the instance
-into the subprocess.
+B) a constructor (forked_constructor): the wrapper creates a
+subprocess for every instance created, and proxies method calls and
+attribute setting and getting into the instance inside the subprocess.
 
 Return values from the wrapped function or wrapper instance methods
 are serialized.  Exceptions are also serialized and reraised in the
 parent process.
+
+Limitation: Forked functions or instance methods can not return any
+value that can not be serialized with pickle. This includes:
+	generators (I.e., created when you use yield)
+	nested classes
+	instance methods
 
 Example usage:
 
@@ -18,7 +24,7 @@ Example usage:
         return a + b
 
     forkedadd = forked_func(add)
-    print forkedadd(1, 1)
+    assert forkedadd(1, 1) == 2
 
     class Adder:
         def add(self, a, b):
@@ -26,7 +32,7 @@ Example usage:
     ForkedAdder = forked_constructor(Adder)
 
     instance = ForkedAdder()
-    print instance.add(1, 1)
+    assert instance.add(1, 1) == 2
 
     # pass an existing instance into a separate process
     class PidGetter:
@@ -38,10 +44,27 @@ Example usage:
     def dummy():
         return pg
     forkedpg = forked_constructor(dummy)()
-    print pg.getpid()
-    print forkedpg.getpid()
-
+    assert pg.getpid() != forkedpg.getpid()
     
+    class Attr(object):
+        def __init__(self, attr):
+            self.attr = attr
+
+        def getattr(self):
+            return self.attr
+
+        def setattr(self, attr):
+            self.attr = attr
+
+    attr = forked_constructor(Attr)(666)
+    assert attr.attr == 666
+
+    attr.setattr(111)
+    assert attr.attr == 111
+
+    attr.attr = 222
+    assert attr.getattr() == 222
+
 """
 
 import os
@@ -154,7 +177,14 @@ class ObjProxyServer(ObjProxyBase):
         setattr(self.obj, attrname, val)
 
 class ObjProxyClient(ObjProxyBase, object):
-    """This proxy class only proxies method invocations - no attributes"""
+    """Object proxy client.
+
+    Transparently handles:
+    * method invocations
+    * attribute setting
+    * attribute getting
+
+    """
     __local_attr__ = ['_r', '_w']
 
     def __init__(self, r, w):
