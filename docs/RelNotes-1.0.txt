@@ -1,0 +1,48 @@
+v1.0 Release Notes
+==================
+
+* root can operate on non-root owned pools safely
+  implemented using a transparent privilege dropping mechanism
+
+* improved automatic garbage collection: when you unregister a stock, binary packages from that
+  stock are deleted from the pool automatically (previously you had to run pool-gc)
+
+* new pool-info options:
+  --stock-sources (previously --source-versions): shows all source packages/versions in stocks
+  --stock-binaries: shows all binary packages/versions in stocks
+
+  These options allows the user to find which stock a package came from.
+
+* support udeb type packages
+
+* support epochs in package versions
+
+* developed exhaustive regression test suite (tests/regtest.sh)
+  syntax: ./regtest.sh [ --options ]
+  
+    If no testing options are specified - test everything
+  
+  Options:
+    --pool=PATH  use previously initialized pool
+                 (e.g., initialize a pool with --notests --nodelete)
+  
+    --notests    turn off tests
+    --nodelete   dont delete test pool at the end
+                 (default if test fails)
+  
+    --info       test pool-info
+    --list       test pool-list
+    --exists     test pool-exists
+    --commit     test new version detection after committing to stocks
+    --getnew     test pool-get of newest versions
+    --getall     test pool-get of all versions (new and old)
+    --gc         test garbage collection
+  
+* developed optimized cached control file retrieval mechanism (debinfo)
+  (debinfo now lives in turnkey-pylib)
+
+* bugfixes:
+  Pool.resolve calls _list without all_versions argument and this broke pool-get
+  sumo-close on unregister + dup thin branch into stock/checkout
+  registering a subpool breaks package building
+  subpool unregistration broken because Sumo arena in checkout/ wasn't closed
