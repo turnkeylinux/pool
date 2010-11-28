@@ -6,6 +6,7 @@ usage() {
     echo "  If no testing options are specified - test everything"
     echo
     echo "Options:"
+    echo "  --notests   turn off tests"
     echo "  --nodelete  dont delete test pool at the end"
     echo "              (default if test fails)"
     echo 
@@ -16,6 +17,7 @@ usage() {
     echo "  --getnew    test pool-get of newest versions"
     echo "  --getall    test pool-get of all versions (new and old)"
     echo "  --gc        test garbage collection"
+
     
     exit 1
 }
@@ -52,12 +54,15 @@ for arg; do
 	    test_gc=yes
             ;;
 	    
+	--notests)
+	    test_notests=yes
+	    ;;
         *)
 	    usage
     esac
 done
 
-OPTS="info list exists commit getnew getall gc"
+OPTS="info list exists commit getnew getall gc notests"
 
 noopts=yes
 for opt in $OPTS; do
