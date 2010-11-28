@@ -780,13 +780,15 @@ class _Pool(object):
 
     class BuildLogs(object):
         def __get__(self, obj, type):
+            arr = []
             for fname in os.listdir(obj.paths.build.logs):
                 fpath = join(obj.paths.build.logs, fname)
                 if not isfile(fpath) or not fname.endswith(".build"):
                     continue
 
                 log_name, log_version = fname[:-len(".build")].split("_", 1)
-                yield log_name, log_version
+                arr.append((log_name, log_version))
+            return arr
 
     build_logs = BuildLogs()
 
