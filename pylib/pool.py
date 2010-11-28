@@ -608,7 +608,7 @@ class _Pool(object):
         os.symlink(buildroot, paths.build.root)
 
         return cls(path)
-    
+
     def __init__(self, path=None, recursed_paths=[], autosync=True):
         """Initialize pool instance.
 
@@ -849,22 +849,24 @@ class _Pool(object):
         """synchronise pool with registered stocks"""
         self.stocks.sync()
 
-def Pool(*args, **kws):
-    """wrapper that drops privileges in a sub-process if required"""
-    pool = _Pool(*args, **kws)
-    
-    owner_uid = os.stat(pool.paths.path).st_uid
-    owner_gid = os.stat(pool.paths.path).st_gid
+class Pool(_Pool):
+    """wrapper class that drops privileges in a sub-process if required"""
+    def __new__(cls, *args, **kws):
+        pool = _Pool(*args, **kws)
 
-    uid = os.getuid()
+        owner_uid = os.stat(pool.paths.path).st_uid
+        owner_gid = os.stat(pool.paths.path).st_gid
 
-    if uid == owner_uid or uid != 0:
-        return pool
+        uid = os.getuid()
 
-    def f():
-        os.setgid(owner_gid)
-        os.setuid(owner_uid)
-        return pool
+        if uid == owner_uid or uid != 0:
+            return pool
 
-    return forked_constructor(f)()
+        def f():
+            os.setgid(owner_gid)
+            os.setuid(owner_uid)
+            reload(debinfo)
+            return pool
+
+        return forked_constructor(f)()
     
