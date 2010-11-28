@@ -155,16 +155,16 @@ class ObjProxyServer(ObjProxyBase):
 
 class ObjProxyClient(ObjProxyBase, object):
     """This proxy class only proxies method invocations - no attributes"""
-    __local_attr__ = ['r', 'w']
+    __local_attr__ = ['_r', '_w']
 
     def __init__(self, r, w):
-        self.r = r
-        self.w = w
+        self._r = r
+        self._w = w
 
     def _read_result(op_method):
         def wrapper(self, *args, **kws):
             op_method(self, *args, **kws)
-            error, val = pickle.load(self.r)
+            error, val = pickle.load(self._r)
             if error:
                 raise val
             return val
@@ -172,15 +172,15 @@ class ObjProxyClient(ObjProxyBase, object):
 
     @_read_result
     def _op_call(self, attrname, args, kws):
-        pickle.dump((self.OP_CALL, (attrname, args, kws)), self.w)
+        pickle.dump((self.OP_CALL, (attrname, args, kws)), self._w)
 
     @_read_result
     def _op_get(self, attrname):
-        pickle.dump((self.OP_GET, (attrname,)), self.w)
+        pickle.dump((self.OP_GET, (attrname,)), self._w)
 
     @_read_result
     def _op_set(self, attrname, val):
-        pickle.dump((self.OP_SET, (attrname, val)), self.w)
+        pickle.dump((self.OP_SET, (attrname, val)), self._w)
 
     def __setattr__(self, attrname, val):
         if attrname in self.__local_attr__:
@@ -200,7 +200,6 @@ class ObjProxyClient(ObjProxyBase, object):
                                     self, self.__class__)
         object.__setattr__(self, attrname, method)
         return method
-
     
 def forkpipe():
     """Forks and create a bi-directional pipe -> (pid, r, w)"""
