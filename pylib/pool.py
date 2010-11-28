@@ -189,7 +189,7 @@ class StockPool(StockBase):
             raise CircularDependency("circular dependency detected `%s' is in recursed paths %s" %
                                      (self.link, recursed_paths))
 
-        self.pool = Pool(self.link, recursed_paths)
+        self.pool = _Pool(self.link, recursed_paths)
         
 class Stock(StockBase):
     """Class for managing a non-subpool-type stock."""
