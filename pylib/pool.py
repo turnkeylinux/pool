@@ -877,5 +877,5 @@ class Pool(_Pool):
             reload(debinfo)
             return pool
 
-        return forked_constructor(f)()
+        return forked_constructor(f, print_traceback=True)()
     
