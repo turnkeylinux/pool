@@ -260,29 +260,32 @@ def test():
     def dummy():
         return pg
     forkedpg = forked_constructor(dummy)()
-    print pg.getpid()
-    print forkedpg.getpid()
+    print "pg.getpid() = %d" % pg.getpid()
+    print "forkedpg.getpid() = %d" % forkedpg.getpid()
+    assert pg.getpid() != forkedpg.getpid()
+    
+    class Attr(object):
+        def __init__(self, attr):
+            self.attr = attr
 
+        def getattr(self):
+            return self.attr
 
-class Foo(object):
-    def __init__(self, foo):
-        self.foo = foo
+        def setattr(self, attr):
+            self.attr = attr
 
-    def getfoo(self):
-        return self.foo
+    attr = forked_constructor(Attr)(666)
+    print ">>> attr.attr"
+    print attr.attr
 
-    def setfoo(self, foo):
-        self.foo = foo
+    attr.setattr(111)
+    assert attr.attr == 111
 
-foo = forked_constructor(Foo)(666)
-print foo.getfoo()
-print foo.foo
-foo.setfoo(111)
-print foo.foo
+    print ">>> attr.attr = 222"
+    attr.attr = 222
+    print ">>> attr.getattr()"
+    print attr.getattr()
+    assert attr.getattr() == 222
 
-foo.foo = 222
-print foo.getfoo()
-print foo.foo
-
-
-
+if __name__=="__main__":
+    test()
