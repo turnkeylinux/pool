@@ -156,7 +156,8 @@ class ObjProxyServer(ObjProxyBase):
                 pickle.dump((False, ret), self.w)
             except Exception, e:
                 if self.print_traceback:
-                    traceback.print_exc(file=sys.stderr)
+                    if not isinstance(e, AttributeError):
+                        traceback.print_exc(file=sys.stderr)
                 pickle.dump((True, e), self.w)
 
         return wrapper
