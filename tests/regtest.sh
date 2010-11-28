@@ -198,6 +198,9 @@ if [ -n "$test_getall" ] || [ -n "$test_getnew" ]; then
     rm *.deb
     pool-info -r --pkgcache
     pool-info -r --build-logs
+
+    pool-info-build gitsingle
+    pool-info-build $(pool-list plain)
 fi
 
 if [ -n "$test_getall" ]; then
