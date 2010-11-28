@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.150103519669">
+<globals body_outline_ratio="0.345755693582">
 	<global_window_position top="0" left="552" height="966" width="718"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -124,11 +124,16 @@
 <v t="zaril.20101123043551"><vh>add --binary-versions option to pool-info command</vh></v>
 </v>
 <v t="zaril.20101123051529"><vh>patch unregister and gc to take advantage of binary-versions</vh></v>
-<v t="zaril.20101125202956" a="E"><vh>optimize pool privilege dropping</vh>
+<v t="zaril.20101125202956" a="TV"><vh>optimize pool privilege dropping</vh>
 <v t="zaril.20101126004951"><vh>implement POC master/slave RPC</vh></v>
-<v t="zaril.20101126092908"><vh>wildcard attribute access</vh></v>
 <v t="zaril.20101126225101"><vh>benchmark forked_constructor vs forked_func</vh></v>
-<v t="zaril.20101126092948" a="TV"><vh>communicate exception backtrace?</vh></v>
+<v t="zaril.20101126233132"><vh>hack pool</vh></v>
+<v t="zaril.20101127211846"><vh>control initialization of Pool with __new__</vh></v>
+<v t="zaril.20101126092908"><vh>develop attribute access</vh></v>
+<v t="zaril.20101128183305"><vh>work out bugs</vh></v>
+<v t="zaril.20101128185308"><vh>stress test</vh></v>
+<v t="zaril.20101126092948"><vh>communicate exception backtrace?</vh></v>
+<v t="zaril.20101128223512" a="E"><vh>bug: some operations are executed as root</vh></v>
 </v>
 </v>
 </v>
@@ -2361,18 +2366,33 @@ E: how much of an improvement if we turn on psyco?
     on unregister, add binaries to package list
     on gc, add binaries in stocks in whitelist</t>
 <t tx="zaril.20101125202956">SUMMARY
-    the overhead is to to extensive forking
+    the overhead is due to extensive forking
         process creation overhead for each method invocation
 
+    putting the instance inside a subprocess eliminates most of this overhead
+        operations become constant time
+            previously the overhead seemed to grow exponentially with the amount of packages you ask for
+    
+
+    EXAMPLE BENCHMARKS
+        BEFORE:    
+            time pool-get tmp/ -i 50pkgs
+                real    2m8.659s
+                user    2m2.628s
+                sys     0m2.036s
+                      
+        AFTER:
+            time pool-get tmp/ -i 50pkgs
+            
+            real    0m0.476s
+            user    0m0.172s
+            sys     0m0.048s
+                
 time pool-get tmp-z/ -i 10pkgs
     real    0m0.429s
     user    0m0.292s
     sys     0m0.136s
-    
-time pool-get tmp/ -i 10pkgs
-    real    0m7.863s
-    user    0m7.448s
-    sys     0m0.384s
+
 
 IDEAS
     maybe keep the entire object in reduced privileges?
@@ -2394,11 +2414,7 @@ Q: what dropped pool methods does cmd_get call?
         shouldn't be because it doesn't sync
 
     getpath_deb
-        forked each time
-
-
-
-</t>
+        forked each time</t>
 <t tx="zaril.20101126004951">Q: should we use XMLRPC?
 
 protocol:
@@ -2466,10 +2482,32 @@ forks
     parent process return dummy proxy instance
     
     </t>
-<t tx="zaril.20101126092908">configure Proxy object as inheritable
+<t tx="zaril.20101126092908">LOGIC
+    add get/set calls
+    if we get a method back, then bind a proxy attribute
+        otherwise pass the value back 
 
+Q: can we serialize functions between processes?
+
+configure Proxy object as inheritable
+    
+ROADMAP
+    convert call to InstanceServer/InstanceClient
+    get 
+    set
+
+protocol
+    GET attr
+    SET attr val
+    CALL attr, args, kws
+
+op, args
+    (attr, val)
 </t>
-<t tx="zaril.20101126092948"></t>
+<t tx="zaril.20101126092948">rational: would make it much easier to debug issues inside forked code if we had a full backtrace
+
+GOTCHA: tracebacks can not be serialized. damn
+    we can print them out though</t>
 <t tx="zaril.20101126225101">optimize if needed
     cpickle instead of pickle
 
@@ -2484,5 +2522,73 @@ benchmarks for forked_func
 
 IDEA:
     add examples</t>
+<t tx="zaril.20101126233132">LOGIC
+    create a pool instance
+    if we're running as root and the pool instance is not owned by root
+    wrap a dummy constructor which:
+        drops privileges
+        return the already created instance (this will be wrapped)
+
+IDEAS
+    it would be nice if we could pass an existing instance
+        we can, just create a function that returns an existing instance
+
+GOTCHA:
+    I need attribute access for cmd_info.py
+
+ROADMAP
+    fix cmd_get, then fix cmd_info
+
+at the end, pool has to pass regression tests
+</t>
+<t tx="zaril.20101127211846">LOGIC
+    create paths
+
+RESOURCE: Python reference-&gt;index-&gt;__new__
+
+__new__(  	cls[, ...])
+    Called to create a new instance of class cls. __new__() is a static method (special-cased so you need not declare it as such) that takes the class of which an instance was requested as its first argument. The remaining arguments are those passed to the object constructor expression (the call to the class). The return value of __new__() should be the new object instance (usually an instance of cls).
+
+    Typical implementations create a new instance of the class by invoking the superclass's __new__() method using "super(currentclass, cls).__new__(cls[, ...])"with appropriate arguments and then modifying the newly-created instance as necessary before returning it.
+
+    If __new__() returns an instance of cls, then the new instance's __init__() method will be invoked like "__init__(self[, ...])", where self is the new instance and the remaining arguments are the same as were passed to __new__().
+
+    If __new__() does not return an instance of cls, then the new instance's __init__() method will not be invoked.
+
+    __new__() is intended mainly to allow subclasses of immutable types (like int, str, or tuple) to customize instance creation. </t>
+<t tx="zaril.20101128183305">GOTCHA: yield doesn't work
+
+pool-info --build-logs
+</t>
+<t tx="zaril.20101128185308">hack regression suite to support a pre-setup test pool
+
+</t>
+<t tx="zaril.20101128223512">PROBLEM:
+    pool.subpools is returning live Pool objects from the forked process to the root process
+	so when we sync a subpool, its being synced with root privileges
+
+SOLUTION:
+    drop privileges of the entire info command
+        maybe also in cmd_info_build 
+
+INSIGHT: dropping privileges should be the default
+    it fits all commands except get
+
+I think these are sync operations in info
+
+print_pkgcache
+print_stock_sources
+pritn_stock_binaries
+
+E: remove sync in cmd_info
+R: that solves the problem, so its definitely there
+
+IDEAS
+    drop privileges in cmd_info?
+    somehow intercept the pool after its come
+
+    how?
+        wrap proxy client's subpools?
+</t>
 </tnodes>
 </leo_file>
