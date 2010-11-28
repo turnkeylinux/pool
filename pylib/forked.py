@@ -14,6 +14,8 @@ parent process.
 
 Limitation: Forked functions or instance methods can not return any
 value that can not be serialized with pickle. This includes:
+        file objects
+        tracebacks
 	generators (I.e., created when you use yield)
 	nested classes
 	instance methods
