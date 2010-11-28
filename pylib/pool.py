@@ -850,7 +850,14 @@ class _Pool(object):
         self.stocks.sync()
 
 class Pool(_Pool):
-    """wrapper class that drops privileges in a sub-process if required"""
+    """wrapper class that drops privileges in a sub-process if required.
+
+    If privileges are dropped a proxy instance is returned which
+    transparently passes method access to the real instance running inside
+    the privilege reduced sub process.
+
+    Otherwise, a normal pool instance is returned.
+    """
     def __new__(cls, *args, **kws):
         pool = _Pool(*args, **kws)
 
