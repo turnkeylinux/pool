@@ -95,7 +95,8 @@ class Pipe:
 class ObjProxyBase:
     OP_CALL = "call"
     OP_GET = "get"
-    ATTR_CALLABLE = "__attr_is_callable__"
+    OP_SET = "set"
+    ATTR_CALLABLE = "__attr_callable__"
 
 class ObjProxyServer(ObjProxyBase):
     def __init__(self, r, w, obj):
@@ -114,12 +115,14 @@ class ObjProxyServer(ObjProxyBase):
                 op_handler = self._handle_op_call
             elif op == self.OP_GET:
                 op_handler = self._handle_op_get
+            elif op == self.OP_SET:
+                op_handler = self._handle_op_set
             else:
                 raise Error("illegal ObjProxy operation (%s)" % op)
                 
             op_handler(params)
 
-    def _sendresult(method):
+    def _write_result(method):
         def wrapper(self, *args, **kws):
             try:
                 ret = method(self, *args, **kws)
@@ -129,7 +132,7 @@ class ObjProxyServer(ObjProxyBase):
 
         return wrapper
 
-    @_sendresult
+    @_write_result
     def _handle_op_call(self, params):
         attrname, args, kws = params
         attr = getattr(self.obj, attrname)
@@ -137,34 +140,54 @@ class ObjProxyServer(ObjProxyBase):
             raise Error("'%s' is not callable" % attrname)
         return attr(*args, **kws)
     
-    @_sendresult
+    @_write_result
     def _handle_op_get(self, params):
         attrname, = params
-        attr = getattr(self.obj, attrname)
-        if callable(attr):
+        val = getattr(self.obj, attrname)
+        if callable(val):
             return self.ATTR_CALLABLE
-        return attr
-        
-class ObjProxyClient(ObjProxyBase):
+        return val
+
+    @_write_result
+    def _handle_op_set(self, params):
+        attrname, val = params
+        setattr(self.obj, attrname, val)
+
+class ObjProxyClient(ObjProxyBase, object):
     """This proxy class only proxies method invocations - no attributes"""
+    __local_attr__ = ['r', 'w']
+
     def __init__(self, r, w):
         self.r = r
         self.w = w
 
+    def _read_result(op_method):
+        def wrapper(self, *args, **kws):
+            op_method(self, *args, **kws)
+            error, val = pickle.load(self.r)
+            if error:
+                raise val
+            return val
+        return wrapper
+
+    @_read_result
     def _op_call(self, attrname, args, kws):
         pickle.dump((self.OP_CALL, (attrname, args, kws)), self.w)
-        error, val = pickle.load(self.r)
-        if error:
-            raise val
-        return val
 
+    @_read_result
     def _op_get(self, attrname):
         pickle.dump((self.OP_GET, (attrname,)), self.w)
-        error, val = pickle.load(self.r)
-        if error:
-            raise val
-        return val
-              
+
+    @_read_result
+    def _op_set(self, attrname, val):
+        pickle.dump((self.OP_SET, (attrname, val)), self.w)
+
+    def __setattr__(self, attrname, val):
+        if attrname in self.__local_attr__:
+            return object.__setattr__(self, attrname, val)
+
+        return self._op_set(attrname, val)
+
     def __getattr__(self, attrname):
         val = self._op_get(attrname)
         if val != self.ATTR_CALLABLE:
@@ -175,9 +198,10 @@ class ObjProxyClient(ObjProxyBase):
 
         method = new.instancemethod(unbound_method,
                                     self, self.__class__)
-        setattr(self, attrname, method)
+        object.__setattr__(self, attrname, method)
         return method
 
+    
 def forkpipe():
     """Forks and create a bi-directional pipe -> (pid, r, w)"""
     pipe_input = Pipe()
@@ -257,6 +281,9 @@ print foo.foo
 foo.setfoo(111)
 print foo.foo
 
+foo.foo = 222
+print foo.getfoo()
+print foo.foo
 
 
 
