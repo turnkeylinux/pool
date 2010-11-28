@@ -70,13 +70,14 @@ Example usage:
 import os
 import sys
 
+import traceback
 import cPickle as pickle
 import new
 
 class Error(Exception):
     pass
 
-def forked_func(func):
+def forked_func(func, print_traceback=False):
     def wrapper(*args, **kws):
         r_fd, w_fd = os.pipe()
         r_fh = os.fdopen(r_fd, "r", 0)
@@ -90,6 +91,8 @@ def forked_func(func):
             try:
                 ret = func(*args, **kws)
             except Exception, e:
+                if print_traceback:
+                    traceback.print_exc(file=sys.stderr)
                 pickle.dump(e, w_fh)
                 sys.exit(1)
 
@@ -122,10 +125,11 @@ class ObjProxyBase:
     ATTR_CALLABLE = "__attr_callable__"
 
 class ObjProxyServer(ObjProxyBase):
-    def __init__(self, r, w, obj):
+    def __init__(self, r, w, obj, print_traceback=False):
         self.r = r
         self.w = w
         self.obj = obj
+        self.print_traceback = print_traceback
 
     def run(self):
         while True:
@@ -151,6 +155,8 @@ class ObjProxyServer(ObjProxyBase):
                 ret = method(self, *args, **kws)
                 pickle.dump((False, ret), self.w)
             except Exception, e:
+                if self.print_traceback:
+                    traceback.print_exc(file=sys.stderr)
                 pickle.dump((True, e), self.w)
 
         return wrapper
@@ -248,14 +254,14 @@ def forkpipe():
         
         return (pid, pipe_output.r, pipe_input.w)
 
-def forked_constructor(constructor):
+def forked_constructor(constructor, print_traceback=False):
     """Wraps a constructor so that instances are created in a subprocess.
     Returns a new constructor"""
     def wrapper(*args, **kws):
         pid, r, w = forkpipe()
         if pid == 0:
             obj = constructor(*args, **kws)
-            ObjProxyServer(r, w, obj).run()
+            ObjProxyServer(r, w, obj, print_traceback=print_traceback).run()
             sys.exit(0)
 
         return ObjProxyClient(r, w)
