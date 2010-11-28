@@ -92,30 +92,35 @@ class Pipe:
         self.r = os.fdopen(r, "r", 0)
         self.w = os.fdopen(w, "w", 0)
 
-class InstanceServer:
-    def __init__(self, r, w, instance):
+class ObjProxyServer:
+    def __init__(self, r, w, obj):
         self.r = r
         self.w = w
-        self.instance = instance
+        self.obj = obj
 
     def run(self):
         while True:
             try:
-                attrname, args, kws = pickle.load(self.r)
+                op, params = pickle.load(self.r)
             except EOFError:
                 break
 
-            try:
-                attr = getattr(self.instance, attrname)
-                if not callable(attr):
-                    raise Error("'%s' is not callable" % attrname)
+            op_handler = getattr(self, "_op_" + op)
+            op_handler(params)
 
-                ret = attr(*args, **kws)
-                pickle.dump((False, ret), self.w)
-            except Exception, e:
-                pickle.dump((True, e), self.w)
+    def _op_call(self, params):
+        attrname, args, kws = params
+        try:
+            attr = getattr(self.obj, attrname)
+            if not callable(attr):
+                raise Error("'%s' is not callable" % attrname)
 
-class InstanceClient:
+            ret = attr(*args, **kws)
+            pickle.dump((False, ret), self.w)
+        except Exception, e:
+            pickle.dump((True, e), self.w)
+
+class ObjProxyClient:
     """This proxy class only proxies method invocations - no attributes"""
     def __init__(self, r, w):
         self.r = r
@@ -124,7 +129,7 @@ class InstanceClient:
     @staticmethod
     def _proxy(attrname):
         def method(self, *args, **kws):
-            pickle.dump((attrname, args, kws), self.w)
+            pickle.dump(('call', (attrname, args, kws)), self.w)
             error, val = pickle.load(self.r)
             if error:
                 raise val
@@ -161,11 +166,11 @@ def forked_constructor(constructor):
     def wrapper(*args, **kws):
         pid, r, w = forkpipe()
         if pid == 0:
-            instance = constructor(*args, **kws)
-            InstanceServer(r, w, instance).run()
+            obj = constructor(*args, **kws)
+            ObjProxyServer(r, w, obj).run()
             sys.exit(0)
 
-        return InstanceClient(r, w)
+        return ObjProxyClient(r, w)
     return wrapper
 
 def test():
