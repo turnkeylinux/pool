@@ -13,7 +13,6 @@ import verseek
 import debversion
 
 from git import Git
-from forked import forked_constructor
 
 import debinfo
 
@@ -189,7 +188,7 @@ class StockPool(StockBase):
             raise CircularDependency("circular dependency detected `%s' is in recursed paths %s" %
                                      (self.link, recursed_paths))
 
-        self.pool = _Pool(self.link, recursed_paths)
+        self.pool = Pool(self.link, recursed_paths, drop_privileges=False)
         
 class Stock(StockBase):
     """Class for managing a non-subpool-type stock."""
@@ -557,7 +556,7 @@ def sync(method):
         return method(self, *args, **kws)
     return wrapper
 
-class _Pool(object):
+class Pool(object):
     """Class for creating and controlling a Pool.
     This class's public methods map roughly to the pool's cli interface"""
 
@@ -609,7 +608,7 @@ class _Pool(object):
 
         return cls(path)
 
-    def __init__(self, path=None, recursed_paths=[], autosync=True):
+    def __init__(self, path=None, recursed_paths=[], autosync=True, drop_privileges=True):
         """Initialize pool instance.
 
         if <autosync> is False, the user is expected to control syncing manually.
@@ -618,6 +617,9 @@ class _Pool(object):
         self.path = dirname(self.paths.path)
         if not exists(self.paths.path):
             raise Error("no pool found (POOL_DIR=%s)" % self.path)
+        if drop_privileges:
+            self.drop_privileges()
+            
         self.buildroot = os.readlink(self.paths.build.root)
         self.pkgcache = PackageCache(self.paths.pkgcache)
         self.stocks = Stocks(self.paths.stocks, self.pkgcache,
@@ -846,36 +848,26 @@ class _Pool(object):
         if recurse:
             for subpool in self.subpools:
                 subpool.gc(recurse)
-            
+
+    def drop_privileges(self, pretend=False):
+        """Set the uid and gid of the current process to that of the pool.
+        Returns whether or not we dropped privileges.
+
+        if <pretend> is True, we don't actually drop privileges.
+        """
+        pool_uid = os.stat(self.paths.path).st_uid
+        pool_gid = os.stat(self.paths.path).st_gid
+
+        if os.getuid() != 0 or os.getuid() == pool_uid:
+            return False
+
+        if not pretend:
+            os.setgid(pool_gid)
+            os.setuid(pool_uid)
+            reload(debinfo)
+
+        return True
+
     def sync(self):
         """synchronise pool with registered stocks"""
         self.stocks.sync()
-
-class Pool(_Pool):
-    """wrapper class that drops privileges in a sub-process if required.
-
-    If privileges are dropped a proxy instance is returned which
-    transparently passes method access to the real instance running inside
-    the privilege reduced sub process.
-
-    Otherwise, a normal pool instance is returned.
-    """
-    def __new__(cls, *args, **kws):
-        pool = _Pool(*args, **kws)
-
-        owner_uid = os.stat(pool.paths.path).st_uid
-        owner_gid = os.stat(pool.paths.path).st_gid
-
-        uid = os.getuid()
-
-        if uid == owner_uid or uid != 0:
-            return pool
-
-        def f():
-            os.setgid(owner_gid)
-            os.setuid(owner_uid)
-            reload(debinfo)
-            return pool
-
-        return forked_constructor(f, print_traceback=True)()
-    

@@ -23,6 +23,7 @@ import re
 from pool import Pool
 
 from common import *
+from forked import forked_constructor
 
 @help.usage(__doc__)
 def usage():
@@ -88,7 +89,15 @@ def main():
             opt_tree = True
 
 
-    pool = Pool(autosync=False)
+    # don't drop privileges immediately because we may need root privileges
+    # in the cli process to write packages to a root owned directory
+    pool = Pool(autosync=False, drop_privileges=False)
+    if pool.drop_privileges(pretend=True):
+        def f():
+            pool.drop_privileges()
+            return pool
+        pool = forked_constructor(f, print_traceback=True)()
+        
     pool.sync()
     
     if input:
