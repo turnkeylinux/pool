@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # Copyright (c) 2010 TurnKey Linux - all rights reserved
-"""
+"""Maintain a pool of packages from source and binary stocks
+
 Environment variables:
     POOL_DIR            Location of pool (defaults to `.')
     DEBINFO_DIR         Location of debinfo cache (default: $HOME/.debinfo)
