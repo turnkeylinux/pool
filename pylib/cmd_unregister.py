@@ -1,5 +1,5 @@
 #!/usr/bin/python
-"""unregister a package stock from the pool"""
+"""Unregister a package stock from the pool"""
 import sys
 import help
 import pool

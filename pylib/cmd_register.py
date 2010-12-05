@@ -1,5 +1,5 @@
 #!/usr/bin/python
-"""register a package stock into the pool"""
+"""Register a package stock into the pool"""
 import sys
 import help
 import pool
