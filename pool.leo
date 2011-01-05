@@ -3,7 +3,7 @@
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
 <globals body_outline_ratio="0.345755693582">
-	<global_window_position top="0" left="552" height="966" width="718"/>
+	<global_window_position top="0" left="0" height="966" width="718"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -124,7 +124,7 @@
 <v t="zaril.20101123043551"><vh>add --binary-versions option to pool-info command</vh></v>
 </v>
 <v t="zaril.20101123051529"><vh>patch unregister and gc to take advantage of binary-versions</vh></v>
-<v t="zaril.20101125202956" a="TV"><vh>optimize pool privilege dropping</vh>
+<v t="zaril.20101125202956"><vh>optimize pool privilege dropping</vh>
 <v t="zaril.20101126004951"><vh>implement POC master/slave RPC</vh></v>
 <v t="zaril.20101126225101"><vh>benchmark forked_constructor vs forked_func</vh></v>
 <v t="zaril.20101126233132"><vh>hack pool</vh></v>
@@ -138,6 +138,7 @@
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
+<v t="zaril.20110105152053" a="TV"><vh>adapter that allows pool to be accessed by apt-get</vh></v>
 <v t="zaril.20101022061317"><vh>bug: pool assumes that packages have always existed in all versions</vh></v>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
@@ -2589,6 +2590,11 @@ IDEAS
 
     how?
         wrap proxy client's subpools?
+</t>
+<t tx="zaril.20110105152053">usage scenario
+    I want to resolve build dependencies from a pool
+
+    I want to install packages live during development from the pool
 </t>
 </tnodes>
 </leo_file>
