@@ -2,11 +2,11 @@ Source: pool
 Section: misc
 Priority: optional
 Maintainer: Liraz Siri <liraz@turnkeylinux.org>
-Build-Depends: debhelper (>> 4.2.0), python (>= 2.4)
+Build-Depends: pyproject-common
 Standards-Version: 3.6.1
 
 Package: pool
 Architecture: any
-Depends: python (>= 2.4), turnkey-pylib, git-core (>= 1:1.5.2), deckdebuild, verseek
+Depends: pyproject-common, git-core (>= 1:1.5.2), deckdebuild, verseek
 Recommends: sumo
 Description: maintain a pool of packages from source and binary stocks
