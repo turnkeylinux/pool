@@ -3,7 +3,7 @@
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
 <globals body_outline_ratio="0.345755693582">
-	<global_window_position top="0" left="0" height="966" width="718"/>
+	<global_window_position top="10" left="10" height="966" width="718"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -138,7 +138,8 @@
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
-<v t="zaril.20110105152053" a="TV"><vh>adapter that allows pool to be accessed by apt-get</vh></v>
+<v t="zaril.20110109153840" a="TV"><vh>pool info command that shows the source of a package</vh></v>
+<v t="zaril.20110105152053"><vh>adapter that allows pool to be accessed by apt-get</vh></v>
 <v t="zaril.20101022061317"><vh>bug: pool assumes that packages have always existed in all versions</vh></v>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
 <v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
@@ -2595,6 +2596,14 @@ IDEAS
     I want to resolve build dependencies from a pool
 
     I want to install packages live during development from the pool
+</t>
+<t tx="zaril.20110109153840">IDEA: instead of using info --stock-sources and --stock-binaries to list all sources,
+have a command that shows the stock for a specific package 
+    (latest version if no version is specified)
+
+pool-info-origin package[=version]
+
+
 </t>
 </tnodes>
 </leo_file>
