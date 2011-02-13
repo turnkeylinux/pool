@@ -89,8 +89,11 @@ def main():
             opt_tree = True
 
 
-    # don't drop privileges immediately because we may need root privileges
-    # in the cli process to write packages to a root owned directory
+    # 1) don't drop privileges immediately because we may need root privileges
+    #    in the cli process to write packages to a root owned directory
+    # 2) we drop privileges in a separate process, using forked_constructor
+    # 3) to minimize overhead we use forked_constructor to drop privileges
+    #    only after verifying we really need to drop privileges
     pool = Pool(autosync=False, drop_privileges=False)
     if pool.drop_privileges(pretend=True):
         def f():
