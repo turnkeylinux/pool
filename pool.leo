@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.345755693582">
-	<global_window_position top="10" left="10" height="966" width="718"/>
+<globals body_outline_ratio="0.227743271222">
+	<global_window_position top="0" left="647" height="966" width="623"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -135,10 +135,14 @@
 <v t="zaril.20101126092948"><vh>communicate exception backtrace?</vh></v>
 <v t="zaril.20101128223512" a="E"><vh>bug: some operations are executed as root</vh></v>
 </v>
+<v t="zaril.20110213045733" a="ETV"><vh>refactor cli interface into Pool</vh>
+<v t="zaril.20110213074424" a="M"><vh>list</vh></v>
+<v t="zaril.20110213212432" a="M"><vh>get</vh></v>
+</v>
 </v>
 </v>
 <v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
-<v t="zaril.20110109153840" a="TV"><vh>pool info command that shows the source of a package</vh></v>
+<v t="zaril.20110109153840"><vh>pool info command that shows the source of a package</vh></v>
 <v t="zaril.20110105152053"><vh>adapter that allows pool to be accessed by apt-get</vh></v>
 <v t="zaril.20101022061317"><vh>bug: pool assumes that packages have always existed in all versions</vh></v>
 <v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
@@ -2605,5 +2609,54 @@ pool-info-origin package[=version]
 
 
 </t>
+<t tx="zaril.20110213045733">PoolKernel
+Pool
+    register
+    unregister
+    exists
+    list
+    get
+    gc
+
+* ROADMAP
+pass everything to PoolKernel
+privilege dropping 
+    remove from cmd_get.py
+move init_create to Pool
+list
+get
+
+* IDEAS
+
+cmd_info.py: pool -&gt; kernel
+drop_privileges -&gt; os_drop_privileges
+
+create option NOT to retain privileges
+    so we can drop privileges globally
+        useful in some of the cli commands
+            don't need overhead of additional fork
+                only relevant when there is a privilege gap (root/fab)
+                    better to use API anyhow in that scenario
+
+makerelative from Paths
+
+
+
+</t>
+<t tx="zaril.20110213074424">GOTCHA: how do we support non-match warnings?
+    we could just print the warning from filter_packages
+
+
+IDEAS:
+list accepts only one package_glob and raises an exception if its missing?
+    very inefficient
+
+returns a data structure inherited from list
+    list of packages
+
+    with .missing attribute
+
+raises</t>
+<t tx="zaril.20110213212432"></t>
 </tnodes>
 </leo_file>

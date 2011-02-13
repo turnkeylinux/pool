@@ -8,7 +8,7 @@ import commands
 
 from paths import Paths
 
-from common import *
+import errno
 import verseek
 import debversion
 
@@ -46,6 +46,14 @@ def get_suffix(filename):
         return filename.rsplit(".", 1)[1]
     except IndexError:
         return None
+
+def hardlink_or_copy(src, dst):
+    try:
+        os.link(src, dst)
+    except OSError, e:
+        if e[0] != errno.EXDEV:
+            raise
+        shutil.copyfile(src, dst)
 
 class PackageCache:
     """Class representing the pool's package cache"""
@@ -164,6 +172,14 @@ def make_relative(root, path):
 
         root = dirname(root).rstrip('/')
         up_count += 1
+
+def mkdir(path):
+    path = str(path)
+    try:
+        os.makedirs(path)
+    except OSError, e:
+        if e[0] != errno.EEXIST:
+            raise
 
 class StockBase(object):
     class Paths(Paths):
@@ -858,6 +874,12 @@ class PoolKernel(object):
         """synchronise pool with registered stocks"""
         self.stocks.sync()
 
+def get_treedir(pkgname):
+    if pkgname.startswith("lib"):
+        return join(pkgname[:4], pkgname)
+    else:
+        return join(pkgname[:1], pkgname)
+
 class Pool(object):
     Error = Error
     
@@ -888,8 +910,8 @@ class Pool(object):
 
         return cls(path)
 
-    def __init__(self, *args, **kws):
-        kernel = PoolKernel(*args, **kws)
+    def __init__(self, path=None):
+        kernel = PoolKernel(path)
         if kernel.drop_privileges(pretend=True):
             def f():
                 kernel.drop_privileges()
@@ -939,4 +961,49 @@ class Pool(object):
         packages.sort(cmp=_cmp, reverse=True)
         return packages
 
+    def get(self, output_dir, packages, tree_fmt=False, strict=False):
+        """get packages to output_dir -> resolved Pool.PackageList of packages we got
+
+        If strict missing packages raise an exception,
+        otherwise they are listed in .missing attr of the returned PackageList
+        """
+        
+        self.kernel.autosync = False
+        self.kernel.sync()
+
+        resolved = Pool.PackageList()
+        unresolved = []
+        for package in packages:
+            if not self.kernel.exists(package):
+                if strict:
+                    raise Error("no such package (%s)" % package)
+                resolved.missing.append(package)
+                continue
+
+            if '=' in package:
+                resolved.append(package)
+            else:
+                unresolved.append(package)
+
+        if unresolved:
+            resolved += self.kernel.resolve(unresolved)
+
+        try:
+            for package in resolved:
+                path_from = self.kernel.getpath_deb(package)
+                fname = basename(path_from)
+
+                if tree_fmt:
+                    package_name = package.split("=")[0]
+                    path_to = join(output_dir, get_treedir(package_name), fname)
+                    mkdir(dirname(path_to))
+                else:
+                    path_to = join(output_dir, basename(path_from))
+
+                if not exists(path_to):
+                    hardlink_or_copy(path_from, path_to)
+        finally:
+            self.kernel.autosync = True
+            
+        return resolved
 

@@ -22,8 +22,6 @@ import re
 
 from pool import Pool
 
-from common import *
-
 @help.usage(__doc__)
 def usage():
     print >> sys.stderr, "Syntax: %s [-options] <output-dir> [ package[=version] ... ]" % sys.argv[0]
@@ -50,16 +48,10 @@ def read_packages(fh):
         packages.append(line)
     return packages
     
-def get_treedir(pkgname):
-    if pkgname.startswith("lib"):
-        return join(pkgname[:4], pkgname)
-    else:
-        return join(pkgname[:1], pkgname)
-
 def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], 'i:sqt',
-                                   ['input=', 'strict', 'quiet', 'tree'])
+                                       ['input=', 'strict', 'quiet', 'tree'])
     except getopt.GetoptError, e:
         usage(e)
 
@@ -87,51 +79,24 @@ def main():
         elif opt in ('-t', '--tree'):
             opt_tree = True
 
-
-    pool = Pool(autosync=False)
-    pool.sync()
+    pool = Pool()
     
     if input:
         packages += read_packages(input)
-
-    resolved = []
-    unresolved = []
-    for package in packages:
-        if not pool.exists(package):
-            if opt_strict:
-                fatal("%s: no such package" % package)
-            if not opt_quiet:
-                warn("%s: no such package" % package)
-            continue
-
-        if '=' in package:
-            resolved.append(package)
-        else:
-            unresolved.append(package)
-
-    if unresolved:
-        resolved += pool.resolve(unresolved)
-
-    packages = resolved
 
     if not args[1:] and not input:
         # if no packages specified, get all the newest versions
         packages = pool.list()
 
-    for package in packages:
-        path_from = pool.getpath_deb(package)
-        fname = basename(path_from)
-        
-        if opt_tree:
-            package_name = package.split("=")[0]
-            path_to = join(outputdir, get_treedir(package_name), fname)
-            mkdir(dirname(path_to))
-        else:
-            path_to = join(outputdir, basename(path_from))
+    try:
+        packages = pool.get(outputdir, packages, tree_fmt=opt_tree, strict=opt_strict)
+    except pool.Error, e:
+        fatal(e)
 
-        if not exists(path_to):
-            hardlink_or_copy(path_from, path_to)
-
+    if not opt_quiet:
+        for package in packages.missing:
+            warn("no such package (%s)" % package)
+            
     sys.exit(exitcode)
         
 if __name__=="__main__":
