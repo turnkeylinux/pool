@@ -6,17 +6,20 @@ usage() {
     echo "  If no testing options are specified - test everything"
     echo
     echo "Options:"
-    echo "  --notests   turn off tests"
-    echo "  --nodelete  dont delete test pool at the end"
-    echo "              (default if test fails)"
+    echo "  --pool=PATH  use previously initialized pool"
+    echo "               (e.g., initialize a pool with --notests --nodelete)"
+    echo
+    echo "  --notests    turn off tests"
+    echo "  --nodelete   dont delete test pool at the end"
+    echo "               (default if test fails)"
     echo 
-    echo "  --info      test pool-info"
-    echo "  --list      test pool-list"
-    echo "  --exists    test pool-exists"
-    echo "  --commit    test new version detection after committing to stocks"
-    echo "  --getnew    test pool-get of newest versions"
-    echo "  --getall    test pool-get of all versions (new and old)"
-    echo "  --gc        test garbage collection"
+    echo "  --info       test pool-info"
+    echo "  --list       test pool-list"
+    echo "  --exists     test pool-exists"
+    echo "  --commit     test new version detection after committing to stocks"
+    echo "  --getnew     test pool-get of newest versions"
+    echo "  --getall     test pool-get of all versions (new and old)"
+    echo "  --gc         test garbage collection"
 
     
     exit 1
@@ -26,8 +29,17 @@ if [ "$1" == "-h" ]; then
     usage
 fi
 
+pool_path=""
 for arg; do
     case "$arg" in
+	--pool=*)
+	    pool_path=${arg#--pool=}
+	    ;;
+	    
+	--notests)
+	    test_notests=yes
+	    ;;
+
 	--nodelete)
 	    nodelete=yes
 	    ;;
@@ -54,9 +66,7 @@ for arg; do
 	    test_gc=yes
             ;;
 	    
-	--notests)
-	    test_notests=yes
-	    ;;
+
         *)
 	    usage
     esac
@@ -80,28 +90,34 @@ fi
 set -ex
 base=$(pwd)
 
-export TMPDIR=/turnkey/tmp/pool
-mkdir -p $TMPDIR
+unset POOL_DIR
 
-testbase=$(mktemp -d -t test.XXXXXX)
-
-cd $testbase
-pool-init /turnkey/fab/buildroots/jaunty
-
-mkdir subpool
-tar -C subpool -xvf $base/regtest-stocks.tar.bz2 
-
-cd subpool
-pool-init /turnkey/fab/buildroots/jaunty
-for stock in stocks/*; do
-    pool-register $stock
-    pool-unregister $stock
-    pool-register $stock
-done
-
-cd ../
-pool-register subpool
-
+if [ -z "$pool_path" ]; then
+    export TMPDIR=/turnkey/tmp/pool
+    mkdir -p $TMPDIR
+    
+    testbase=$(mktemp -d -t test.XXXXXX)
+    
+    cd $testbase
+    pool-init /turnkey/fab/buildroots/jaunty
+    
+    mkdir subpool
+    tar -C subpool -xvf $base/regtest-stocks.tar.bz2 
+    
+    cd subpool
+    pool-init /turnkey/fab/buildroots/jaunty
+    for stock in stocks/*; do
+        pool-register $stock
+        pool-unregister $stock
+        pool-register $stock
+    done
+    
+    cd ../
+    pool-register subpool
+else
+    cd $pool_path
+fi
+    
 if [ -n "$test_info" ]; then
     pool-info -r
     pool-info -r --stocks
