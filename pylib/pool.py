@@ -16,6 +16,8 @@ from git import Git
 
 import debinfo
 from forked import forked_constructor
+from fnmatch import fnmatch
+import debversion
 
 class Error(Exception):
     pass
@@ -859,6 +861,15 @@ class PoolKernel(object):
 class Pool(object):
     Error = Error
     
+    class PackageList(list):
+        def __init__(self, sequence=None):
+            if sequence:
+                list.__init__(self, sequence)
+            else:
+                list.__init__(self)
+
+            self.missing = []
+
     parse_package_id = staticmethod(PoolKernel.parse_package_id)
     fmt_package_id = staticmethod(PoolKernel.fmt_package_id)
 
@@ -888,3 +899,44 @@ class Pool(object):
 
     def __getattr__(self, name):
         return getattr(self.kernel, name)
+
+    def list(self, all_versions=False, *globs):
+        """List packages in pool (sorted) -> Pool.PackageList (list + .missing attr)
+
+        If no globs are specified, lists all packages.
+        Globs that didn't match are listed in PackageList.missing
+        """
+        assert isinstance(all_versions, bool)
+        
+        def filter_packages(packages, globs):
+            filtered = Pool.PackageList()
+            for glob in globs:
+                matches = []
+                for package in packages:
+                    name, version = Pool.parse_package_id(package)
+                    if fnmatch(name, glob):
+                        matches.append(package)
+
+                if not matches:
+                    filtered.missing.append(glob)
+                else:
+                    filtered += matches
+
+            return filtered
+
+        packages = Pool.PackageList(self.kernel.list(all_versions))
+        if globs:
+            packages = filter_packages(packages, globs)
+
+        def _cmp(a, b):
+            a = Pool.parse_package_id(a)
+            b = Pool.parse_package_id(b)
+            val = cmp(b[0], a[0])
+            if val != 0:
+                return val
+            return debversion.compare(a[1], b[1])
+
+        packages.sort(cmp=_cmp, reverse=True)
+        return packages
+
+
