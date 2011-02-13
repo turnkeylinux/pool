@@ -15,6 +15,7 @@ import debversion
 from git import Git
 
 import debinfo
+from forked import forked_constructor
 
 class Error(Exception):
     pass
@@ -188,7 +189,7 @@ class StockPool(StockBase):
             raise CircularDependency("circular dependency detected `%s' is in recursed paths %s" %
                                      (self.link, recursed_paths))
 
-        self.pool = PoolKernel(self.link, recursed_paths, drop_privileges=False)
+        self.pool = PoolKernel(self.link, recursed_paths)
         
 class Stock(StockBase):
     """Class for managing a non-subpool-type stock."""
@@ -593,7 +594,7 @@ class PoolKernel(object):
 
         return name + "=" + version
 
-    def __init__(self, path=None, recursed_paths=[], autosync=True, drop_privileges=True):
+    def __init__(self, path=None, recursed_paths=[], autosync=True):
         """Initialize pool instance.
 
         if <autosync> is False, the user is expected to control syncing manually.
@@ -602,8 +603,6 @@ class PoolKernel(object):
         self.path = dirname(self.paths.path)
         if not exists(self.paths.path):
             raise Error("no pool found (POOL_DIR=%s)" % self.path)
-        if drop_privileges:
-            self.drop_privileges()
             
         self.buildroot = os.readlink(self.paths.build.root)
         self.pkgcache = PackageCache(self.paths.pkgcache)
@@ -879,7 +878,13 @@ class Pool(object):
         return cls(path)
 
     def __init__(self, *args, **kws):
-        self.kernel = PoolKernel(*args, **kws)
+        kernel = PoolKernel(*args, **kws)
+        if kernel.drop_privileges(pretend=True):
+            def f():
+                kernel.drop_privileges()
+                return kernel
+            kernel = forked_constructor(f, print_traceback=True)()
+        self.kernel = kernel
 
     def __getattr__(self, name):
         return getattr(self.kernel, name)

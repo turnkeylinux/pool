@@ -23,7 +23,6 @@ import re
 from pool import Pool
 
 from common import *
-from forked import forked_constructor
 
 @help.usage(__doc__)
 def usage():
@@ -94,13 +93,7 @@ def main():
     # 2) we drop privileges in a separate process, using forked_constructor
     # 3) to minimize overhead we use forked_constructor to drop privileges
     #    only after verifying we really need to drop privileges
-    pool = Pool(autosync=False, drop_privileges=False)
-    if pool.drop_privileges(pretend=True):
-        def f():
-            pool.drop_privileges()
-            return pool
-        pool = forked_constructor(f, print_traceback=True)()
-        
+    pool = Pool(autosync=False)
     pool.sync()
     
     if input:

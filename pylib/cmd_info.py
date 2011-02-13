@@ -118,6 +118,7 @@ def print_build_logs(pool):
 def info(func, recursive, pool=None):
     if pool is None:
         pool = PoolKernel()
+        pool.drop_privileges()
 
     if recursive:
         print "### POOL_DIR=" + pool.path
