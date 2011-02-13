@@ -188,7 +188,7 @@ class StockPool(StockBase):
             raise CircularDependency("circular dependency detected `%s' is in recursed paths %s" %
                                      (self.link, recursed_paths))
 
-        self.pool = Pool(self.link, recursed_paths, drop_privileges=False)
+        self.pool = PoolKernel(self.link, recursed_paths, drop_privileges=False)
         
 class Stock(StockBase):
     """Class for managing a non-subpool-type stock."""
@@ -556,7 +556,7 @@ def sync(method):
         return method(self, *args, **kws)
     return wrapper
 
-class Pool(object):
+class PoolKernel(object):
     """Class for creating and controlling a Pool.
     This class's public methods map roughly to the pool's cli interface"""
 
@@ -592,21 +592,6 @@ class Pool(object):
             raise Error("can't format package_id with unspecified version")
 
         return name + "=" + version
-
-    @classmethod
-    def init_create(cls, buildroot, path=None):
-        paths = PoolPaths(path)
-
-        if not isdir(buildroot):
-            raise Error("buildroot `%s' is not a directory" % buildroot)
-        
-        mkdir(paths.stocks)
-        mkdir(paths.pkgcache)
-        mkdir(paths.build)
-        mkdir(paths.build.logs)
-        os.symlink(buildroot, paths.build.root)
-
-        return cls(path)
 
     def __init__(self, path=None, recursed_paths=[], autosync=True, drop_privileges=True):
         """Initialize pool instance.
@@ -871,3 +856,30 @@ class Pool(object):
     def sync(self):
         """synchronise pool with registered stocks"""
         self.stocks.sync()
+
+class Pool(object):
+    Error = Error
+    
+    parse_package_id = staticmethod(PoolKernel.parse_package_id)
+    fmt_package_id = staticmethod(PoolKernel.fmt_package_id)
+
+    @classmethod
+    def init_create(cls, buildroot, path=None):
+        paths = PoolPaths(path)
+
+        if not isdir(buildroot):
+            raise Error("buildroot `%s' is not a directory" % buildroot)
+        
+        mkdir(paths.stocks)
+        mkdir(paths.pkgcache)
+        mkdir(paths.build)
+        mkdir(paths.build.logs)
+        os.symlink(buildroot, paths.build.root)
+
+        return cls(path)
+
+    def __init__(self, *args, **kws):
+        self.kernel = PoolKernel(*args, **kws)
+
+    def __getattr__(self, name):
+        return getattr(self.kernel, name)

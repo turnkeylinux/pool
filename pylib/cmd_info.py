@@ -20,7 +20,7 @@ import sys
 import help
 import getopt
 
-from pool import Pool
+from pool import PoolKernel
 
 def fatal(s):
     print >> sys.stderr, "error: " + str(s)
@@ -117,7 +117,7 @@ def print_build_logs(pool):
 
 def info(func, recursive, pool=None):
     if pool is None:
-        pool = Pool()
+        pool = PoolKernel()
 
     if recursive:
         print "### POOL_DIR=" + pool.path
@@ -186,7 +186,7 @@ def main():
 
     try:
         info(func, recursive)
-    except Pool.Error, e:
+    except PoolKernel.Error, e:
         fatal(e)
 
 if __name__ == "__main__":
