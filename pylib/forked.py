@@ -96,10 +96,10 @@ def forked_func(func, print_traceback=False):
                 if print_traceback:
                     traceback.print_exc(file=sys.stderr)
                 pickle.dump(e, w_fh)
-                sys.exit(1)
+                os._exit(1)
 
             pickle.dump(ret, w_fh)
-            sys.exit(0)
+            os._exit(0)
 
         # parent
         w_fh.close()
@@ -265,7 +265,7 @@ def forked_constructor(constructor, print_traceback=False):
         if pid == 0:
             obj = constructor(*args, **kws)
             ObjProxyServer(r, w, obj, print_traceback=print_traceback).run()
-            sys.exit(0)
+            os._exit(0)
 
         return ObjProxyClient(r, w)
     return wrapper
