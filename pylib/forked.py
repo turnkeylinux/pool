@@ -137,7 +137,7 @@ class ObjProxyServer(ObjProxyBase):
         while True:
             try:
                 op, params = pickle.load(self.r)
-            except EOFError:
+            except (EOFError, KeyboardInterrupt):
                 break
 
             if op == self.OP_CALL:
