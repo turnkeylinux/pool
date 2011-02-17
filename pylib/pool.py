@@ -189,7 +189,7 @@ class StockBase(object):
     def create(cls, path, link):
         mkdir(path)
         paths = cls.Paths(path)
-        os.symlink(realpath(link), paths.link)
+        os.symlink(abspath(link), paths.link)
 
     def __init__(self, path):
         self.paths = self.Paths(path)
@@ -456,7 +456,7 @@ class Stocks:
             dir = stock
             branch = None
 
-        return realpath(dir), branch
+        return abspath(dir), branch
 
     def register(self, stock):
         dir, branch = self._parse_stock(stock)
@@ -492,7 +492,7 @@ class Stocks:
             stock_name += "#" + branch
             
         matches = [ stock for stock in self.stocks.values()
-                    if stock.link == dir and (not branch or stock.branch == branch) ]
+                    if realpath(stock.link) == realpath(dir) and (not branch or stock.branch == branch) ]
         if not matches:
             raise Error("no matches for unregister")
 
