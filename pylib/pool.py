@@ -9,7 +9,7 @@ import commands
 from paths import Paths
 
 import errno
-import verseek
+from pyproject.verseek import verseek
 import debversion
 
 from git import Git
