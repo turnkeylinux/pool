@@ -279,6 +279,9 @@ class Stock(StockBase):
             return join(checkout_path, "arena")
 
         # update tags
+        for tag in checkout.list_tags():
+            checkout.remove_tag(tag)
+
         for tag in orig.list_tags():
             checkout.update_ref("refs/tags/" + tag, orig.rev_parse(tag))
 
