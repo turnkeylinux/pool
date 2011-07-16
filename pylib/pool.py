@@ -929,9 +929,20 @@ class Pool(object):
             raise Error("buildroot `%s' is not a directory" % buildroot)
         
         mkdir(paths.stocks)
+        Git.set_gitignore(paths.stocks, Stock.Paths.files)
+
         mkdir(paths.pkgcache)
+        Git.anchor(paths.pkgcache)
+        Git.set_gitignore(paths.pkgcache, ["*.deb", "*.udeb"])
+
         mkdir(paths.build)
+
         mkdir(paths.build.logs)
+        Git.anchor(paths.build.logs)
+        Git.set_gitignore(paths.build.logs, ["*.build"])
+
+        Git.set_gitignore(paths.path, ["tmp"])
+
         os.symlink(buildroot, paths.build.root)
 
         return cls(path)
