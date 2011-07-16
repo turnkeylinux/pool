@@ -24,12 +24,6 @@ def main():
     buildroot = args[0]
 
     try:
-        pool.Pool()
-        fatal("pool already initialized")
-    except pool.Error:
-        pass
-    
-    try:
         pool.Pool.init_create(buildroot)
     except pool.Error, e:
         fatal(e)

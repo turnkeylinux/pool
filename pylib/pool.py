@@ -908,7 +908,9 @@ class Pool(object):
     @classmethod
     def init_create(cls, buildroot, path=None):
         paths = PoolPaths(path)
-
+        if isdir(paths.path):
+            raise Error("pool already initialized")
+    
         if not isdir(buildroot):
             raise Error("buildroot `%s' is not a directory" % buildroot)
         
