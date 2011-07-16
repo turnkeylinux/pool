@@ -182,6 +182,9 @@ def mkdir(path):
             raise
 
 class StockBase(object):
+    class Error(Exception):
+        pass
+
     class Paths(Paths):
         files = [ 'link' ]
 
@@ -195,9 +198,12 @@ class StockBase(object):
         self.paths = self.Paths(path)
         
         self.name = basename(path)
+        if not exists(self.paths.link):
+            raise StockBase.Error("stock link doesn't exist")
+
         self.link = os.readlink(self.paths.link)
         if not isdir(self.link):
-            raise Error("stock link to non-directory `%s'" % self.link)
+            raise StockBase.Error("stock link to non-directory `%s'" % self.link)
 
 class StockPool(StockBase):
     """Class for managing a subpool-type stock"""
@@ -263,7 +269,7 @@ class Stock(StockBase):
             # checkout latest changes
             commit = orig.rev_parse(branch)
             if not commit:
-                raise Error("no such branch `%s' at %s" % (branch, self.link))
+                raise self.Error("no such branch `%s' at %s" % (branch, self.link))
             checkout.update_ref("refs/heads/" + branch, commit)
 
         dup_branch(self.branch)
@@ -275,7 +281,7 @@ class Stock(StockBase):
             command = "cd %s && sumo-open" % commands.mkarg(checkout_path)
             error = os.system(command)
             if error:
-                raise Error("failed command: " + command)
+                raise self.Error("failed command: " + command)
             return join(checkout_path, "arena")
 
         # update tags
@@ -414,11 +420,14 @@ class Stocks:
             self.subpools[stock.name] = stock.pool
         except CircularDependency:
             raise
-        except Error:
+        except (Error, Stock.Error):
             pass
 
         if not stock:
-            stock = Stock(path_stock, self.pkgcache)
+            try:
+                stock = Stock(path_stock, self.pkgcache)
+            except Stock.Error:
+                return
 
         self.stocks[stock.name] = stock
 
