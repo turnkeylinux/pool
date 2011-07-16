@@ -43,4 +43,6 @@ v1.0.1 Release Notes
 
 * ported to pyproject 1.0
 
+* improved documentation
+
 * minor packaging changes
