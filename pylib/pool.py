@@ -566,9 +566,16 @@ class Stocks:
 class PoolPaths(Paths):
     files = [ "pkgcache", "stocks", "tmp", "build/root", "build/logs" ]
     def __init__(self, path=None):
+
+        def pool_realpath(p):
+            return join(realpath(p), ".pool")
+
         if path is None:
-            path = os.getenv("POOL_DIR", os.getcwd())
-        path = join(realpath(path), ".pool")
+            path = os.getcwd()
+            if not isdir(pool_realpath(path)):
+                path = os.environ.get("POOL_DIR", os.getcwd())
+
+        path = pool_realpath(path)
         Paths.__init__(self, path)
 
 def sync(method):
