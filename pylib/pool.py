@@ -565,15 +565,29 @@ class Stocks:
 
 class PoolPaths(Paths):
     files = [ "pkgcache", "stocks", "tmp", "build/root", "build/logs" ]
-    def __init__(self, path=None):
+    def __init__(self, path=None, create=False):
 
         def pool_realpath(p):
             return join(realpath(p), ".pool")
 
+        def get_default_path(create):
+            path_cwd = os.getcwd()
+            path_env = os.environ.get("POOL_DIR") or path_cwd
+
+            if create:
+                if isdir(pool_realpath(path_env)):
+                    return path_cwd
+                else:
+                    return path_env
+
+            else:
+                if isdir(pool_realpath(path_cwd)):
+                    return path_cwd
+                else:
+                    return path_env
+
         if path is None:
-            path = os.getcwd()
-            if not isdir(pool_realpath(path)):
-                path = os.environ.get("POOL_DIR", os.getcwd())
+            path = get_default_path(create)
 
         path = pool_realpath(path)
         Paths.__init__(self, path)
@@ -907,7 +921,7 @@ class Pool(object):
 
     @classmethod
     def init_create(cls, buildroot, path=None):
-        paths = PoolPaths(path)
+        paths = PoolPaths(path, create=True)
         if isdir(paths.path):
             raise Error("pool already initialized")
     
