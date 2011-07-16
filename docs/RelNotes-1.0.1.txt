@@ -1,0 +1,46 @@
+====================
+v1.0.1 Release Notes
+====================
+
+* Added support for keeping the pool in a Git repository
+
+  Why?
+
+  Keeping the pool inside a Git repository (e.g., an autocommitted
+  repository) is useful because:
+  
+  1) it allows us to rollback pool operations
+  2) it makes it much easier to backup a pool
+  
+  How?
+
+  - when we initialize the pool gitignore non-essential files
+
+    Note that users of existing pools will need to manually setup
+    gitignore and anchor files.
+
+  - we ignore link-less stocks that could be left in-place when we
+    checkout an old commit that undos a pool registration.
+
+* pyproject magic import hook related changes
+
+  - created Pool high-level class for direct access via API
+    (we moved a lot of logic that was previously in cli code)
+
+  - ported pool to use verseek API directly instead of CLI
+
+* made working with multiple pools more intuitive
+
+  - if $(pwd)/.pool exists, prefer $(pwd) to POOL_DIR
+
+    More intuitive and convenient since we can set POOL_DIR and
+    still access other pools without messing with POOL_DIR environment
+    variable.
+
+  - pool-init should initialize pool in CWD if POOL_DIR already initialized
+
+* bugfix: checkout should clean up stale tags
+
+* ported to pyproject 1.0
+
+* minor packaging changes
