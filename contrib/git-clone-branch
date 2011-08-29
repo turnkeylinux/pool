@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [[ "$#" != "3" ]]; then
     echo "syntax: $0 /path/to/repository <branch> <new-directory>"
