@@ -760,7 +760,7 @@ class PoolKernel(object):
 
         # seek to version, build the package, seek back
         verseek.seek(source_path, version)
-        error = os.system("cd %s && deckdebuild %s %s" % mkargs(source_path, self.buildroot, build_outputdir))
+        error = os.system("cd %s && deckdebuild --faketime %s %s" % mkargs(source_path, self.buildroot, build_outputdir))
         verseek.seek(source_path)
         
         if error:
