@@ -48,6 +48,9 @@ def get_suffix(filename):
         return None
 
 def hardlink_or_copy(src, dst):
+    if exists(dst):
+        os.remove(dst)
+
     try:
         os.link(src, dst)
     except OSError, e:
