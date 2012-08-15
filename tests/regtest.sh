@@ -99,13 +99,13 @@ if [ -z "$pool_path" ]; then
     testbase=$(mktemp -d -t test.XXXXXX)
     
     cd $testbase
-    pool-init /turnkey/fab/buildroots/jaunty
+    pool-init /turnkey/fab/buildroots/lucid
     
     mkdir subpool
     tar -C subpool -xvf $base/regtest-stocks.tar.bz2 
     
     cd subpool
-    pool-init /turnkey/fab/buildroots/jaunty
+    pool-init /turnkey/fab/buildroots/lucid
     for stock in stocks/*; do
         pool-register $stock
         pool-unregister $stock
