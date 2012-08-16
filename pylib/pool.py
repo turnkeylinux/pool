@@ -577,6 +577,10 @@ class Stocks:
 
 class PoolPaths(Paths):
     files = [ "pkgcache", "stocks", "tmp", "build/root", "build/logs" ]
+
+    def __new__(cls, path, create=False):
+        return str.__new__(cls, path)
+
     def __init__(self, path=None, create=False):
 
         def pool_realpath(p):
