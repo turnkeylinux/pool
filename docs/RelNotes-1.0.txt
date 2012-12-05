@@ -39,7 +39,6 @@ v1.0 Release Notes
     --gc         test garbage collection
   
 * developed optimized cached control file retrieval mechanism (debinfo)
-  (debinfo now lives in turnkey-pylib)
 
 * bugfixes:
   Pool.resolve calls _list without all_versions argument and this broke pool-get

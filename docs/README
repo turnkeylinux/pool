@@ -235,7 +235,7 @@ Example usage session
     #  woops, noticed I registered the wrong branch
     #  added #devel branch for emphasis 
     #  unregister would work without it since there is only one branch registered for that path
-    pool-unregister /turnkey/projects/covin#devel
+    pool-unregister /turnkey/projects/pool#devel
 
     # prints a list of all packages in the pool (by name only)
     pool-list -n
