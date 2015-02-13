@@ -1,5 +1,8 @@
+Maintain a pool of packages from source and binary stocks
+=========================================================
+
 Introduction
-============
+------------
 
 The pool is a system thats maintains a pool of binary packages which may
 be either imported as-is from a registered collection of binaries, or
@@ -7,14 +10,11 @@ built on-demand from a registered source or collection of sources.
 
 The dominant abstraction for the pool is a virtual filesystem folder
 that you can get get specific versions of specific packages from. Behind
-the scenes, the pool will build those binary packages for from source if
+the scenes, the pool will build those binary packages from source if
 required and cache the built binaries for future access.
 
-In this sense calling it a pool is in line with software terminology
-conventions [http://en.wikipedia.org/wiki/Object_pool].
-
 Terminology / architecture
-==========================
+--------------------------
 
 pool
    The pool maintains a pool of packages from source and binary 'stocks'.
@@ -54,7 +54,7 @@ package cache
     a cache of binary packages either built from source or imported as-is
 
 File/data structure
-===================
+-------------------
 
 The pools tucks away all of its internals neatly out of site in a
 'hidden' directory. The reason for doing this was to make it easy to
@@ -86,7 +86,7 @@ stored directly as filesystem constructs::
                 checkout/
 
 Usage
-=====
+-----
 
 Syntax: pool <command> [args]
 
@@ -98,12 +98,12 @@ Environment variables::
     DEBINFO_DIR         Location of debinfo cache (default: $HOME/.debinfo)
 
 Initialize a new pool
----------------------
+'''''''''''''''''''''
 
 pool-init /path/to/build-chroot
 
 Register a package stock into the pool
---------------------------------------
+''''''''''''''''''''''''''''''''''''''
 
 pool-register /path/to/stock
 
@@ -115,12 +115,12 @@ Stock type can be:
 * /path/to/regular_directory
 
 Unregister a package stock from the pool
-----------------------------------------
+''''''''''''''''''''''''''''''''''''''''
 
 pool-unregstier /path/to/stock
 
 Prints pool info
-----------------
+''''''''''''''''
 
 pool-info [-options]
 
@@ -140,7 +140,7 @@ Options::
   -r --recursive        Lookup pool info recursively in subpools
 
 Prints source build log for package
------------------------------------
+'''''''''''''''''''''''''''''''''''
 
 * info-build package 
     will return info on built package
@@ -149,7 +149,7 @@ Prints source build log for package
 
 
 Check if package exists in pool
--------------------------------
+'''''''''''''''''''''''''''''''
 
 pool-exists package[=version]
 
@@ -158,7 +158,7 @@ If true exitcode = 0, else exitcode = 1
 
   
 List packages in pool
----------------------
+'''''''''''''''''''''
 
 pool-list [ <package-glob> ]
 
@@ -176,7 +176,7 @@ Options::
             incompatible with -a option
 
 Get packages from pool
-----------------------
+''''''''''''''''''''''
 
 pool-get [-options] <output-dir> [ package[=version] ... ]
 
@@ -193,7 +193,7 @@ Options::
   -t --tree             output dir is in a package tree format (like a repository)
 
 Garbage collect stale data from the pool's caches
--------------------------------------------------
+'''''''''''''''''''''''''''''''''''''''''''''''''
 
 pool-gc [ -options ]
 
@@ -212,7 +212,7 @@ Options::
   -R --disable-recursion    Disable recursive garbage collection of subpools
 
 Example usage session
-=====================
+---------------------
 
 ::
 
