@@ -467,7 +467,7 @@ package cache
 
 alternatives
     pms (package management system), and you know what else...
-    tklps (TurnKey Linux Packaging System)
+    tklps (TurnKey GNU/Linux Packaging System)
     spkg (turnkey package ...) - used by slackware
     repoware (repository software)
     poolman (pool management software)
