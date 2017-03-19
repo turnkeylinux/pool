@@ -12,6 +12,7 @@
 import sys
 import help
 import pool
+import path
 
 @help.usage(__doc__)
 def usage():
@@ -33,7 +34,7 @@ def main():
     buildroot = args[0]
 
     try:
-        pool.Pool.init_create(buildroot)
+        pool.Pool.init_create(path.abspath(buildroot))
     except pool.Error, e:
         fatal(e)
     
