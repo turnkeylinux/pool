@@ -9,10 +9,10 @@
 # option) any later version.
 
 """Initialize a new pool"""
+import os
 import sys
 import help
 import pool
-import path
 
 @help.usage(__doc__)
 def usage():
@@ -24,20 +24,20 @@ def fatal(s):
 
 def main():
     args = sys.argv[1:]
-    
+
     if not args:
         usage()
-        
+
     if len(args) != 1:
         usage("bad number of arguments")
 
     buildroot = args[0]
 
     try:
-        pool.Pool.init_create(path.abspath(buildroot))
+        pool.Pool.init_create(os.path.abspath(buildroot))
     except pool.Error, e:
         fatal(e)
-    
+
 if __name__=="__main__":
     main()
 
