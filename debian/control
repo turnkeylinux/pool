@@ -4,8 +4,9 @@ Priority: optional
 Maintainer: Liraz Siri <liraz@turnkeylinux.org>
 Build-Depends:
  debhelper (>= 10),
- pyproject-common,
+ python-all (>= 2.6.6-3~),
 Standards-Version: 4.0.0
+X-Python-Version: >= 2.6
 
 Package: pool
 Architecture: any
@@ -13,6 +14,8 @@ Depends:
  deckdebuild,
  git-core (>= 1:1.5.2),
  ${misc:Depends},
+ ${shlibs:Depends},
+ ${python:Depends},
  pyproject-common,
  verseek,
 Recommends:
