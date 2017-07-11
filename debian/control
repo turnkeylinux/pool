@@ -12,6 +12,7 @@ Architecture: any
 Depends:
  deckdebuild,
  git-core (>= 1:1.5.2),
+ ${misc:Depends},
  pyproject-common,
  verseek,
 Recommends:
