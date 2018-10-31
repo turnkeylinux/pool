@@ -588,7 +588,7 @@ class Stocks:
         return self.subpools.values()
 
 class PoolPaths(Paths):
-    files = [ "pkgcache", "stocks", "tmp", "build/root", "build/logs" ]
+    files = [ "pkgcache", "stocks", "tmp", "build/root", "build/logs", "build/buildinfo" ]
 
     def __new__(cls, path, create=False):
         return str.__new__(cls, path)
@@ -795,6 +795,8 @@ class PoolKernel(object):
                 self.pkgcache.add(fpath)
             elif fname.endswith(".build"):
                 shutil.copyfile(fpath, join(self.paths.build.logs, fname))
+            elif fname.endswith(".buildinfo"):
+                shutil.copyfile(fpath, join(self.paths.build.buildinfo, fname))
 
         shutil.rmtree(build_outputdir)
 
@@ -968,6 +970,10 @@ class Pool(object):
         mkdir(paths.build.logs)
         Git.anchor(paths.build.logs)
         Git.set_gitignore(paths.build.logs, ["*.build"])
+
+        mkdir(paths.build.buildinfo)
+        Git.anchor(paths.build.buildinfo)
+        Git.set_gitignore(paths.build.buildinfo, ['*.buildinfo'])
 
         Git.set_gitignore(paths.path, ["tmp"])
 
