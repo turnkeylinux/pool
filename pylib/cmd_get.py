@@ -21,6 +21,8 @@ Options:
 
   -t --tree		output dir is in a package tree format (like a repository)
 
+  -o --source       build source packages in addition to binary packages
+
 """
 import sys
 import help
@@ -59,8 +61,8 @@ def read_packages(fh):
     
 def main():
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], 'i:sqt',
-                                       ['input=', 'strict', 'quiet', 'tree'])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], 'i:sqto',
+                                       ['input=', 'strict', 'quiet', 'tree', 'source'])
     except getopt.GetoptError, e:
         usage(e)
 
@@ -74,6 +76,7 @@ def main():
     opt_strict = False
     opt_quiet = False
     opt_tree = False
+    opt_source = False
     
     for opt, val in opts:
         if opt in ('-i', '--input'):
@@ -87,6 +90,8 @@ def main():
             opt_quiet = True
         elif opt in ('-t', '--tree'):
             opt_tree = True
+        elif opt in ('-o', '--source'):
+            opt_source = True
 
     pool = Pool()
     
@@ -98,7 +103,7 @@ def main():
         packages = pool.list()
 
     try:
-        packages = pool.get(outputdir, packages, tree_fmt=opt_tree, strict=opt_strict)
+        packages = pool.get(outputdir, packages, tree_fmt=opt_tree, strict=opt_strict, source=opt_source)
     except pool.Error, e:
         fatal(e)
 
