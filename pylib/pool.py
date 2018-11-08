@@ -824,7 +824,7 @@ class PoolKernel(object):
             return path
 
         for subpool in self.subpools:
-            path = subpool.getpath_deb(package, build)
+            path = subpool.getpath_deb(package, build, source)
             if path:
                 return path
 
