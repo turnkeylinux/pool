@@ -1072,7 +1072,7 @@ class Pool(object):
 
         try:
             for package in resolved:
-                path_from = self.kernel.getpath_deb(package, source)
+                path_from = self.kernel.getpath_deb(package, source=source)
                 fname = basename(path_from)
 
                 if tree_fmt:
