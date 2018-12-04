@@ -588,7 +588,7 @@ class Stocks:
         return self.subpools.values()
 
 class PoolPaths(Paths):
-    files = [ "pkgcache", "stocks", "tmp", "build/root", "build/logs" ]
+    files = [ "pkgcache", "stocks", "tmp", "build/root", "build/logs", "build/buildinfo", "srcpkgcache" ]
 
     def __new__(cls, path, create=False):
         return str.__new__(cls, path)
@@ -766,7 +766,7 @@ class PoolKernel(object):
 
         return resolved
 
-    def _build_package_source(self, source_path, name, version):
+    def _build_package_source(self, source_path, name, version, source=False):
         build_outputdir = tempfile.mkdtemp(dir=self.paths.tmp, prefix="%s-%s." % (name, version))
 
         package = self.fmt_package_id(name, version)
@@ -779,7 +779,11 @@ class PoolKernel(object):
 
         # seek to version, build the package, seek back
         verseek.seek(source_path, version)
-        error = os.system("cd %s && deckdebuild %s %s" % mkargs(source_path, self.buildroot, build_outputdir))
+        if source:
+            error = os.system("cd %s && deckdebuild --build-source %s %s" % mkargs(
+                    source_path, self.buildroot, build_outputdir))
+        else:
+            error = os.system("cd %s && deckdebuild %s %s" % mkargs(source_path, self.buildroot, build_outputdir))
         verseek.seek(source_path)
 
         if error:
@@ -791,16 +795,21 @@ class PoolKernel(object):
         # copy *.debs and build output from output dir
         for fname in os.listdir(build_outputdir):
             fpath = join(build_outputdir, fname)
+            fname_part, ext_part = splitext(fname)
             if get_suffix(fname) in ('deb', 'udeb'):
                 self.pkgcache.add(fpath)
             elif fname.endswith(".build"):
                 shutil.copyfile(fpath, join(self.paths.build.logs, fname))
+            elif fname.endswith(".buildinfo"):
+                shutil.copyfile(fpath, join(self.paths.build.buildinfo, fname))
+            elif ext_part in ('.gz', '.xz', '.bz2') and splitext(fname_part)[1] == '.tar':
+                shutil.copyfile(fpath, join(self.paths.srcpkgcache, fname))
 
         shutil.rmtree(build_outputdir)
 
 
     @sync
-    def getpath_deb(self, package, build=True):
+    def getpath_deb(self, package, build=True, source=False):
         """Get path to package in pool if it exists or None if it doesn't.
 
         By default if package exists only in source, build and cache it first.
@@ -815,7 +824,7 @@ class PoolKernel(object):
             return path
 
         for subpool in self.subpools:
-            path = subpool.getpath_deb(package, build)
+            path = subpool.getpath_deb(package, build, source)
             if path:
                 return path
 
@@ -826,7 +835,7 @@ class PoolKernel(object):
         if not source_path:
             return None
 
-        self._build_package_source(source_path, name, version)
+        self._build_package_source(source_path, name, version, source)
 
         path = self.pkgcache.getpath(name, version)
         if not path:
@@ -963,11 +972,19 @@ class Pool(object):
         Git.anchor(paths.pkgcache)
         Git.set_gitignore(paths.pkgcache, ["*.deb", "*.udeb"])
 
+        mkdir(paths.srcpkgcache)
+        Git.anchor(paths.srcpkgcache)
+        Git.set_gitignore(paths.srcpkgcache, ['*.tar.xz', '*.tar.gz', '*.tar.bz2'])
+
         mkdir(paths.build)
 
         mkdir(paths.build.logs)
         Git.anchor(paths.build.logs)
         Git.set_gitignore(paths.build.logs, ["*.build"])
+
+        mkdir(paths.build.buildinfo)
+        Git.anchor(paths.build.buildinfo)
+        Git.set_gitignore(paths.build.buildinfo, ['*.buildinfo'])
 
         Git.set_gitignore(paths.path, ["tmp"])
 
@@ -1026,7 +1043,7 @@ class Pool(object):
         packages.sort(cmp=_cmp, reverse=True)
         return packages
 
-    def get(self, output_dir, packages, tree_fmt=False, strict=False):
+    def get(self, output_dir, packages, tree_fmt=False, strict=False, source=False):
         """get packages to output_dir -> resolved Pool.PackageList of packages we got
 
         If strict missing packages raise an exception,
@@ -1055,7 +1072,7 @@ class Pool(object):
 
         try:
             for package in resolved:
-                path_from = self.kernel.getpath_deb(package)
+                path_from = self.kernel.getpath_deb(package, source=source)
                 fname = basename(path_from)
 
                 if tree_fmt:
