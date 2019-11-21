@@ -13,7 +13,7 @@ Package: pool
 Architecture: any
 Depends:
  deckdebuild,
- git-core (>= 1:1.5.2),
+ git (>= 1:1.5.2),
  ${misc:Depends},
  ${shlibs:Depends},
  ${python:Depends},
