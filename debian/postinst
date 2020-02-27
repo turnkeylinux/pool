@@ -1,0 +1,17 @@
+#!/bin/sh -e
+
+FAB_PATH=${FAB_PATH:-/turnkey/fab}
+CODENAME=$(lsb_release -cs)
+POOL_PATH=$FAB_PATH/pools/$CODENAME
+CHANKO_PATH=$FAB_PATH/chankos/$CODENAME.chanko
+BUILDROOT=$FAB_PATH/buildroots/$CODENAME
+
+mkdir -p $POOL_PATH
+mkdir -p $BUILDROOT
+
+cd $POOL_PATH
+pool-init $BUILDROOT
+
+#DEBHELPER#
+
+exit 0
