@@ -21,4 +21,5 @@ Depends:
  verseek,
 Recommends:
  sumo,
+ chanko,
 Description: maintain a pool of packages from source and binary stocks
