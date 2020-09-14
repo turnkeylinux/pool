@@ -23,17 +23,17 @@ from pool import Pool
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s [ <package-glob> ... ]" % sys.argv[0]
+    print("Syntax: %s [ <package-glob> ... ]" % sys.argv[0], file=sys.stderr)
 
 def fatal(s):
-    print >> sys.stderr, "error: " + str(s)
+    print("error: " + str(s), file=sys.stderr)
     sys.exit(1)
 
 def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], 'an',
                                        ['all-versions', 'name-only'])
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         usage(e)
 
     opt_all_versions = False
@@ -52,13 +52,13 @@ def main():
 
     packages = Pool().list(opt_all_versions, *globs)
     for glob in packages.missing:
-        print >> sys.stderr, "warning: %s: no matching packages" % glob
+        print("warning: %s: no matching packages" % glob, file=sys.stderr)
         
     for package in packages:
         if opt_name_only:
-            print Pool.parse_package_id(package)[0]
+            print(Pool.parse_package_id(package)[0])
         else:
-            print package
+            print(package)
         
 if __name__=="__main__":
     main()

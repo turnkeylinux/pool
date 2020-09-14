@@ -19,10 +19,10 @@ import pool
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s <package>[=<version>]" % sys.argv[0]
+    print("Syntax: %s <package>[=<version>]" % sys.argv[0], file=sys.stderr)
 
 def fatal(s):
-    print >> sys.stderr, "error: " + str(s)
+    print("error: " + str(s), file=sys.stderr)
     sys.exit(1)
 
 def main():
@@ -37,13 +37,13 @@ def main():
     package = args[0]
     try:
         istrue = pool.Pool().exists(package)
-    except pool.Error, e:
+    except pool.Error as e:
         fatal(e)
 
     if istrue:
-        print "true"
+        print("true")
     else:
-        print "false"
+        print("false")
         sys.exit(1)
         
 if __name__=="__main__":

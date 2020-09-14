@@ -12,19 +12,19 @@
 import re
 import sys
 import help
-import commands
+import subprocess
 
 from pool import Pool
 import debinfo
 import debversion
 
 def fatal(s):
-    print >> sys.stderr, "error: " + str(s)
+    print("error: " + str(s), file=sys.stderr)
     sys.exit(1)
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s package[=version]" % sys.argv[0]
+    print("Syntax: %s package[=version]" % sys.argv[0], file=sys.stderr)
 
 def extract_source_name(path):
     fields = debinfo.get_control_fields(path)
@@ -82,7 +82,7 @@ def binary2source(pool, package):
 def getpath_build_log(package):
     try:
         pool = Pool()
-    except Pool.Error, e:
+    except Pool.Error as e:
         fatal(e)
 
     path = pool.getpath_build_log(package)
@@ -97,7 +97,7 @@ def getpath_build_log(package):
         path = pool.getpath_build_log(source_package)
 
     if not path:
-        package_desc = `package`
+        package_desc = repr(package)
         if source_package:
             package_desc += " (%s)" % source_package
         fatal("no build log for " + package_desc)
@@ -113,7 +113,7 @@ def main():
     path = getpath_build_log(package)
     
     for line in file(path).readlines():
-        print line,
+        print(line, end=' ')
 
 if __name__ == "__main__":
     main()

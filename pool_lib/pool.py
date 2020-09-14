@@ -13,7 +13,7 @@ from os.path import *
 import re
 import shutil
 import tempfile
-import commands
+import subprocess
 
 from paths import Paths
 
@@ -27,6 +27,7 @@ import debinfo
 from forked import forked_constructor
 from fnmatch import fnmatch
 import debversion
+import imp
 
 class Error(Exception):
     pass
@@ -62,7 +63,7 @@ def hardlink_or_copy(src, dst):
 
     try:
         os.link(src, dst)
-    except OSError, e:
+    except OSError as e:
         if e[0] != errno.EXDEV:
             raise
         shutil.copyfile(src, dst)
@@ -161,7 +162,7 @@ class PackageCache:
 
     def list(self):
         """List packages in package cache -> list of (package, version)"""
-        return self.filenames.keys()
+        return list(self.filenames.keys())
 
 def make_relative(root, path):
     """Return <path> relative to <root>.
@@ -189,7 +190,7 @@ def mkdir(path):
     path = str(path)
     try:
         os.makedirs(path)
-    except OSError, e:
+    except OSError as e:
         if e[0] != errno.EEXIST:
             raise
 
@@ -290,7 +291,7 @@ class Stock(StockBase):
         if exists(join(checkout_path, "arena.internals")):
             dup_branch(self.branch + "-thin")
 
-            command = "cd %s && sumo-open" % commands.mkarg(checkout_path)
+            command = "cd %s && sumo-open" % subprocess.mkarg(checkout_path)
             error = os.system(command)
             if error:
                 raise self.Error("failed command: " + command)
@@ -357,7 +358,7 @@ class Stock(StockBase):
         for package in packages:
             fh = file(join(source_versions_path, package), "w")
             for version in versions:
-                print >> fh, version
+                print(version, file=fh)
             fh.close()
 
             self.source_versions[join(relative_path, package)] = versions
@@ -400,7 +401,7 @@ class Stock(StockBase):
 
     def sources(self):
         """List package sources for this stock -> [ (relative/path/foo, versions), ... ]"""
-        return self.source_versions.items()
+        return list(self.source_versions.items())
     sources = property(sources)
 
     def sync(self):
@@ -469,7 +470,7 @@ class Stocks:
 
     def __iter__(self):
         # iterate across all stocks except subpools
-        return iter((stock for stock in self.stocks.values()
+        return iter((stock for stock in list(self.stocks.values())
                      if not isinstance(stock, StockPool)))
 
     def __len__(self):
@@ -505,7 +506,7 @@ class Stocks:
         if branch:
             stock_name += "#" + branch
 
-        if self.stocks.has_key(stock_name):
+        if stock_name in self.stocks:
             raise Error("stock already registered under name `%s'" % stock_name)
 
         stock_path = join(self.path, stock_name)
@@ -518,7 +519,7 @@ class Stocks:
         if branch:
             stock_name += "#" + branch
 
-        matches = [ stock for stock in self.stocks.values()
+        matches = [ stock for stock in list(self.stocks.values())
                     if realpath(stock.link) == realpath(dir) and (not branch or stock.branch == branch) ]
         if not matches:
             raise Error("no matches for unregister")
@@ -535,7 +536,7 @@ class Stocks:
             # close sumo arena if it exists
             checkout_path = stock.paths.checkout
             if exists(join(checkout_path, "arena.internals")):
-                command = "cd %s && sumo-close" % commands.mkarg(checkout_path)
+                command = "cd %s && sumo-close" % subprocess.mkarg(checkout_path)
                 error = os.system(command)
                 if error:
                     raise Error("failed command: " + command)
@@ -585,7 +586,7 @@ class Stocks:
         return False
 
     def get_subpools(self):
-        return self.subpools.values()
+        return list(self.subpools.values())
 
 class PoolPaths(Paths):
     files = [ "pkgcache", "stocks", "tmp", "build/root", "build/logs", "build/buildinfo", "srcpkgcache" ]
@@ -722,11 +723,11 @@ class PoolKernel(object):
 
         newest = {}
         for name, version in packages:
-            if not newest.has_key(name) or \
+            if name not in newest or \
                debversion.compare(newest[name], version) < 0:
                 newest[name] = version
 
-        return newest.items()
+        return list(newest.items())
 
     def list(self, all_versions=False):
         """List packages in pool -> list of packages.
@@ -771,11 +772,11 @@ class PoolKernel(object):
 
         package = self.fmt_package_id(name, version)
 
-        print "### BUILDING PACKAGE: " + package
-        print "###           SOURCE: " + source_path
+        print("### BUILDING PACKAGE: " + package)
+        print("###           SOURCE: " + source_path)
 
         def mkargs(*args):
-            return tuple(map(commands.mkarg, args))
+            return tuple(map(subprocess.mkarg, args))
 
         # seek to version, build the package, seek back
         verseek.seek(source_path, version)
@@ -790,7 +791,7 @@ class PoolKernel(object):
             shutil.rmtree(build_outputdir)
             raise Error("package `%s' failed to build" % package)
 
-        print
+        print()
 
         # copy *.debs and build output from output dir
         for fname in os.listdir(build_outputdir):
@@ -927,7 +928,7 @@ class PoolKernel(object):
         if not pretend:
             os.setgid(pool_gid)
             os.setuid(pool_uid)
-            reload(debinfo)
+            imp.reload(debinfo)
 
         return True
 

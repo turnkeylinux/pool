@@ -15,10 +15,10 @@ import pool
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s /path/to/stock[#branch]" % sys.argv[0]
+    print("Syntax: %s /path/to/stock[#branch]" % sys.argv[0], file=sys.stderr)
 
 def fatal(s):
-    print >> sys.stderr, "error: " + str(s)
+    print("error: " + str(s), file=sys.stderr)
     sys.exit(1)
 
 def main():
@@ -33,7 +33,7 @@ def main():
     stock = args[0]
     try:
         pool.Pool().unregister(stock)
-    except pool.Error, e:
+    except pool.Error as e:
         fatal(e)
         
 if __name__=="__main__":

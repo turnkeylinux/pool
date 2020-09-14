@@ -16,10 +16,10 @@ import pool
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s /path/to/build-chroot" % sys.argv[0]
+    print("Syntax: %s /path/to/build-chroot" % sys.argv[0], file=sys.stderr)
 
 def fatal(s):
-    print >> sys.stderr, "error: " + str(s)
+    print("error: " + str(s), file=sys.stderr)
     sys.exit(1)
 
 def main():
@@ -35,7 +35,7 @@ def main():
 
     try:
         pool.Pool.init_create(os.path.abspath(buildroot))
-    except pool.Error, e:
+    except pool.Error as e:
         fatal(e)
 
 if __name__=="__main__":

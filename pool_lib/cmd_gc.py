@@ -30,17 +30,17 @@ import getopt
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s [ -options ]" % sys.argv[0]
+    print("Syntax: %s [ -options ]" % sys.argv[0], file=sys.stderr)
 
 def fatal(s):
-    print >> sys.stderr, "error: " + str(s)
+    print("error: " + str(s), file=sys.stderr)
     sys.exit(1)
 
 def main():
     args = sys.argv[1:]
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], 'Rh', ['disable-recursion'])
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         usage(e)
 
     opt_recurse = True
@@ -52,7 +52,7 @@ def main():
 
     try:
         pool.Pool().gc(opt_recurse)
-    except pool.Error, e:
+    except pool.Error as e:
         fatal(e)
         
 if __name__=="__main__":

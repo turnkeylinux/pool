@@ -35,7 +35,7 @@ from pool import Pool
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s [-options] <output-dir> [ package[=version] ... ]" % sys.argv[0]
+    print("Syntax: %s [-options] <output-dir> [ package[=version] ... ]" % sys.argv[0], file=sys.stderr)
 
 
 exitcode = 0
@@ -43,10 +43,10 @@ def warn(s):
     global exitcode
     exitcode = 1
     
-    print >> sys.stderr, "warning: " + str(s)
+    print("warning: " + str(s), file=sys.stderr)
     
 def fatal(s):
-    print >> sys.stderr, "error: " + str(s)
+    print("error: " + str(s), file=sys.stderr)
     sys.exit(1)
 
 def read_packages(fh):
@@ -63,7 +63,7 @@ def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], 'i:sqto',
                                        ['input=', 'strict', 'quiet', 'tree', 'source'])
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         usage(e)
 
     if not args:
@@ -104,7 +104,7 @@ def main():
 
     try:
         packages = pool.get(outputdir, packages, tree_fmt=opt_tree, strict=opt_strict, source=opt_source)
-    except pool.Error, e:
+    except pool.Error as e:
         fatal(e)
 
     if not opt_quiet:

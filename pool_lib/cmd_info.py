@@ -32,12 +32,12 @@ import getopt
 from pool import PoolKernel
 
 def fatal(s):
-    print >> sys.stderr, "error: " + str(s)
+    print("error: " + str(s), file=sys.stderr)
     sys.exit(1)
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s [-options]" % sys.argv[0]
+    print("Syntax: %s [-options]" % sys.argv[0], file=sys.stderr)
 
 class RigidVal:
     class AlreadySetError(Exception):
@@ -56,13 +56,13 @@ class RigidVal:
 
 def print_registered(pool):
     if pool.stocks:
-        print "# stocks"
+        print("# stocks")
     print_stocks(pool)
 
     if pool.subpools:
         if pool.stocks:
-            print
-        print "# subpools"
+            print()
+        print("# subpools")
         print_subpools(pool)
     
 def print_stocks(pool):
@@ -70,28 +70,28 @@ def print_stocks(pool):
         addr = stock.link
         if stock.branch:
             addr += "#" + stock.branch
-        print addr
+        print(addr)
 
 def print_subpools(pool):
     for subpool in pool.subpools:
-        print subpool.path
+        print(subpool.path)
 
 def print_build_root(pool):
-    print pool.buildroot
+    print(pool.buildroot)
 
 def print_pkgcache(pool):
     pool.sync()
     for name, version in pool.pkgcache.list():
-        print name + "=" + version
+        print(name + "=" + version)
 
 def print_stock_inventory(stock_inventory):
     package_width = max([ len(vals[0]) for vals in stock_inventory ])
     stock_name_width = max([ len(vals[1]) for vals in stock_inventory ])
 
     for package, stock_name, relative_path in stock_inventory:
-        print "%s  %s  %s" % (package.ljust(package_width),
+        print("%s  %s  %s" % (package.ljust(package_width),
                               stock_name.ljust(stock_name_width),
-                              relative_path)
+                              relative_path))
     
 def print_stock_sources(pool):
     pool.sync()
@@ -122,7 +122,7 @@ def print_stock_binaries(pool):
         
 def print_build_logs(pool):
     for log_name, log_version in pool.build_logs:
-        print log_name + "=" + log_version
+        print(log_name + "=" + log_version)
 
 def info(func, recursive, pool=None):
     if pool is None:
@@ -130,12 +130,12 @@ def info(func, recursive, pool=None):
         pool.drop_privileges()
 
     if recursive:
-        print "### POOL_DIR=" + pool.path
+        print("### POOL_DIR=" + pool.path)
 
     func(pool)
     if recursive:
         for subpool in pool.subpools:
-            print
+            print()
             info(func, recursive, subpool)
 
 def main():
@@ -150,7 +150,7 @@ def main():
                                     'stock-sources',
                                     'stock-binaries',
                                     'recursive'])
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         usage(e)
 
     recursive = False
@@ -196,7 +196,7 @@ def main():
 
     try:
         info(func, recursive)
-    except PoolKernel.Error, e:
+    except PoolKernel.Error as e:
         fatal(e)
 
 if __name__ == "__main__":
