@@ -1,0 +1,145 @@
+#!/usr/bin/python3
+# Copyright (c) TurnKey GNU/Linux - http://www.turnkeylinux.org
+#
+# This file is part of Pool
+#
+# Pool is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
+
+import os
+import sys
+import argparse
+import re
+from os.path import *  # XXX
+import debversion
+import debinfo
+
+import commands
+
+import pool_lib as pool
+from pool_lib import Pool
+from pool_lib import PoolKernel
+
+exitcode = 0
+
+
+def warn(s):
+    global exitcode
+    exitcode = 1
+    print("warning: " + str(s), file=sys.stderr)
+
+
+def fatal(s):
+    print("error: " + str(s), file=sys.stderr)
+    sys.exit(1)
+
+
+def exists(package):
+    try:
+        istrue = pool.Pool().exists(package)
+    except pool.Error as e:
+        fatal(e)
+
+    if istrue:
+        print("true")
+    else:
+        print("false")
+        sys.exit(1)
+
+
+def gc(recurse=True):
+    try:
+        pool.Pool().gc(recurse)
+    except pool.Error as e:
+        fatal(e)
+
+
+def read_packages(in_file):
+    packages = []
+    with open(in_file, 'r') as fob:
+        for line in fob.readlines():
+            line = line.split('#')[0].strip()
+            if not line:
+                continue
+            packages.append(line)
+    return packages
+
+
+def get(outputdir, packages=None, inputfile=None,
+        strict=False, quiet=False, tree=False, source=False):
+
+    pool = Pool()
+    
+    if input_file:
+        packages += read_packages(input_file)
+
+    if not packages and not inputfile:
+        # if no packages specified, get all the newest versions
+        packages = pool.list()
+
+    try:
+        packages = pool.get(outputdir, packages, tree_fmt=tree, strict=strict, source=source)
+    except pool.Error as e:
+        fatal(e)
+
+    if not quiet:
+        for package in packages.missing:
+            warn("no such package (%s)" % package)
+
+    sys.exit(exitcode)
+
+
+def init(pool_path):
+    try:
+                pool.Pool.init_create(os.path.abspath(buildroot))
+                    except pool.Error, e:
+                                fatal(e)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+            description='Maintain a pool of packages from source and binary'
+                        ' stocks')
+    subparsers = parser.add_subparsers(dest='subcommand',
+                                       help='sub-command help')
+
+    # pool-exists
+    parser_exists = subparsers.add_parser(
+            'exists',
+            help='Check if package exists in pool (Prints true/false; exit'
+                 ' code 0/1 respectively)')
+    parser_exists.add_argument('package', help='Package to check for')
+
+    # pool-gc
+    parser_gc = subparsers.add_parser(
+            'gc',
+            help="Garbage collect stale data from the pool's caches")
+    parser_gc.add_argument(
+            '-R', '--disable-recursion', action='store_true',
+            help='Disable recursive garbage collection of subpools')
+
+    # pool-get
+    parser_get = subparsers.add_parser('get', help='Get packages from pool')
+    parser_get.add_argument(
+            '-i', '--input',
+            help='Package list input file (- for stdin)')
+    parser_get.add_argument(
+            '-s', '--strict', action='store_true',
+            help='fatal error on missing packages')
+    parser_get.add_argument(
+            '-q', '--quiet', action='store_true',
+            help='suppress warnings about missing packages')
+    parser_get.add_argument(
+            '-t', '--tree', action='store_true',
+            help='output dir is in a package tree format (like a repository)')
+    parser_get.add_argument(
+            '-o', '--source', action='store_true',
+            help='build source packages in addition to binary packages')
+
+
+
+
+if __name__ == "__main__":
+    main()
