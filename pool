@@ -15,6 +15,7 @@ import re
 from os.path import *  # XXX
 import debversion
 import debinfo
+import subprocess
 
 import commands
 
@@ -71,7 +72,7 @@ def get(outputdir, packages=None, inputfile=None,
         strict=False, quiet=False, tree=False, source=False):
 
     pool = Pool()
-    
+
     if input_file:
         packages += read_packages(input_file)
 
@@ -80,7 +81,8 @@ def get(outputdir, packages=None, inputfile=None,
         packages = pool.list()
 
     try:
-        packages = pool.get(outputdir, packages, tree_fmt=tree, strict=strict, source=source)
+        packages = pool.get(outputdir, packages, tree_fmt=tree,
+                            strict=strict, source=source)
     except pool.Error as e:
         fatal(e)
 
@@ -93,9 +95,225 @@ def get(outputdir, packages=None, inputfile=None,
 
 def init(pool_path):
     try:
-                pool.Pool.init_create(os.path.abspath(buildroot))
-                    except pool.Error, e:
-                                fatal(e)
+        pool.Pool.init_create(os.path.abspath(buildroot))
+    except pool.Error as e:
+        fatal(e)
+
+
+# # info_build
+def extract_source_name(path):
+    fields = debinfo.get_control_fields(path)
+    if 'Source' in fields:
+        return fields['Source']
+
+    return None
+
+
+def pkgcache_list_versions(pool, name):
+    versions = [pkgcache_version
+                for pkgcache_name, pkgcache_version in pool.pkgcache.list()
+                if pkgcache_name == name]
+
+    for subpool in pool.subpools:
+        versions += pkgcache_list_versions(subpool, name)
+
+    return versions
+
+
+def pkgcache_getpath_newest(pool, name):
+    versions = pkgcache_list_versions(pool, name)
+    if not versions:
+        return None
+
+    versions.sort(debversion.compare)
+    version_newest = versions[-1]
+
+    package = pool.fmt_package_id(name, version_newest)
+    return pool.getpath_deb(package, build=False)
+
+
+def binary2source(pool, package):
+    """translate package from binary to source"""
+    name, version = pool.parse_package_id(package)
+    if version:
+        path = pool.getpath_deb(package, build=False)
+        if not path:
+            return None
+
+        source_name = extract_source_name(path)
+        if not source_name:
+            return package
+
+        return pool.fmt_package_id(source_name, version)
+
+    # no version, extract source from the most recent binary
+    path = pkgcache_getpath_newest(pool, name)
+    if not path:
+        return None
+
+    source_name = extract_source_name(path)
+    if not source_name:
+        return name
+
+    return source_name
+
+
+def getpath_build_log(package):
+    try:
+        pool = Pool()
+    except Pool.Error as e:
+        fatal(e)
+
+    path = pool.getpath_build_log(package)
+    if path:
+        return path
+
+    # maybe package is a binary name?
+    # try mapping it to a source name and trying again
+
+    source_package = binary2source(pool, package)
+    if source_package:
+        path = pool.getpath_build_log(source_package)
+
+    if not path:
+        package_desc = repr(package)
+        if source_package:
+            package_desc += " (%s)" % source_package
+        fatal("no build log for " + package_desc)
+
+    return path
+
+
+# # info
+def print_registered(pool):
+    if pool.stocks:
+        print("# stocks")
+    print_stocks(pool)
+
+    if pool.subpools:
+        if pool.stocks:
+            print()
+        print("# subpools")
+        print_subpools(pool)
+
+
+def print_stocks(pool):
+    for stock in pool.stocks:
+        addr = stock.link
+        if stock.branch:
+            addr += "#" + stock.branch
+        print(addr)
+
+
+def print_subpools(pool):
+    for subpool in pool.subpools:
+        print(subpool.path)
+
+
+def print_build_root(pool):
+    print(pool.buildroot)
+
+
+def print_pkgcache(pool):
+    pool.sync()
+    for name, version in pool.pkgcache.list():
+        print(name + "=" + version)
+
+
+def print_stock_inventory(stock_inventory):
+    package_width = max([len(vals[0]) for vals in stock_inventory])
+    stock_name_width = max([len(vals[1]) for vals in stock_inventory])
+
+    for package, stock_name, relative_path in stock_inventory:
+        print("%s  %s  %s" % (package.ljust(package_width),
+                              stock_name.ljust(stock_name_width),
+                              relative_path))
+
+
+def print_stock_sources(pool):
+    pool.sync()
+
+    stock_inventory = []
+    for stock in pool.stocks:
+        for path, versions in stock.sources:
+            for version in versions:
+                package = basename(path) + "=" + version
+                relative_path = dirname(path)
+                stock_inventory.append((package, stock.name, relative_path))
+
+    if stock_inventory:
+        print_stock_inventory(stock_inventory)
+
+
+def print_stock_binaries(pool):
+    pool.sync()
+
+    stock_inventory = []
+    for stock in pool.stocks:
+        for path in stock.binaries:
+            package = basename(path)
+            relative_path = dirname(path)
+            stock_inventory.append((package, stock.name, relative_path))
+
+    if stock_inventory:
+        print_stock_inventory(stock_inventory)
+
+
+def print_build_logs(pool):
+    for log_name, log_version in pool.build_logs:
+        print(log_name + "=" + log_version)
+
+
+def info(func, recursive, pool=None):
+    if pool is None:
+        pool = PoolKernel()
+        pool.drop_privileges()
+
+    if recursive:
+        print("### POOL_DIR=" + pool.path)
+
+    func(pool)
+    if recursive:
+        for subpool in pool.subpools:
+            print()
+            info(func, recursive, subpool)
+
+
+# # init
+def init(buildroot):
+    try:
+        pool.Pool.init_create(os.path.abspath(buildroot))
+    except pool.Error as e:
+        fatal(e)
+
+
+# # list
+def p_list(globs=[], all_versions=False, name_only=False):
+    packages = Pool().list(all_versions, *globs)
+    for glob in packages.missing:
+        print("warning: %s: no matching packages" % glob, file=sys.stderr)
+
+    for package in packages:
+        if name_only:
+            print(Pool.parse_package_id(package)[0])
+        else:
+            print(package)
+
+
+# # register
+def register(stock):
+    try:
+        pool.Pool().register(stock)
+    except pool.Error as e:
+        fatal(e)
+
+
+# # unregister
+def unregister(stock):
+    try:
+        pool.Pool().unregister(stock)
+    except pool.Error as e:
+        fatal(e)
 
 
 def main():
@@ -141,8 +359,98 @@ def main():
             help='build source packages in addition to binary packages')
     parser_get.set_defaults(func=get)
 
+    # pool-info-build
+    parser_info_build = subparsers.add_parser('info-get',
+                                              help='Prints source build log'
+                                                   ' for package')
+    parser_info_build.add_argument('package', help='Package name')
+    parser_info_build.set_defaults(func=get)
+
+    # pool-info
+    parser_info = subparsers.add_parser('info', help="Prints pool info")
+    parser_info.add_argument(
+            '-r', '--recursive', action='store_true',
+            help='Lookup pool info recursively in subpools')
+    # pool-info conflicting args
+    parser_info_conflicts = parser_info.add_mutually_exclusive_group()
+    parser_info_conflicts.add_argument(
+            '--registered', dest='function',
+            action='store_const', const=print_registered,
+            help='Prints list of registered stocks and subpools (default)')
+    parser_info_conflicts.add_argument(
+            '--stocks', dest='function',
+            action='store_const', const=print_stocks,
+            help='Prints list of registered stocks')
+    parser_info_conflicts.add_argument(
+            '--subpools', dest='function',
+            action='store_const', const=print_subpools,
+            help='Prints list of registered subpools')
+    parser_info_conflicts.add_argument(
+            '--build-root', dest='function',
+            action='store_const', const=print_build_root,
+            help='Prints build-root')
+    parser_info_conflicts.add_argument(
+            '--build-logs', dest='function',
+            action='store_const', const=print_build_logs,
+            help='Prints a list of build logs for source packages')
+    parser_info_conflicts.add_argument(
+            '--pkgcache', dest='function',
+            action='store_const', const=print_pkgcache,
+            help='Prints list of cached packages')
+    parser_info_conflicts.add_argument(
+            '--stock-sources', dest='function',
+            action='store_const', const=print_stock_sources,
+            help='Prints list of package sources in registered stocks')
+    parser_info_conflicts.add_argument(
+            '--stock-binaries', dest='function',
+            action='store_const', const=print_stock_binaries,
+            help='Prints list of package binaries in registered stocks')
+    # pool-info non-conflicting arg
+    parser_info.add_argument(
+            '-r', '--recursive', action='store_true',
+            help='Lookup pool info recursively in subpools')
+    parser_info.set_defaults(func=inf0)
+
+    # pool-init
+    parser_init = subparsers.add_parser('init', help='Initialize a new pool')
+    parser_init.add_argument('buildroot', help='/path/to/build-chroot')
+    parser_init.set_defaults(func=init)
+
+    # pool-list
+    parser_list = subparsers.add_parser('list', help='List packages in pool')
+    parser_list.add_argument(
+            '-a', '--all-versions', action='store_true',
+            help='print all available versions of a package in the pool'
+                 ' (default: print the newest versions only)')
+    parser_list.add_argument(
+            '-n', '--name-only', action='store_true',
+            help='print only the names of packages in the pool')
+    parser_list.add_argument(
+            'globs', nargs='+',
+            help='package-glob(s)')
+    parser_list.set_defaults(func=p_list)
+
+    # pool-register
+    parser_register = subparsers.add_parser(
+            'register',
+            help='Register a package stock into the pool')
+    parser_register.add_argument(
+            'stock',
+            help='/path/to/stock[#branch]')
+    parser_register.set_defaults(func=register)
+
+    # pool-unregister
+    parser_unregister = subparsers.add_parser(
+            'unregister',
+            help='Unregister a package stock from the pool')
+    parser_unregister.add_argument(
+            'stock',
+            help='/path/to/stock[#branch]')
+    parser_unregister.set_defaults(func=unregister)
+
     args = parser.parse_args()
     args.func(args)
+
 
 if __name__ == "__main__":
     main()
