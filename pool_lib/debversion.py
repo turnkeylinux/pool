@@ -10,6 +10,7 @@
 import re
 import string
 
+
 def parse(v):
     if ':' in v:
         epoch, v = v.split(':', 1)
@@ -23,6 +24,7 @@ def parse(v):
         debian_revision = '0'
 
     return epoch, upstream_version, debian_revision
+
 
 class VersionParser:
     def __init__(self, str):
@@ -60,6 +62,7 @@ class VersionParser:
 
         return 0
 
+
 def _lexcmp(a, b):
     i = 0
     while True:
@@ -93,6 +96,7 @@ def _lexcmp(a, b):
 
         i += 1
 
+
 # _compare is functionally equivalent to _compare_flat
 # only its much more readable
 def _compare(s1, s2):
@@ -112,13 +116,14 @@ def _compare(s1, s2):
 
         n1 = p1.getnum()
         n2 = p2.getnum()
-        
+
         val = cmp(n1, n2)
         if val != 0:
             return val
 
         if p1.str == p2.str:
             return 0
+
 
 # _compare_flat is functionally equivalent to _compare
 # but it embeds VersionParser's functionality inline for optimization
@@ -190,6 +195,7 @@ def _compare_flat(s1, s2):
         if s1 == s2:
             return 0
 
+
 def compare(a, b):
     """Compare a with b according to Debian versioning criteria"""
 
@@ -203,22 +209,25 @@ def compare(a, b):
 
     return 0
 
+
 def test():
     try:
-       import psyco; psyco.full()
+        import psyco
+        psyco.full()
     except ImportError:
-       pass
-    
+        pass
+
     import time
     howmany = 10000
     start = time.time()
-    for i in xrange(howmany):
+    for i in range(howmany):
         compare("0-2007.10.1-d6cbb928", "0-2007.10.10-a9ee521c")
     end = time.time()
     elapsed = end - start
 
-    print "%d runs in %.4f seconds (%.2f per/sec)" % (howmany, elapsed,
-                                                      howmany / elapsed)
+    print("%d runs in %.4f seconds (%.2f per/sec)" % (howmany, elapsed,
+                                                      howmany / elapsed))
+
 
 if __name__ == "__main__":
     test()
