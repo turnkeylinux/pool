@@ -25,6 +25,7 @@ import lzma
 
 import ar
 from hashstore import HashStore
+import imp
 
 class Error(Exception):
     pass
@@ -61,13 +62,13 @@ def _extract_control(path):
         xz_str = lzma.decompress(control_tar_archive)
         xz_bytes = BytesIO(xz_str)
         tar = tarfile.open(mode="r:", fileobj=xz_bytes)
-        reload(sys)
+        imp.reload(sys)
         sys.setdefaultencoding('utf8')
     else:
         fh = BytesIO(control_tar_archive)
         tar = tarfile.open(filename, mode="r:"+compression_type, fileobj=fh)
 
-    reload(sys)
+    imp.reload(sys)
     sys.setdefaultencoding('utf8')
 
     try:
