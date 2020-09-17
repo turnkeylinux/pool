@@ -15,8 +15,6 @@ import re
 from os.path import *  # XXX
 import subprocess
 
-import commands
-
 import pool_lib as pool
 from pool_lib import Pool
 from pool_lib import PoolKernel
