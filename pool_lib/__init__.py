@@ -26,13 +26,12 @@ from git import Git
 import debinfo
 from forked import forked_constructor
 from fnmatch import fnmatch
-import debversion
 import imp
 
-class Error(Exception):
+class PoolError(Exception):
     pass
 
-class CircularDependency(Error):
+class CircularDependency(PoolError):
     pass
 
 def deb_get_packages(srcpath):
@@ -45,7 +44,7 @@ def parse_package_filename(filename):
     """Parses package filename -> (name, version)"""
 
     if not get_suffix(filename) in ('deb', 'udeb'):
-        raise Error("not a package `%s'" % filename)
+        raise PoolError("not a package `%s'" % filename)
 
     name, version = filename.split("_")[:2]
 
@@ -136,7 +135,7 @@ class PackageCache:
         """Add binary to cache. Hardlink if possible, copy otherwise."""
         suffix = get_suffix(path)
         if not suffix in ('deb', 'udeb'):
-            raise Error("illegal package suffix (%s)" % suffix)
+            raise PoolError("illegal package suffix (%s)" % suffix)
 
         control_fields = debinfo.get_control_fields(path)
         name = control_fields['Package']
@@ -195,7 +194,7 @@ def mkdir(path):
             raise
 
 class StockBase(object):
-    class Error(Exception):
+    class StockBaseError(Exception):
         pass
 
     class Paths(Paths):
@@ -212,11 +211,11 @@ class StockBase(object):
 
         self.name = basename(path)
         if not exists(self.paths.link):
-            raise StockBase.Error("stock link doesn't exist")
+            raise StockBaseError("stock link doesn't exist")
 
         self.link = os.readlink(self.paths.link)
         if not isdir(self.link):
-            raise StockBase.Error("stock link to non-directory `%s'" % self.link)
+            raise StockBaseError("stock link to non-directory `%s'" % self.link)
 
 class StockPool(StockBase):
     """Class for managing a subpool-type stock"""
@@ -294,7 +293,7 @@ class Stock(StockBase):
             command = "cd %s && sumo-open" % subprocess.mkarg(checkout_path)
             error = os.system(command)
             if error:
-                raise self.Error("failed command: " + command)
+                raise self.StockError("failed command: " + command)
             return join(checkout_path, "arena")
 
         # update tags
@@ -436,13 +435,13 @@ class Stocks:
             self.subpools[stock.name] = stock.pool
         except CircularDependency:
             raise
-        except (Error, Stock.Error):
+        except (PoolError, Stock.Error):
             pass
 
         if not stock:
             try:
                 stock = Stock(path_stock, self.pkgcache)
-            except Stock.Error:
+            except StockError:
                 return
 
         self.stocks[stock.name] = stock
@@ -489,7 +488,7 @@ class Stocks:
     def register(self, stock):
         dir, branch = self._parse_stock(stock)
         if not isdir(dir):
-            raise Error("not a directory `%s'" % dir)
+            raise PoolError("not a directory `%s'" % dir)
 
         try:
             git = Git(dir)
@@ -497,7 +496,7 @@ class Stocks:
             git = None
 
         if (not git and branch) or (git and branch and not git.show_ref(branch)):
-            raise Error("no such branch `%s' at `%s'" % (branch, dir))
+            raise PoolError("no such branch `%s' at `%s'" % (branch, dir))
 
         if git and not branch:
             branch = basename(git.symbolic_ref("HEAD"))
@@ -507,7 +506,7 @@ class Stocks:
             stock_name += "#" + branch
 
         if stock_name in self.stocks:
-            raise Error("stock already registered under name `%s'" % stock_name)
+            raise PoolError("stock already registered under name `%s'" % stock_name)
 
         stock_path = join(self.path, stock_name)
         Stock.create(stock_path, dir)
@@ -522,10 +521,10 @@ class Stocks:
         matches = [ stock for stock in list(self.stocks.values())
                     if realpath(stock.link) == realpath(dir) and (not branch or stock.branch == branch) ]
         if not matches:
-            raise Error("no matches for unregister")
+            raise PoolError("no matches for unregister")
 
         if len(matches) > 1:
-            raise Error("multiple implicit matches for unregister")
+            raise PoolError("multiple implicit matches for unregister")
 
         stock = matches[0]
 
@@ -539,7 +538,7 @@ class Stocks:
                 command = "cd %s && sumo-close" % subprocess.mkarg(checkout_path)
                 error = os.system(command)
                 if error:
-                    raise Error("failed command: " + command)
+                    raise PoolError("failed command: " + command)
 
             # remove cached binaries compiled from this stock
             blacklist = set()
@@ -632,7 +631,7 @@ class PoolKernel(object):
     """Class for creating and controlling a Pool.
     This class's public methods map roughly to the pool's cli interface"""
 
-    Error = Error
+    PoolError = PoolError
     class Subpools(object):
         def __get__(self, obj, type):
             return obj.stocks.get_subpools()
@@ -661,7 +660,7 @@ class PoolKernel(object):
         """Format package_id string -> string"""
 
         if not version:
-            raise Error("can't format package_id with unspecified version")
+            raise PoolError("can't format package_id with unspecified version")
 
         return name + "=" + version
 
@@ -673,7 +672,7 @@ class PoolKernel(object):
         self.paths = PoolPaths(path)
         self.path = dirname(self.paths.path)
         if not exists(self.paths.path):
-            raise Error("no pool found (POOL_DIR=%s)" % self.path)
+            raise PoolError("no pool found (POOL_DIR=%s)" % self.path)
 
         self.buildroot = os.readlink(self.paths.build.root)
         self.pkgcache = PackageCache(self.paths.pkgcache)
@@ -757,7 +756,7 @@ class PoolKernel(object):
             name, version = self.parse_package_id(arg)
             if not version:
                 if name not in packages:
-                    raise Error("can't resolve non-existent package `%s'" % name)
+                    raise PoolError("can't resolve non-existent package `%s'" % name)
                 version = packages[name]
 
             resolved.append(self.fmt_package_id(name, version))
@@ -789,7 +788,7 @@ class PoolKernel(object):
 
         if error:
             shutil.rmtree(build_outputdir)
-            raise Error("package `%s' failed to build" % package)
+            raise PoolError("package `%s' failed to build" % package)
 
         print()
 
@@ -818,7 +817,7 @@ class PoolKernel(object):
         """
         name, version = self.parse_package_id(package)
         if version is None:
-            raise Error("getpath_deb requires explicit version for `%s'" % package)
+            raise PoolError("getpath_deb requires explicit version for `%s'" % package)
 
         path = self.pkgcache.getpath(name, version)
         if path:
@@ -840,7 +839,7 @@ class PoolKernel(object):
 
         path = self.pkgcache.getpath(name, version)
         if not path:
-            raise Error("recently built package `%s' missing from cache" % package)
+            raise PoolError("recently built package `%s' missing from cache" % package)
 
         return path
 
@@ -943,7 +942,7 @@ def get_treedir(pkgname):
         return join(pkgname[:1], pkgname)
 
 class Pool(object):
-    Error = Error
+    PoolError = PoolError
 
     class PackageList(list):
         def __init__(self, sequence=None):
@@ -961,10 +960,10 @@ class Pool(object):
     def init_create(cls, buildroot, path=None):
         paths = PoolPaths(path, create=True)
         if isdir(paths.path):
-            raise Error("pool already initialized")
+            raise PoolError("pool already initialized")
 
         if not isdir(buildroot):
-            raise Error("buildroot `%s' is not a directory" % buildroot)
+            raise PoolError("buildroot `%s' is not a directory" % buildroot)
 
         mkdir(paths.stocks)
         Git.set_gitignore(paths.stocks, Stock.Paths.files)
@@ -1059,7 +1058,7 @@ class Pool(object):
         for package in packages:
             if not self.kernel.exists(package):
                 if strict:
-                    raise Error("no such package (%s)" % package)
+                    raise PoolError("no such package (%s)" % package)
                 resolved.missing.append(package)
                 continue
 
