@@ -15,6 +15,8 @@ import shutil
 import tempfile
 import subprocess
 
+from debian import debfile
+
 from .paths import Paths
 
 import errno
@@ -23,7 +25,6 @@ from . import debversion
 
 from gitwrapper import Git
 
-from . import debinfo
 from forked import forked_constructor
 from fnmatch import fnmatch
 import imp
@@ -137,14 +138,14 @@ class PackageCache:
         if not suffix in ('deb', 'udeb'):
             raise PoolError("illegal package suffix (%s)" % suffix)
 
-        control_fields = debinfo.get_control_fields(path)
-        name = control_fields['Package']
-        version = control_fields['Version']
+        deb = debfile.DebFile(path)
+        name = deb.debcontrol()['Package']
+        version = deb.debcontrol()['Version']
 
         if self.exists(name, version):
             return
 
-        arch = control_fields['Architecture']
+        arch = deb.debcontrol()['Architecture']
         filename = "%s_%s_%s.%s" % (name, version, arch, suffix)
         path_cached = join(self.path, filename)
         hardlink_or_copy(path, path_cached)
@@ -927,7 +928,7 @@ class PoolKernel(object):
         if not pretend:
             os.setgid(pool_gid)
             os.setuid(pool_uid)
-            imp.reload(debinfo)
+            imp.reload(debfile)
 
         return True
 
