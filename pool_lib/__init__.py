@@ -16,13 +16,12 @@ import tempfile
 import subprocess
 import importlib
 
-from debian import debfile
+from debian import debfile, debian_support
 
 from .paths import Paths
 
 import errno
 import verseek_lib as verseek
-from . import debversion
 
 from gitwrapper import Git
 
@@ -724,7 +723,7 @@ class PoolKernel(object):
         newest = {}
         for name, version in packages:
             if name not in newest or \
-               debversion.compare(newest[name], version) < 0:
+               debian_support.version_compare(newest[name], version) < 0:
                 newest[name] = version
 
         return list(newest.items())
@@ -877,7 +876,7 @@ class PoolKernel(object):
                     log_versions.append(log_version)
 
         if log_versions:
-            log_versions.sort(debversion.compare)
+            log_versions.sort(debian_support.version_compare)
             last_version = log_versions[-1]
 
             return get_log_path(name, last_version)
@@ -1039,7 +1038,7 @@ class Pool(object):
             val = cmp(b[0], a[0])
             if val != 0:
                 return val
-            return debversion.compare(a[1], b[1])
+            return debian_support.version_compare(a[1], b[1])
 
         packages.sort(cmp=_cmp, reverse=True)
         return packages
