@@ -15,11 +15,12 @@ import re
 from os.path import *  # XXX
 import subprocess
 
+from debian import debfile
+
 import pool_lib as pool
 from pool_lib import Pool
 from pool_lib import PoolKernel
-from pool import debversion  # XXX
-from pool import debinfo  # XXX should be replaced with python3-debian
+from .pool import debversion  # XXX
 
 exitcode = 0
 
@@ -100,9 +101,9 @@ def init(pool_path):
 
 # # info_build
 def extract_source_name(path):
-    fields = debinfo.get_control_fields(path)
-    if 'Source' in fields:
-        return fields['Source']
+    deb = debfile.DebFile(path)
+    if 'Source' in deb.debcontrol():
+        return deb.debcontrol()['Source']
 
     return None
 
