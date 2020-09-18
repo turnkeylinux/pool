@@ -30,8 +30,10 @@ def warn(s):
     print("warning: " + str(s), file=sys.stderr)
 
 
-def fatal(s):
-    print("error: " + str(s), file=sys.stderr)
+def fatal(msg, help=None):
+    print("error: " + str(msg), file=sys.stderr)
+    if help:
+        help()
     sys.exit(1)
 
 
@@ -318,8 +320,7 @@ def main():
     parser = argparse.ArgumentParser(
             description='Maintain a pool of packages from source and binary'
                         ' stocks')
-    subparsers = parser.add_subparsers(dest='subcommand',
-                                       help='sub-command help')
+    subparsers = parser.add_subparsers(dest='subcommand')
 
     # pool-exists
     parser_exists = subparsers.add_parser(
@@ -366,9 +367,6 @@ def main():
 
     # pool-info
     parser_info = subparsers.add_parser('info', help="Prints pool info")
-    parser_info.add_argument(
-            '-r', '--recursive', action='store_true',
-            help='Lookup pool info recursively in subpools')
     # pool-info conflicting args
     parser_info_conflicts = parser_info.add_mutually_exclusive_group()
     parser_info_conflicts.add_argument(
@@ -407,7 +405,7 @@ def main():
     parser_info.add_argument(
             '-r', '--recursive', action='store_true',
             help='Lookup pool info recursively in subpools')
-    parser_info.set_defaults(func=inf0)
+    parser_info.set_defaults(func=info)
 
     # pool-init
     parser_init = subparsers.add_parser('init', help='Initialize a new pool')
@@ -447,7 +445,10 @@ def main():
     parser_unregister.set_defaults(func=unregister)
 
     args = parser.parse_args()
-    args.func(args)
+    if args.subcommand:
+        args.func(args)
+    else:
+        fatal("Subcommand required.", parser.print_help)
 
 
 if __name__ == "__main__":
