@@ -26,7 +26,7 @@ from . import debversion
 
 from gitwrapper import Git
 
-from forked import forked_constructor
+from .forked import forked_constructor
 from fnmatch import fnmatch
 
 class PoolError(Exception):
