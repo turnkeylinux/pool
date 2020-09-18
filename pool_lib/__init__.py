@@ -14,6 +14,7 @@ import re
 import shutil
 import tempfile
 import subprocess
+import importlib
 
 from debian import debfile
 
@@ -27,7 +28,6 @@ from gitwrapper import Git
 
 from forked import forked_constructor
 from fnmatch import fnmatch
-import imp
 
 class PoolError(Exception):
     pass
@@ -928,7 +928,7 @@ class PoolKernel(object):
         if not pretend:
             os.setgid(pool_gid)
             os.setuid(pool_uid)
-            imp.reload(debfile)
+            importlib.reload(debfile)
 
         return True
 
