@@ -15,15 +15,15 @@ import shutil
 import tempfile
 import subprocess
 
-from paths import Paths
+from .paths import Paths
 
 import errno
-from pyproject.verseek import verseek
-import debversion
+import verseek_lib as verseek
+from . import debversion
 
-from git import Git
+from gitwrapper import Git
 
-import debinfo
+from . import debinfo
 from forked import forked_constructor
 from fnmatch import fnmatch
 import imp
