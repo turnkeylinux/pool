@@ -1,0 +1,10 @@
+/usr/bin/pool_bin   /usr/bin/pool 
+/usr/bin/pool_bin   /usr/bin/pool-exists
+/usr/bin/pool_bin   /usr/bin/pool-gc
+/usr/bin/pool_bin   /usr/bin/pool-get
+/usr/bin/pool_bin   /usr/bin/pool-info
+/usr/bin/pool_bin   /usr/bin/pool-info-build
+/usr/bin/pool_bin   /usr/bin/pool-init
+/usr/bin/pool_bin   /usr/bin/pool-list
+/usr/bin/pool_bin   /usr/bin/pool-register
+/usr/bin/pool_bin   /usr/bin/pool-unregister

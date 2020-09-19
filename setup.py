@@ -9,6 +9,6 @@ setup(
     author_email="jeremy@turnkeylinux.org",
     url="https://github.com/turnkeylinux/pool",
     packages=["pool_lib"],
-    scripts=["pool"]
+    scripts=["pool_bin"]
 )
 
