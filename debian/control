@@ -15,7 +15,6 @@ Depends:
  deckdebuild,
  git (>= 1:1.5.2),
  ${misc:Depends},
- ${shlibs:Depends},
  ${python3:Depends},
  turnkey-gitwrapper,
  python3-debian,
