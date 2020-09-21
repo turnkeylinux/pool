@@ -332,6 +332,7 @@ def main():
             description='Maintain a pool of packages from source and binary'
                         ' stocks')
     subparsers = parser.add_subparsers()
+    subparsers.required = True
 
     # pool-exists
     parser_exists = subparsers.add_parser(
@@ -455,13 +456,13 @@ def main():
             help='/path/to/stock[#branch]')
     parser_unregister.set_defaults(func=unregister)
 
-    args = parser.parse_args()
-    if args.subcommand:
+    try:
+        args = parser.parse_args()
         func = args.func
         args = vars(args)
         del args['func']
         func(**args)
-    else:
+    except TypeError:  # if subparser/subcommand not called
         fatal("Subcommand required.", parser.print_help)
 
 
