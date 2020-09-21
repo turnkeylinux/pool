@@ -264,10 +264,13 @@ def print_build_logs(pool):
         print(log_name + "=" + log_version)
 
 
-def info(func, recursive, pool=None):
-    if pool is None:
-        pool = PoolKernel()
-        pool.drop_privileges()
+def info(func, recursive=False, pool=None):
+    try:
+        if pool is None:
+            pool = PoolKernel()
+            pool.drop_privileges()
+    except PoolError as e:
+        fatal(e)
 
     if recursive:
         print("### POOL_DIR=" + pool.path)
