@@ -275,11 +275,12 @@ def info(function, recursive=False, pool=None):
     if recursive:
         print("### POOL_DIR=" + pool.path)
 
-    function(pool)
-    if recursive:
-        for subpool in pool.subpools:
-            print()
-            info(function, recursive, subpool)
+    if function:
+        function(pool)
+        if recursive:
+            for subpool in pool.subpools:
+                print()
+                info(function, recursive, subpool)
 
 
 # # init
