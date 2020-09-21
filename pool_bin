@@ -22,6 +22,7 @@ from pool_lib import Pool
 from pool_lib import PoolKernel
 
 exitcode = 0
+PROG = 'pool'
 
 
 def warn(s):
@@ -317,7 +318,15 @@ def unregister(stock):
 
 
 def main():
+    # process 'pool-COMMAND' symlinks to be 'pool COMMAND'
+    command = os.path.split(sys.argv[0])[-1]
+    if command.startswith(PROG+'-'):
+        sys.argv[0] = PROG
+        subcommand = command[len(PROG+'-'):]
+        sys.argv.insert(1, subcommand)
+
     parser = argparse.ArgumentParser(
+            prog=PROG,
             description='Maintain a pool of packages from source and binary'
                         ' stocks')
     subparsers = parser.add_subparsers(dest='subcommand')
