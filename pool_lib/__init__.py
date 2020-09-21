@@ -31,6 +31,11 @@ from fnmatch import fnmatch
 class PoolError(Exception):
     pass
 
+
+class StockError(PoolError):
+    pass
+
+
 class CircularDependency(PoolError):
     pass
 
@@ -435,7 +440,7 @@ class Stocks:
             self.subpools[stock.name] = stock.pool
         except CircularDependency:
             raise
-        except (PoolError, Stock.Error):
+        except (PoolError, StockError):
             pass
 
         if not stock:
