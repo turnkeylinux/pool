@@ -264,7 +264,7 @@ def print_build_logs(pool):
         print(log_name + "=" + log_version)
 
 
-def info(func, recursive=False, pool=None):
+def info(function, recursive=False, pool=None):
     try:
         if pool is None:
             pool = PoolKernel()
@@ -275,11 +275,11 @@ def info(func, recursive=False, pool=None):
     if recursive:
         print("### POOL_DIR=" + pool.path)
 
-    func(pool)
+    function(pool)
     if recursive:
         for subpool in pool.subpools:
             print()
-            info(func, recursive, subpool)
+            info(function, recursive, subpool)
 
 
 # # init
@@ -457,7 +457,11 @@ def main():
 
     args = parser.parse_args()
     if args.subcommand:
-        args.func(args)
+        func = args.func
+        args = vars(args)
+        del args['subcommand']
+        del args['func']
+        func(**args)
     else:
         fatal("Subcommand required.", parser.print_help)
 
