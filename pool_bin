@@ -331,7 +331,7 @@ def main():
             prog=PROG,
             description='Maintain a pool of packages from source and binary'
                         ' stocks')
-    subparsers = parser.add_subparsers(dest='subcommand')
+    subparsers = parser.add_subparsers()
 
     # pool-exists
     parser_exists = subparsers.add_parser(
@@ -459,7 +459,6 @@ def main():
     if args.subcommand:
         func = args.func
         args = vars(args)
-        del args['subcommand']
         del args['func']
         func(**args)
     else:
