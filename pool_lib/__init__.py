@@ -63,7 +63,7 @@ def hardlink_or_copy(src, dst):
     try:
         os.link(src, dst)
     except OSError as e:
-        if e[0] != errno.EXDEV:
+        if e.args[0] != errno.EXDEV:
             raise
         shutil.copyfile(src, dst)
 
@@ -190,7 +190,7 @@ def mkdir(path):
     try:
         os.makedirs(path)
     except OSError as e:
-        if e[0] != errno.EEXIST:
+        if e.args[0] != errno.EEXIST:
             raise
 
 class StockBase(object):
