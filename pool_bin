@@ -18,8 +18,7 @@ import subprocess
 from debian import debfile, debian_support
 
 import pool_lib as pool
-from pool_lib import Pool
-from pool_lib import PoolKernel
+from pool_lib import Pool, PoolKernel, PoolError
 
 exitcode = 0
 PROG = 'pool'
