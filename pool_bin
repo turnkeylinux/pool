@@ -73,7 +73,7 @@ def get(outputdir, packages=None, inputfile=None,
 
     pool = Pool()
 
-    if input_file:
+    if inputfile:
         packages += read_packages(input_file)
 
     if not packages and not inputfile:
@@ -321,10 +321,10 @@ def unregister(stock):
 
 
 def main():
-    # process 'pool-COMMAND' symlinks to be 'pool COMMAND'
+    # process 'pool-COMMAND' symlinks to be 'pool COMMAND
     command = os.path.split(sys.argv[0])[-1]
+    sys.argv[0] = PROG
     if command.startswith(PROG+'-'):
-        sys.argv[0] = PROG
         subcommand = command[len(PROG+'-'):]
         sys.argv.insert(1, subcommand)
 
@@ -333,7 +333,7 @@ def main():
             description='Maintain a pool of packages from source and binary'
                         ' stocks')
     subparsers = parser.add_subparsers()
-    subparsers.required = True
+    #subparsers.required = True
 
     # pool-exists
     parser_exists = subparsers.add_parser(
@@ -355,7 +355,7 @@ def main():
     # pool-get
     parser_get = subparsers.add_parser('get', help='Get packages from pool')
     parser_get.add_argument(
-            '-i', '--input',
+            '-i', '--input', dest='inputfile',
             help='Package list input file (- for stdin)')
     parser_get.add_argument(
             '-s', '--strict', action='store_true',
@@ -369,6 +369,12 @@ def main():
     parser_get.add_argument(
             '-o', '--source', action='store_true',
             help='build source packages in addition to binary packages')
+    parser_get.add_argument(
+            'outputdir',
+            help='Output directory')
+    parser_get.add_argument(
+            'packages', nargs='+',
+            help='Package(s) - optionally with versions')
     parser_get.set_defaults(func=get)
 
     # pool-info-build
@@ -435,7 +441,7 @@ def main():
             '-n', '--name-only', action='store_true',
             help='print only the names of packages in the pool')
     parser_list.add_argument(
-            'globs', nargs='+',
+            'globs', nargs='*',
             help='package-glob(s)')
     parser_list.set_defaults(func=p_list)
 
@@ -457,14 +463,15 @@ def main():
             help='/path/to/stock[#branch]')
     parser_unregister.set_defaults(func=unregister)
 
-    try:
-        args = parser.parse_args()
-        func = args.func
-        args = vars(args)
-        del args['func']
-        func(**args)
-    except TypeError:  # if subparser/subcommand not called
-        fatal("Subcommand required.", parser.print_help)
+    #try:
+    args = parser.parse_args()
+    print(args)
+    func = args.func
+    args = vars(args)
+    del args['func']
+    func(**args)
+    #except TypeError:  # if subparser/subcommand not called
+    #    fatal("Subcommand required.", parser.print_help)
 
 
 if __name__ == "__main__":
