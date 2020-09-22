@@ -17,6 +17,7 @@ import subprocess
 import importlib
 
 from debian import debfile, debian_support
+from functools import cmp_to_key
 
 from .paths import Paths
 
@@ -1045,7 +1046,7 @@ class Pool(object):
                 return val
             return debian_support.version_compare(a[1], b[1])
 
-        packages.sort(cmp=_cmp, reverse=True)
+        packages.sort(key=cmp_to_key(_cmp), reverse=True)
         return packages
 
     def get(self, output_dir, packages, tree_fmt=False, strict=False, source=False):
