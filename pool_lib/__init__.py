@@ -43,7 +43,7 @@ class CircularDependency(PoolError):
 def deb_get_packages(srcpath):
     controlfile = join(srcpath, "debian/control")
     return [ re.sub(r'^.*?:', '', line).strip()
-             for line in file(controlfile).readlines()
+             for line in open(controlfile).readlines()
              if re.match(r'^Package:', line, re.I) ]
 
 def parse_package_filename(filename):
@@ -248,7 +248,7 @@ class Stock(StockBase):
         def __get__(self, obj, type):
             path = obj.paths.SYNC_HEAD
             if exists(path):
-                return file(path).read().rstrip()
+                return open(path).read().rstrip()
 
             return None
 
@@ -258,7 +258,7 @@ class Stock(StockBase):
                 if exists(path):
                     os.remove(path)
             else:
-                file(path, "w").write(val + "\n")
+                open(path, "w").write(val + "\n")
 
     sync_head = SyncHead()
 
@@ -335,7 +335,7 @@ class Stock(StockBase):
             relative_path = make_relative(self.paths.index_sources, dpath)
             for fname in fnames:
                 fpath = join(dpath, fname)
-                versions = [ line.strip() for line in file(fpath).readlines() if line.strip() ]
+                versions = [ line.strip() for line in open(fpath).readlines() if line.strip() ]
                 source_versions[join(relative_path, fname)] = versions
 
         return source_versions
@@ -361,7 +361,7 @@ class Stock(StockBase):
         mkdir(source_versions_path)
 
         for package in packages:
-            fh = file(join(source_versions_path, package), "w")
+            fh = open(join(source_versions_path, package), "w")
             for version in versions:
                 print(version, file=fh)
             fh.close()
@@ -372,7 +372,7 @@ class Stock(StockBase):
         relative_path = make_relative(self.workdir, path)
         binary_version_path = join(self.paths.index_binaries, relative_path)
         mkdir(dirname(binary_version_path))
-        file(binary_version_path, "w").truncate() # create zero length file
+        open(binary_version_path, "w").truncate() # create zero length file
 
     def _sync(self, dir=None):
         """recursive sync back-end.
