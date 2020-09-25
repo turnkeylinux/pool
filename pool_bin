@@ -22,6 +22,7 @@ from pool_lib import Pool, PoolKernel, PoolError
 
 exitcode = 0
 PROG = 'pool'
+DEBUG = True
 
 
 def warn(s):
@@ -41,7 +42,8 @@ def exists(package):
     try:
         istrue = pool.Pool().exists(package)
     except PoolError as e:
-        fatal(e)
+        if not DEBUG:
+            fatal(e)
 
     if istrue:
         print("true")
@@ -54,7 +56,8 @@ def gc(recurse=True):
     try:
         pool.Pool().gc(recurse)
     except PoolError as e:
-        fatal(e)
+        if not DEBUG:
+            fatal(e)
 
 
 def read_packages(in_file):
@@ -84,7 +87,8 @@ def get(outputdir, packages=None, inputfile=None,
         packages = pool.get(outputdir, packages, tree_fmt=tree,
                             strict=strict, source=source)
     except PoolError as e:
-        fatal(e)
+        if not DEBUG:
+            fatal(e)
 
     if not quiet:
         for package in packages.missing:
@@ -97,7 +101,8 @@ def init(pool_path):
     try:
         pool.Pool.init_create(os.path.abspath(buildroot))
     except PoolError as e:
-        fatal(e)
+        if not DEBUG:
+            fatal(e)
 
 
 # # info_build
@@ -162,7 +167,8 @@ def getpath_build_log(package):
     try:
         pool = Pool()
     except Pool.Error as e:
-        fatal(e)
+        if not DEBUG:
+            fatal(e)
 
     path = pool.getpath_build_log(package)
     if path:
@@ -270,7 +276,8 @@ def info(function, recursive=False, pool=None):
             pool = PoolKernel()
             pool.drop_privileges()
     except PoolError as e:
-        fatal(e)
+        if not DEBUG:
+            fatal(e)
 
     if recursive:
         print("### POOL_DIR=" + pool.path)
@@ -288,7 +295,8 @@ def init(buildroot):
     try:
         pool.Pool.init_create(os.path.abspath(buildroot))
     except PoolError as e:
-        fatal(e)
+        if not DEBUG:
+            fatal(e)
 
 
 # # list
@@ -309,7 +317,8 @@ def register(stock):
     try:
         pool.Pool().register(stock)
     except PoolError as e:
-        fatal(e)
+        if not DEBUG:
+            fatal(e)
 
 
 # # unregister
@@ -317,11 +326,13 @@ def unregister(stock):
     try:
         pool.Pool().unregister(stock)
     except PoolError as e:
-        fatal(e)
+        if not DEBUG:
+            fatal(e)
 
 
 def main():
     # process 'pool-COMMAND' symlinks to be 'pool COMMAND
+
     command = os.path.split(sys.argv[0])[-1]
     sys.argv[0] = PROG
     if command.startswith(PROG+'-'):
