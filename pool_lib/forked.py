@@ -123,6 +123,7 @@ def forked_func(func, print_traceback=False):
         if error:
             raise val
         return val
+
     return wrapper
 
 
@@ -209,7 +210,8 @@ class ObjProxyClient(ObjProxyBase, object):
     * attribute getting
 
     """
-    __local_attr__ = ['_r', '_w']
+
+    __local_attr__ = ["_r", "_w"]
 
     def __init__(self, r, w):
         self._r = r
@@ -222,6 +224,7 @@ class ObjProxyClient(ObjProxyBase, object):
             if error:
                 raise val
             return val
+
         return wrapper
 
     @_read_result
@@ -276,6 +279,7 @@ def forkpipe():
 def forked_constructor(constructor, print_traceback=False):
     """Wraps a constructor so that instances are created in a subprocess.
     Returns a new constructor"""
+
     def wrapper(*args, **kws):
         pid, r, w = forkpipe()
         if pid == 0:
@@ -284,6 +288,7 @@ def forked_constructor(constructor, print_traceback=False):
             os._exit(0)
 
         return ObjProxyClient(r, w)
+
     return wrapper
 
 
@@ -315,6 +320,7 @@ def test():
 
     def dummy():
         return pg
+
     forkedpg = forked_constructor(dummy)()
     print("pg.getpid() = %d" % pg.getpid())
     print("forkedpg.getpid() = %d" % forkedpg.getpid())

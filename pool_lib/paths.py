@@ -50,7 +50,7 @@ import re
 import os
 from os.path import *
 
-__all__ = ['make_relative', 'Paths', 'subdir']
+__all__ = ["make_relative", "Paths", "subdir"]
 
 
 def make_relative(base, path):
@@ -65,14 +65,14 @@ def make_relative(base, path):
 
     up_count = 0
 
-    base = realpath(str(base)).rstrip('/')
-    path = realpath(str(path)).rstrip('/')
+    base = realpath(str(base)).rstrip("/")
+    path = realpath(str(path)).rstrip("/")
 
     while True:
         if path == base or path.startswith(base.rstrip("/") + "/"):
-            return ("../" * up_count) + path[len(base) + 1:]
+            return ("../" * up_count) + path[len(base) + 1 :]
 
-        base = dirname(base).rstrip('/')
+        base = dirname(base).rstrip("/")
         up_count += 1
 
 
@@ -107,15 +107,15 @@ class Paths(str):
 
     @staticmethod
     def _fname2attr(fname):
-        return re.sub(r'[\.-]', '_', fname)
+        return re.sub(r"[\.-]", "_", fname)
 
     def listdir(self):
-        "Return a list containing the names of the entries in directory"""
+        "Return a list containing the names of the entries in directory" ""
         return list(self.files.values())
 
     def register(self, filename):
-        if '/' in filename:
-            subdir, filename = filename.split('/', 1)
+        if "/" in filename:
+            subdir, filename = filename.split("/", 1)
             attr = self._fname2attr(subdir)
             subpaths = getattr(self, attr, None)
             if not subpaths or not isinstance(subpaths, Paths):
@@ -134,10 +134,10 @@ def subdir(dir, files):
 
 def test():
     class FooPaths(Paths):
-            files = ["foo", "sub.dir/sub-file"]
+        files = ["foo", "sub.dir/sub-file"]
 
     class BarPaths(FooPaths):
-            files = ["bar"] + subdir("sub.dir2", ["sub-file2"])
+        files = ["bar"] + subdir("sub.dir2", ["sub-file2"])
 
     paths = BarPaths("/tmp")
     print(paths.foo)
