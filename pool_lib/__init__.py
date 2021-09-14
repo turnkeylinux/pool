@@ -406,11 +406,8 @@ class Stock(StockBase):
 
         for fname in os.listdir(dir):
             fpath = join(dir, fname)
-            if (
-                not islink(fpath)
-                and isfile(fpath)
-                and get_suffix(fname) in ("deb", "udeb")
-            ):
+            if not islink(fpath) and isfile(fpath) and \
+                    get_suffix(fname) in ("deb", "udeb"):
                 self.pkgcache.add(fpath)
                 self._sync_update_binary_versions(fpath)
 
@@ -779,10 +776,9 @@ class PoolKernel(object):
 
         newest = {}
         for name, version in packages:
-            if (
-                name not in newest
-                or debian_support.version_compare(newest[name], version) < 0
-            ):
+            if name not in newest or \
+                    debian_support.version_compare(
+                            newest[name], version) < 0:
                 newest[name] = version
 
         return list(newest.items())
@@ -870,9 +866,8 @@ class PoolKernel(object):
                 shutil.copyfile(fpath, join(self.paths.build.logs, fname))
             elif fname.endswith(".buildinfo"):
                 shutil.copyfile(fpath, join(self.paths.build.buildinfo, fname))
-            elif (
-                ext_part in (".gz", ".xz", ".bz2") and splitext(fname_part)[1] == ".tar"
-            ):
+            elif ext_part in (".gz", ".xz", ".bz2") and \
+                    splitext(fname_part)[1] == ".tar":
                 shutil.copyfile(fpath, join(self.paths.srcpkgcache, fname))
 
         shutil.rmtree(build_outputdir)

@@ -48,7 +48,7 @@ print paths.make_relative(paths.sub_dir, paths.sub_dir.sub_file)
 """
 import re
 import os
-from os.path import *
+from os.path import join, realpath
 
 __all__ = ["make_relative", "Paths", "subdir"]
 
