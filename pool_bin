@@ -22,7 +22,7 @@ from pool_lib import Pool, PoolKernel, PoolError
 
 exitcode = 0
 PROG = "pool"
-DEBUG = True
+DEBUG = False
 
 
 def warn(s):
@@ -44,6 +44,8 @@ def exists(package):
     except PoolError as e:
         if not DEBUG:
             fatal(e)
+        else:
+            raise e
 
     if istrue:
         print("true")
@@ -52,12 +54,14 @@ def exists(package):
         sys.exit(1)
 
 
-def gc(recurse=True):
+def gc(disable_recursion=False):
     try:
-        pool.Pool().gc(recurse)
+        pool.Pool().gc(not disable_recursion)
     except PoolError as e:
         if not DEBUG:
             fatal(e)
+        else:
+            raise e
 
 
 def read_packages(in_file):
@@ -96,6 +100,8 @@ def get(
     except PoolError as e:
         if not DEBUG:
             fatal(e)
+        else:
+            raise e
 
     if not quiet:
         for package in packages.missing:
@@ -110,6 +116,8 @@ def init(pool_path):
     except PoolError as e:
         if not DEBUG:
             fatal(e)
+        else:
+            raise e
 
 
 # # info_build
@@ -178,6 +186,8 @@ def getpath_build_log(package):
     except Pool.Error as e:
         if not DEBUG:
             fatal(e)
+        else:
+            raise e
 
     path = pool.getpath_build_log(package)
     if path:
@@ -292,6 +302,8 @@ def info(function, recursive=False, pool=None):
     except PoolError as e:
         if not DEBUG:
             fatal(e)
+        else:
+            raise e
 
     if recursive:
         print("### POOL_DIR=" + pool.path)
@@ -311,6 +323,8 @@ def init(buildroot):
     except PoolError as e:
         if not DEBUG:
             fatal(e)
+        else:
+            raise e
 
 
 # # list
@@ -328,11 +342,14 @@ def p_list(globs=[], all_versions=False, name_only=False):
 
 # # register
 def register(stock):
+    print(repr(stock))
     try:
         pool.Pool().register(stock)
     except PoolError as e:
         if not DEBUG:
             fatal(e)
+        else:
+            raise e
 
 
 # # unregister
@@ -342,6 +359,8 @@ def unregister(stock):
     except PoolError as e:
         if not DEBUG:
             fatal(e)
+        else:
+            raise e
 
 
 def main():
@@ -357,8 +376,7 @@ def main():
         prog=PROG,
         description="Maintain a pool of packages from source and binary" " stocks",
     )
-    subparsers = parser.add_subparsers()
-    # subparsers.required = True
+    subparsers = parser.add_subparsers(dest='cmd')
 
     # pool-exists
     parser_exists = subparsers.add_parser(
@@ -526,15 +544,15 @@ def main():
     parser_unregister.add_argument("stock", help="/path/to/stock[#branch]")
     parser_unregister.set_defaults(func=unregister)
 
-    # try:
     args = parser.parse_args()
-    print(args)
-    func = args.func
-    args = vars(args)
-    del args["func"]
-    func(**args)
-    # except TypeError:  # if subparser/subcommand not called
-    #    fatal("Subcommand required.", parser.print_help)
+    if args.cmd:
+        func = args.func
+        args = vars(args)
+        del args["cmd"]
+        del args["func"]
+        func(**args)
+    else:
+        fatal("Subcommand required.", parser.print_help)
 
 
 if __name__ == "__main__":

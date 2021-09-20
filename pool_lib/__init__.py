@@ -15,6 +15,7 @@ import shutil
 import tempfile
 import subprocess
 import importlib
+from contextlib import contextmanager
 
 from debian import debfile, debian_support
 from functools import cmp_to_key
@@ -54,7 +55,7 @@ def deb_get_packages(srcpath):
 def parse_package_filename(filename):
     """Parses package filename -> (name, version)"""
 
-    if not get_suffix(filename) in ("deb", "udeb"):
+    if not splitext(filename)[1] in (".deb", ".udeb"):
         raise PoolError("not a package `%s'" % filename)
 
     name, version = filename.split("_")[:2]
@@ -62,14 +63,9 @@ def parse_package_filename(filename):
     return name, version
 
 
-def get_suffix(filename):
-    try:
-        return filename.rsplit(".", 1)[1]
-    except IndexError:
-        return None
-
-
-def hardlink_or_copy(src, dst):
+def hardlink_or_copy(src: os.PathLike, dst: os.PathLike):
+    src = os.fspath(src)
+    dst = os.fspath(dst)
     if exists(dst):
         os.remove(dst)
 
@@ -80,6 +76,16 @@ def hardlink_or_copy(src, dst):
             raise
         shutil.copyfile(src, dst)
 
+@contextmanager
+def in_dir(path: os.PathLike):
+    '''context manager to perform an operation within a specified directory'''
+    cwd = os.getcwd()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(cwd)
+
 
 class PackageCache:
     """Class representing the pool's package cache"""
@@ -89,7 +95,7 @@ class PackageCache:
         for filename in os.listdir(self.path):
             filepath = join(self.path, filename)
 
-            if not isfile(filepath) or not get_suffix(filename) in ("deb", "udeb"):
+            if not isfile(filepath) or not splitext(filename)[1] in (".deb", ".udeb"):
                 continue
 
             yield filename
@@ -147,8 +153,8 @@ class PackageCache:
 
     def add(self, path):
         """Add binary to cache. Hardlink if possible, copy otherwise."""
-        suffix = get_suffix(path)
-        if not suffix in ("deb", "udeb"):
+        suffix = splitext(path)[1]
+        if not suffix in (".deb", ".udeb"):
             raise PoolError("illegal package suffix (%s)" % suffix)
 
         deb = debfile.DebFile(path)
@@ -159,7 +165,7 @@ class PackageCache:
             return
 
         arch = deb.debcontrol()["Architecture"]
-        filename = "%s_%s_%s.%s" % (name, version, arch, suffix)
+        filename = f"{name}_{version}_{arch}{suffix}"
         path_cached = join(self.path, filename)
         hardlink_or_copy(path, path_cached)
 
@@ -357,7 +363,6 @@ class Stock(StockBase):
                     line.strip() for line in open(fpath).readlines() if line.strip()
                 ]
                 source_versions[join(relative_path, fname)] = versions
-
         return source_versions
 
     def __init__(self, path, pkgcache):
@@ -374,7 +379,7 @@ class Stock(StockBase):
     def _sync_update_source_versions(self, dir):
         """update versions for a particular source package at <dir>"""
         packages = deb_get_packages(dir)
-        versions = verseek.list(dir)
+        versions = verseek.list_versions(dir)
 
         relative_path = make_relative(self.workdir, dir)
         source_versions_path = join(self.paths.index_sources, relative_path)
@@ -407,7 +412,7 @@ class Stock(StockBase):
         for fname in os.listdir(dir):
             fpath = join(dir, fname)
             if not islink(fpath) and isfile(fpath) and \
-                    get_suffix(fname) in ("deb", "udeb"):
+                    splitext(fname)[1] in (".deb", ".udeb"):
                 self.pkgcache.add(fpath)
                 self._sync_update_binary_versions(fpath)
 
@@ -837,18 +842,18 @@ class PoolKernel(object):
             return tuple(map(subprocess.mkarg, args))
 
         # seek to version, build the package, seek back
-        verseek.seek(source_path, version)
+        verseek.seek_version(source_path, version)
         if source:
-            error = os.system(
-                "cd %s && deckdebuild --build-source %s %s"
-                % mkargs(source_path, self.buildroot, build_outputdir)
-            )
+            with in_dir(source_path):
+                error = subprocess.run([
+                    'deckdebuild', '--build-source',
+                    self.buildroot, build_outputdir]).returncode
         else:
-            error = os.system(
-                "cd %s && deckdebuild %s %s"
-                % mkargs(source_path, self.buildroot, build_outputdir)
-            )
-        verseek.seek(source_path)
+            with in_dir(source_path):
+                error = subprocess.run([
+                    'deckdebuild', self.buildroot, build_outputdir
+                ]).returncode
+        verseek.seek_version(source_path)
 
         if error:
             shutil.rmtree(build_outputdir)
@@ -860,7 +865,7 @@ class PoolKernel(object):
         for fname in os.listdir(build_outputdir):
             fpath = join(build_outputdir, fname)
             fname_part, ext_part = splitext(fname)
-            if get_suffix(fname) in ("deb", "udeb"):
+            if splitext(fname)[1] in (".deb", ".udeb"):
                 self.pkgcache.add(fpath)
             elif fname.endswith(".build"):
                 shutil.copyfile(fpath, join(self.paths.build.logs, fname))
