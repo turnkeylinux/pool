@@ -1090,6 +1090,9 @@ class Pool(object):
             self.inner += other
             return self
 
+        def append(self, pkg: str):
+            self.inner.append(pkg)
+
         def sort(self, key, reverse: bool=False):
             self.inner.sort(key=key, reverse=reverse)
 
