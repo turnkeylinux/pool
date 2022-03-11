@@ -13,7 +13,8 @@ import sys
 import argparse
 import re
 import subprocess
-from os.path import basename, dirname
+from os.path import basename, dirname, isdir
+from os.path import exists as path_exists
 
 from debian import debfile, debian_support
 
@@ -45,7 +46,7 @@ def exists(package):
         if not DEBUG:
             fatal(e)
         else:
-            raise e
+            raise
 
     if istrue:
         print("true")
@@ -66,13 +67,19 @@ def gc(disable_recursion=False):
 
 def read_packages(in_file):
     packages = []
-    with open(in_file, "r") as fob:
-        for line in fob.readlines():
-            line = line.split("#")[0].strip()
-            if not line:
-                continue
-            packages.append(line)
-    return packages
+    try:
+        with open(in_file, "r") as fob:
+            for line in fob.readlines():
+                line = line.split("#")[0].strip()
+                if not line:
+                    continue
+                packages.append(line)
+        return packages
+    except FileNotFoundError as e:
+        if not DEBUG:
+            fatal(e)
+        else:
+            raise e
 
 
 def get(
@@ -84,30 +91,39 @@ def get(
         tree=False,
         source=False):
 
+    this_exitcode = exitcode
     pool = Pool()
-
-    if inputfile:
-        packages += read_packages(input_file)
+    package_list = []
 
     if not packages and not inputfile:
         # if no packages specified, get all the newest versions
         packages = pool.list()
+    elif inputfile:
+        # treat all "packages" as plan files
+        for plan_file in packages:
+            package_list.extend(read_packages(plan_file))
+    else:
+        # assume that it's actaully a list of package names
+        package_list = packages
 
     try:
         packages = pool.get(
-            outputdir, packages, tree_fmt=tree, strict=strict, source=source
+            outputdir, package_list, tree_fmt=tree,
+            strict=strict, source=source
         )
     except PoolError as e:
         if not DEBUG:
             fatal(e)
         else:
             raise e
+    if strict and packages.missing:
+        this_exitcode = 1
 
     if not quiet:
         for package in packages.missing:
             warn("no such package (%s)" % package)
 
-    sys.exit(exitcode)
+    sys.exit(this_exitcode)
 
 
 def init(pool_path):
@@ -369,27 +385,29 @@ def main():
     command = os.path.split(sys.argv[0])[-1]
     sys.argv[0] = PROG
     if command.startswith(PROG + "-"):
-        subcommand = command[len(PROG + "-") :]
+        subcommand = command[len(PROG + "-"):]
         sys.argv.insert(1, subcommand)
 
     parser = argparse.ArgumentParser(
         prog=PROG,
-        description="Maintain a pool of packages from source and binary" " stocks",
+        description=("Maintain a pool of packages from source and binary"
+                     " stocks")
     )
     subparsers = parser.add_subparsers(dest='cmd')
 
     # pool-exists
     parser_exists = subparsers.add_parser(
         "exists",
-        help="Check if package exists in pool (Prints true/false; exit"
-        " code 0/1 respectively)",
+        help=("Check if package exists in pool (Prints true/false; exit"
+              " code 0/1 respectively)")
     )
     parser_exists.add_argument("package", help="Package to check for")
     parser_exists.set_defaults(func=exists)
 
     # pool-gc
     parser_gc = subparsers.add_parser(
-        "gc", help="Garbage collect stale data from the pool's caches"
+        "gc",
+        help="Garbage collect stale data from the pool's caches"
     )
     parser_gc.add_argument(
         "-R",
@@ -402,10 +420,16 @@ def main():
     # pool-get
     parser_get = subparsers.add_parser("get", help="Get packages from pool")
     parser_get.add_argument(
-        "-i", "--input", dest="inputfile", help="Package list input file (- for stdin)"
+        "-i",
+        "--input",
+        dest="inputfile",
+        action="store_true",
+        help="Read packages from file(s)."
     )
     parser_get.add_argument(
-        "-s", "--strict", action="store_true", help="fatal error on missing packages"
+        "-s", "--strict",
+        action="store_true",
+        help="fatal error on missing packages"
     )
     parser_get.add_argument(
         "-q",
@@ -427,7 +451,10 @@ def main():
     )
     parser_get.add_argument("outputdir", help="Output directory")
     parser_get.add_argument(
-        "packages", nargs="+", help="Package(s) - optionally with versions"
+        "packages", nargs="+",
+        default=[],
+        help=("Package(s) or file containing packages (optionally"
+              " with versions)")
     )
     parser_get.set_defaults(func=get)
 
@@ -550,6 +577,11 @@ def main():
         args = vars(args)
         del args["cmd"]
         del args["func"]
+        if 'outputdir' in args.keys():
+            if not path_exists(args['outputdir']):
+                fatal(f"{args['outputdir']} does not exist")
+            elif not isdir(args['outputdir']):
+                fatal(f"{args['outputdir']} exists, but is not a directory")
         func(**args)
     else:
         fatal("Subcommand required.", parser.print_help)
