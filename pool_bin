@@ -46,7 +46,7 @@ def exists(package):
         if not DEBUG:
             fatal(e)
         else:
-            raise e
+            raise
 
     if istrue:
         print("true")
