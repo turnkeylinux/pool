@@ -242,7 +242,7 @@ def print_stocks(pool):
     for stock in pool.stocks:
         addr = stock.link
         if stock.branch:
-            addr += "#" + stock.branch
+            addr += "#" + stock.branch.replace('%2F', '/')
         print(addr)
 
 
