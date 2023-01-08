@@ -344,8 +344,8 @@ def init(buildroot):
 
 
 # # list
-def p_list(globs=[], all_versions=False, name_only=False):
-    packages = Pool().list(all_versions, *globs)
+def p_list(globs=[], all_versions=False, name_only=False, verbose=False):
+    packages = Pool().list(all_versions, *globs, verbose=verbose)
     for glob in packages.missing:
         print("warning: %s: no matching packages" % glob, file=sys.stderr)
 
@@ -547,6 +547,12 @@ def main():
         action="store_true",
         help="print all available versions of a package in the pool"
         " (default: print the newest versions only)",
+    )
+    parser_list.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="show warnings for skipped package versions",
     )
     parser_list.add_argument(
         "-n",
