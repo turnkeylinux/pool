@@ -12,6 +12,7 @@ from os.path import *
 
 import re
 import shlex
+import sys
 import shutil
 import tempfile
 import subprocess
@@ -816,7 +817,8 @@ class PoolKernel:
         return False
 
     @sync
-    def _list(self, all_versions: bool) -> List[Tuple[str, str]]:
+    def _list(self, all_versions: bool,
+              verbose: bool = False) -> List[Tuple[str, str]]:
         """List packages in pool -> list of (name, version) tuples."""
         packages: Set[Tuple[str, str]] = set()
         for subpool in self.subpools:
@@ -833,22 +835,33 @@ class PoolKernel:
 
         newest: Dict[str, str] = {}
         for name, version in packages:
-            if name not in newest or \
+            try:
+                if name not in newest or \
                     debian_support.version_compare(
                             newest[name], version) < 0:
-                newest[name] = version
+                    newest[name] = version
+            except ValueError as e:
+                if verbose:
+                    print(f'Warning: skipping {name} {version} - {e}',
+                          file=sys.stderr)
+                else:
+                    pass
 
         return list(newest.items())
 
-    def list(self, all_versions: bool=False) -> List[str]:
+    def list(self, all_versions: bool = False,
+             verbose: bool = False) -> List[str]:
         """List packages in pool -> list of packages.
 
         If all_versions is True, returns all versions of packages,
         otherwise, returns only the newest versions.
+
+        Will silently skip invalid debian version numbers, will show warning
+        if verbose set.
         """
         return [
             self.fmt_package_id(name, version)
-            for name, version in self._list(all_versions)
+            for name, version in self._list(all_versions, verbose=verbose)
         ]
 
     RS = TypeVar('RS', str, List[str])
@@ -1174,7 +1187,8 @@ class Pool(object):
                     forked_constructor(f, print_traceback=True)())
         self.kernel = kernel
 
-    def list(self, all_versions: bool=False, *globs: str) -> 'Pool.PackageList':
+    def list(self, all_versions: bool = False,
+             *globs: str, verbose: bool = False) -> 'Pool.PackageList':
         """List packages in pool (sorted) -> Pool.PackageList (list + .missing attr)
 
         If no globs are specified, lists all packages.
@@ -1198,7 +1212,7 @@ class Pool(object):
 
             return filtered
 
-        packages = Pool.PackageList(self.kernel.list(all_versions))
+        packages = Pool.PackageList(self.kernel.list(all_versions, verbose=verbose))
         if globs:
             packages = filter_packages(packages, list(globs))
 
