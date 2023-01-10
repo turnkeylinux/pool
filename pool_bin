@@ -242,7 +242,7 @@ def print_stocks(pool):
     for stock in pool.stocks:
         addr = stock.link
         if stock.branch:
-            addr += "#" + stock.branch
+            addr += "#" + stock.branch.replace('%2F', '/')
         print(addr)
 
 
@@ -474,6 +474,7 @@ def main():
         dest="function",
         action="store_const",
         const=print_registered,
+        default=print_registered,
         help="Prints list of registered stocks and subpools (default)",
     )
     parser_info_conflicts.add_argument(

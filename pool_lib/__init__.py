@@ -129,6 +129,7 @@ class PackageCache:
             yield filename
 
     def _register(self, filename: str) -> None:
+        logger.debug(f'PackageCache({self.path})._register({filename})')
         name, version = parse_package_filename(filename)
         self.filenames[(name, version)] = filename
         if name in self.namerefs:
@@ -137,6 +138,7 @@ class PackageCache:
             self.namerefs[name] = 1
 
     def _unregister(self, name: str, version: str) -> None:
+        logger.debug(f'PackageCache({self.path})._unregister({name}, {version})')
         del self.filenames[(name, version)]
         self.namerefs[name] -= 1
         if not self.namerefs[name]:
@@ -260,7 +262,7 @@ class StockBase:
 
         self.name = basename(path_)
         if not exists(self.link_path):
-            raise StockBase.StockBaseError("stock link doesn't exist")
+            raise StockBase.StockBaseError(f"stock link {self.link_path!r} doesn't exist")
 
         self.link = os.readlink(self.link_path)
         if not isdir(self.link):
@@ -353,7 +355,7 @@ class Stock(StockBase):
 
         def dup_branch(branch: str) -> None:
             # checkout latest changes
-            commit = orig.rev_parse(branch)
+            commit = orig.rev_parse(branch.replace('%2F', '/'))
             if not commit:
                 raise StockError("no such branch `%s' at %s" % (branch, self.link))
             checkout.update_ref("refs/heads/" + branch, commit)
@@ -441,7 +443,7 @@ class Stock(StockBase):
     def _sync(self, directory: Optional[str]=None) -> None:
         """recursive sync back-end.
         updates versions of source packages and adds binaries to cache"""
-        logger.debug('Stock[name={self.name!r}]._sync(directory={directory!r})')
+        logger.debug(f'Stock[name={self.name!r}]._sync(directory={directory!r})')
 
         directory = self.workdir if directory is None else directory
         assert directory is not None
@@ -477,9 +479,9 @@ class Stock(StockBase):
 
     def sync(self) -> None:
         """sync stock by updating source versions and importing binaries into the cache"""
-        logger.debug('Stock[name={self.name!r}].sync()')
+        logger.debug(f'Stock[name={self.name!r}].sync()')
         if self.branch:
-            if Git(self.link).rev_parse(self.branch) == self.sync_head:
+            if Git(self.link).rev_parse(self.branch.replace('%2F', '/')) == self.sync_head:
                 return
 
         # delete old cached versions
@@ -575,6 +577,8 @@ class Stocks:
             dir = stock
             branch = None
 
+        if branch:
+            branch = branch.replace('/', '%2F')
         return abspath(dir), branch
 
     def register(self, stock_ref: str) -> None:
@@ -592,11 +596,13 @@ class Stocks:
         
         logger.debug(f'git = {git}')
 
-        if (not git and branch) or (git and branch and not git.show_ref(branch)):
+        if (not git and branch) or (git and branch and not
+                git.show_ref(branch.replace('%2F', '/'))):
             raise PoolError("no such branch `%s' at `%s'" % (branch, dir))
 
         if git and not branch:
-            branch = basename(git.symbolic_ref("HEAD"))
+            ref_path = git.symbolic_ref("HEAD")
+            branch = relpath(ref_path, 'refs/heads').replace('/', '%2F')
             logger.info(f'chose branch {branch}')
 
         stock_name = basename(abspath(dir))
