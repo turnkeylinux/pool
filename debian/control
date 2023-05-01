@@ -14,7 +14,7 @@ Package: pool
 Architecture: any
 Depends:
  deckdebuild,
- git (>= 1:1.5.2),
+ git (>= 1:2.30.2),
  ${misc:Depends},
  ${python3:Depends},
  turnkey-gitwrapper,

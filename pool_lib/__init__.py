@@ -420,6 +420,7 @@ class Stock(StockBase):
 
     def _sync_update_source_versions(self, directory: str) -> None:
         """update versions for a particular source package at <dir>"""
+        logger.debug(f'Stock[name={self.name!r}]._sync_update_source_versions({directory=})')
         packages = deb_get_packages(directory)
         versions = verseek.list_versions(directory)
 
@@ -435,6 +436,7 @@ class Stock(StockBase):
             self.source_versions[join(relative_path, package)] = versions
 
     def _sync_update_binary_versions(self, path: str) -> None:
+        logger.debug(f'Stock[name={self.name!r}]._sync_update_binary_versions({path=})')
         binary_version_path = join(self.path_index_binaries, relpath(path, self.workdir))
         mkdir(dirname(binary_version_path))
         with open(binary_version_path, "w") as fob: # create zero length file
@@ -891,10 +893,13 @@ class PoolKernel:
 
         for arg in args:
             name, version = self.parse_package_id(arg)
+            logger.debug(f"resolve {name=} {version=}")
             if not version:
                 if name not in packages:
                     raise PoolError("can't resolve non-existent package `%s'" % name)
                 version = packages[name]
+            logger.debug(repr(packages))
+            logger.debug(f"resolve {name=} {version=}")
 
             resolved.append(self.fmt_package_id(name, version))
 
@@ -1256,7 +1261,9 @@ class Pool(object):
 
         resolved = Pool.PackageList()
         unresolved = []
+        logger.debug('packages = ' + repr(packages))
         for package in packages:
+            logger.debug("does " + str(package) + " exist?")
             if not self.kernel.exists(package):
                 if strict:
                     raise PoolError("no such package (%s)" % package)
