@@ -910,9 +910,9 @@ class PoolKernel:
 
     def _build_package_source(
             self, source_path: str, name: str,
-            version: str, source: bool=False) -> None:
+            version: str, debug: bool = False, source: bool = False) -> None:
         build_outputdir = tempfile.mkdtemp(
-            dir=self.path_tmp, prefix="%s-%s." % (name, version)
+            dir=self.path_tmp, prefix=f"{name}-{version}."
         )
 
         package = self.fmt_package_id(name, version)
@@ -922,21 +922,21 @@ class PoolKernel:
 
         # seek to version, build the package, seek back
         verseek.seek_version(source_path, version)
+        args = []
+        if debug:
+            args.append('--preserve-build')
         if source:
-            with in_dir(source_path):
-                error = subprocess.run([
-                    'deckdebuild', '--build-source',
-                    self.buildroot, build_outputdir]).returncode
-        else:
-            with in_dir(source_path):
-                error = subprocess.run([
-                    'deckdebuild', self.buildroot, build_outputdir
-                ]).returncode
+            args.append('--build-source')
+        with in_dir(source_path):
+            error = subprocess.run([
+                'deckdebuild', *args, self.buildroot, build_outputdir
+            ]).returncode
         verseek.seek_version(source_path)
 
         if error:
-            shutil.rmtree(build_outputdir)
-            raise PoolError("package `%s' failed to build" % package)
+            if not debug:
+                shutil.rmtree(build_outputdir)
+            raise PoolError(f"package `{package}' failed to build")
 
         print()
 
@@ -1247,13 +1247,15 @@ class Pool(object):
     def get(
                 self, output_dir: str,
                 packages: List[str],
-                tree_fmt: bool=False,
-                strict: bool=False,
-                source: bool=False) -> 'Pool.PackageList':
+                tree_fmt: bool = False,
+                strict: bool = False,
+                debug: bool = False,
+                source: bool = False) -> 'Pool.PackageList':
         """get packages to output_dir -> resolved Pool.PackageList of packages we got
 
         If strict missing packages raise an exception,
         otherwise they are listed in .missing attr of the returned PackageList
+        If debug, leave build chroot intact
         """
 
         self.kernel.autosync = False

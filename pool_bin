@@ -89,6 +89,7 @@ def get(
         strict=False,
         quiet=False,
         tree=False,
+        debug=False,
         source=False):
 
     this_exitcode = exitcode
@@ -103,13 +104,13 @@ def get(
         for plan_file in packages:
             package_list.extend(read_packages(plan_file))
     else:
-        # assume that it's actaully a list of package names
+        # assume that it's a list of package names
         package_list = packages
 
     try:
         packages = pool.get(
             outputdir, package_list, tree_fmt=tree,
-            strict=strict, source=source
+            strict=strict, debug=debug, source=source
         )
     except PoolError as e:
         if not DEBUG:
@@ -442,6 +443,12 @@ def main():
         "--tree",
         action="store_true",
         help="output dir is in a package tree format (like a repository)",
+    )
+    parser_get.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        help="leave build chroot intact after build",
     )
     parser_get.add_argument(
         "-o",
