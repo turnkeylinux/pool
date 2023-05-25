@@ -934,9 +934,13 @@ class PoolKernel:
         verseek.seek_version(source_path)
 
         if error:
+            msg = f"package `{package}' failed to build"
             if not debug:
                 shutil.rmtree(build_outputdir)
-            raise PoolError(f"package `{package}' failed to build")
+                msg = f"{msg} - to preserve build dir, rerun with -d|--debug"
+            else:
+                msg = f"{msg} - build dir preserved for debugging: {build_outputdir}"
+            raise PoolError(msg)
 
         print()
 
