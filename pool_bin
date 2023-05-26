@@ -93,7 +93,7 @@ def get(
         source=False):
 
     this_exitcode = exitcode
-    pool = Pool()
+    pool = Pool(debug=debug)
     package_list = []
 
     if not packages and not inputfile:
@@ -110,7 +110,7 @@ def get(
     try:
         packages = pool.get(
             outputdir, package_list, tree_fmt=tree,
-            strict=strict, debug=debug, source=source
+            strict=strict, source=source
         )
     except PoolError as e:
         if not DEBUG:
@@ -589,6 +589,9 @@ def main():
     if args.cmd:
         func = args.func
         args = vars(args)
+        # only pass debug for pool-get
+        if func.__name__ != 'get' and "debug" in args:
+            del args["debug"]
         del args["cmd"]
         del args["func"]
         if 'outputdir' in args.keys():

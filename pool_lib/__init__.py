@@ -758,9 +758,11 @@ class PoolKernel:
         return name + "=" + version
 
     def __init__(
-            self, path: Optional[AnyPath]=None,
-            recursed_paths: Optional[List[str]]=None,
-            autosync: bool=True):
+            self,
+            path: Optional[AnyPath] = None,
+            recursed_paths: Optional[List[str]] = None,
+            autosync: bool = True,
+            debug: bool = False):
         """Initialize pool instance.
 
         if <autosync> is False, the user is expected to control syncing manually.
@@ -768,6 +770,7 @@ class PoolKernel:
 
         if recursed_paths is None:
             recursed_paths = []
+        self.debug = debug
 
         if path is None:
             cwd = os.getcwd()
@@ -909,8 +912,12 @@ class PoolKernel:
         return resolved
 
     def _build_package_source(
-            self, source_path: str, name: str,
-            version: str, debug: bool = False, source: bool = False) -> None:
+            self,
+            source_path: str,
+            name: str,
+            version: str,
+            source: bool = False) -> None:
+
         build_outputdir = tempfile.mkdtemp(
             dir=self.path_tmp, prefix=f"{name}-{version}."
         )
@@ -923,7 +930,7 @@ class PoolKernel:
         # seek to version, build the package, seek back
         verseek.seek_version(source_path, version)
         args = []
-        if debug:
+        if self.debug:
             args.append('--preserve-build')
         if source:
             args.append('--build-source')
@@ -935,7 +942,7 @@ class PoolKernel:
 
         if error:
             msg = f"package `{package}' failed to build"
-            if not debug:
+            if not self.debug:
                 shutil.rmtree(build_outputdir)
                 msg = f"{msg} - to preserve build dir, rerun with -d|--debug"
             else:
@@ -1188,8 +1195,10 @@ class Pool(object):
 
         return cls(path)
 
-    def __init__(self, path: Optional[AnyPath]=None):
-        kernel = PoolKernel(path)
+    def __init__(self,
+                 path: Optional[AnyPath]=None,
+                 debug=False):
+        kernel = PoolKernel(path, debug=debug)
         if kernel.drop_privileges(pretend=True):
             def f() -> PoolKernel:
                 kernel.drop_privileges()
@@ -1253,7 +1262,6 @@ class Pool(object):
                 packages: List[str],
                 tree_fmt: bool = False,
                 strict: bool = False,
-                debug: bool = False,
                 source: bool = False) -> 'Pool.PackageList':
         """get packages to output_dir -> resolved Pool.PackageList of packages we got
 
