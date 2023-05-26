@@ -928,9 +928,9 @@ class PoolKernel:
         if source:
             args.append('--build-source')
         with in_dir(source_path):
-            error = subprocess.run([
-                'deckdebuild', *args, self.buildroot, build_outputdir
-            ]).returncode
+            command = ['deckdebuild', *args, self.buildroot, build_outputdir]
+            print('# '+' '.join(command))
+            error = subprocess.run(command).returncode
         verseek.seek_version(source_path)
 
         if error:
