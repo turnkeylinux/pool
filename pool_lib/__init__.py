@@ -296,7 +296,7 @@ class StockPool(StockBase):
         if self.link in recursed_paths:
             raise CircularDependency(
                 f"circular dependency detected `{self.link}' is in recursed"
-                " paths recursed_paths"
+                f" paths {recursed_paths}"
             )
 
         self.pool = PoolKernel(self.link, recursed_paths)
@@ -640,8 +640,8 @@ class Stocks:
             stock_name += "#" + branch
 
         if stock_name in self.stocks:
-            raise PoolError(f"stock already registered under name"
-                            f"`{stock_name}'")
+            raise PoolError(
+                f "stock already registered under name `{stock_name}'")
 
         stock_path = join(self.path, stock_name)
         Stock.create(stock_path, dir)
@@ -932,8 +932,8 @@ class PoolKernel:
             logger.debug(f"resolve {name=} {version=}")
             if not version:
                 if name not in packages:
-                    raise PoolError(f"can't resolve non-existent package"
-                                    f" `{name}'")
+                    raise PoolError(
+                        f"can't resolve non-existent package `{name}'")
                 version = packages[name]
             logger.debug(repr(packages))
             logger.debug(f"resolve {name=} {version=}")
