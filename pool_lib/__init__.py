@@ -641,7 +641,7 @@ class Stocks:
 
         if stock_name in self.stocks:
             raise PoolError(
-                f "stock already registered under name `{stock_name}'")
+                f"stock already registered under name `{stock_name}'")
 
         stock_path = join(self.path, stock_name)
         Stock.create(stock_path, dir)
