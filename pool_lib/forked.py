@@ -91,7 +91,8 @@ class Error(Exception):
     pass
 
 
-def forked_func(func: Callable[..., Any], print_traceback: bool=False) -> Callable[..., Any]:
+def forked_func(func: Callable[..., Any],
+                print_traceback: bool = False) -> Callable[..., Any]:
     def wrapper(*args: Any, **kws: Any) -> Any:
         r_fd, w_fd = os.pipe()
         r_fh = os.fdopen(r_fd, "r", 0)
@@ -145,7 +146,7 @@ class ObjProxyBase:
 class ObjProxyServer(ObjProxyBase):
     def __init__(
             self, r: BinaryIO, w: BinaryIO,
-            obj: Any, print_traceback: bool=False):
+            obj: Any, print_traceback: bool = False):
         self.r = r
         self.w = w
         self.obj = obj
@@ -283,7 +284,9 @@ def forkpipe() -> Tuple[int, BinaryIO, BinaryIO]:
         return (pid, pipe_output.r, pipe_input.w)
 
 
-def forked_constructor(constructor: Callable[..., Any], print_traceback: bool=False) -> Callable[..., ObjProxyClient]:
+def forked_constructor(constructor: Callable[..., Any],
+                       print_traceback: bool = False
+                       ) -> Callable[..., ObjProxyClient]:
     """Wraps a constructor so that instances are created in a subprocess.
     Returns a new constructor"""
 

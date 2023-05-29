@@ -89,10 +89,11 @@ def get(
         strict=False,
         quiet=False,
         tree=False,
+        debug=False,
         source=False):
 
     this_exitcode = exitcode
-    pool = Pool()
+    pool = Pool(debug=debug)
     package_list = []
 
     if not packages and not inputfile:
@@ -103,7 +104,7 @@ def get(
         for plan_file in packages:
             package_list.extend(read_packages(plan_file))
     else:
-        # assume that it's actaully a list of package names
+        # assume that it's a list of package names
         package_list = packages
 
     try:
@@ -444,6 +445,12 @@ def main():
         help="output dir is in a package tree format (like a repository)",
     )
     parser_get.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        help="leave build chroot intact after build",
+    )
+    parser_get.add_argument(
         "-o",
         "--source",
         action="store_true",
@@ -582,6 +589,9 @@ def main():
     if args.cmd:
         func = args.func
         args = vars(args)
+        # only pass debug for pool-get
+        if func.__name__ != 'get' and "debug" in args:
+            del args["debug"]
         del args["cmd"]
         del args["func"]
         if 'outputdir' in args.keys():
