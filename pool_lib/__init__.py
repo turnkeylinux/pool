@@ -1,4 +1,4 @@
-# Copyright (c) TurnKey GNU/Linux - http://www.turnkeylinux.org
+# Copyright (c) TurnKey GNU/Linux - https//www.turnkeylinux.org
 #
 # This file is part of Pool
 #
@@ -8,7 +8,9 @@
 # option) any later version.
 
 import os
-from os.path import *
+from os.path import (join, splitext, isfile, basename, abspath,
+                     isdir, relpath, dirname, islink, realpath,
+                     exists as path_exists)
 
 import re
 import shlex
@@ -19,18 +21,18 @@ import subprocess
 import importlib
 from contextlib import contextmanager
 from typing import (
-    Optional, Dict, List, Union, Tuple, Set, Generator, Type, Iterator,
-    TypeVar, Callable, Iterable, no_type_check, cast
-)
+    # Note: List reqd to avoid list type clash with list() method
+    Optional, Union, Generator, List, Type, Iterator,
+    TypeVar, Iterable, no_type_check, cast
+    )
 import logging
 
 from debian import debfile, debian_support
-from functools import cmp_to_key
 
 import errno
 import verseek_lib as verseek
 
-from gitwrapper import Git
+from gitwrapper import Git, GitError
 
 from .forked import forked_constructor
 from fnmatch import fnmatch
@@ -73,7 +75,7 @@ class CircularDependency(PoolError):
     pass
 
 
-def deb_get_packages(srcpath: AnyPath) -> List[str]:
+def deb_get_packages(srcpath: AnyPath) -> list[str]:
     path = str_path(srcpath)
     controlfile = join(path, "debian/control")
 
@@ -84,11 +86,11 @@ def deb_get_packages(srcpath: AnyPath) -> List[str]:
     return lines
 
 
-def parse_package_filename(filename: str) -> Tuple[str, str]:
+def parse_package_filename(filename: str) -> tuple[str, str]:
     """Parses package filename -> (name, version)"""
 
     if not splitext(filename)[1] in (".deb", ".udeb"):
-        raise PoolError("not a package `%s'" % filename)
+        raise PoolError(f"not a package `{filename}'")
 
     name, version = filename.split("_")[:2]
 
@@ -98,7 +100,7 @@ def parse_package_filename(filename: str) -> Tuple[str, str]:
 def hardlink_or_copy(src: AnyPath, dst: AnyPath) -> None:
     src = os.fspath(src)
     dst = os.fspath(dst)
-    if exists(dst):
+    if path_exists(dst):
         os.remove(dst)
 
     try:
@@ -156,8 +158,8 @@ class PackageCache:
     def __init__(self, path: AnyPath):
         self.path = str_path(path)
 
-        self.filenames: Dict[Tuple[str, str], str] = {}
-        self.namerefs: Dict[str, int] = {}
+        self.filenames: dict[tuple[str, str], str] = {}
+        self.namerefs: dict[str, int] = {}
 
         for filename in self._list_binaries():
             self._register(filename)
@@ -182,7 +184,7 @@ class PackageCache:
         if name in self.namerefs:
             return True
 
-        return exists(join(self.path, basename(name)))
+        return path_exists(join(self.path, basename(name)))
 
     def add(self, path: AnyPath) -> None:
         """Add binary to cache. Hardlink if possible, copy otherwise."""
@@ -213,7 +215,7 @@ class PackageCache:
         os.remove(path)
         self._unregister(name, version)
 
-    def list(self) -> List[Tuple[str, str]]:
+    def list(self) -> list[tuple[str, str]]:
         """List packages in package cache -> list of (package, version)"""
         return list(self.filenames.keys())
 
@@ -240,11 +242,11 @@ class StockBase:
         logger.debug(f'ln -s {link} {path}/link')
 
     @property
-    def sources(self) -> List[Tuple[str, List[str]]]:
+    def sources(self) -> list[tuple[str, list[str]]]:
         ...
 
     @property
-    def binaries(self) -> List[str]:
+    def binaries(self) -> list[str]:
         ...
 
     def sync(self) -> None:
@@ -264,14 +266,14 @@ class StockBase:
     def _get_workdir(self) -> Optional[str]:
         ...
 
-    def __init__(self, path: AnyPath):
+    def __init__(self, path: AnyPath) -> None:
         logger.debug(f'StockBase(path={path!r})')
         path_ = str_path(path)
         self.path_root = path_
         self.link_path = join(path_, 'link')
 
         self.name = basename(path_)
-        if not exists(self.link_path):
+        if not path_exists(self.link_path):
             raise StockBase.StockBaseError(
                     f"stock link {self.link_path!r} doesn't exist")
 
@@ -286,7 +288,7 @@ class StockPool(StockBase):
 
     def __init__(self,
                  path: AnyPath,
-                 recursed_paths: Optional[List[str]] = None):
+                 recursed_paths: Optional[list[str]] = None):
         logger.debug(
                 f'StockPool(path={path!r}, recursed_paths={recursed_paths!r})')
         super().__init__(path)
@@ -328,7 +330,7 @@ class _SyncHead:
                 obj: 'StockBase',
                 type: Type['StockBase']) -> Optional[str]:
         path = obj.path_sync_head
-        if exists(path):
+        if path_exists(path):
             with open(path) as fob:
                 fob.read().rstrip()
 
@@ -337,7 +339,7 @@ class _SyncHead:
     def __set__(self, obj: 'StockBase', val: Optional[str]) -> None:
         path = obj.path_sync_head
         if val is None:
-            if exists(path):
+            if path_exists(path):
                 os.remove(path)
         else:
             with open(path, 'w') as fob:
@@ -364,7 +366,7 @@ class Stock(StockBase):
         orig = Git(self.link)
         checkout_path = self.path_checkout
 
-        if not exists(checkout_path):
+        if not path_exists(checkout_path):
             mkdir(checkout_path)
             checkout = Git.init_create(checkout_path)
             checkout.set_alternates(orig)
@@ -381,7 +383,7 @@ class Stock(StockBase):
         dup_branch(self.branch)
         checkout.checkout("-q", "-f", self.branch)
 
-        if exists(join(checkout_path, "arena.internals")):
+        if path_exists(join(checkout_path, "arena.internals")):
             dup_branch(self.branch + "-thin")
 
             command = "cd {shlex.quote(checkout_path)} && sumo-open"
@@ -407,7 +409,7 @@ class Stock(StockBase):
     _workdir: Optional[str]
     workdir = _Workdir()
 
-    def _init_read_versions(self) -> Dict[str, List[str]]:
+    def _init_read_versions(self) -> dict[str, list[str]]:
         source_versions = {}
         for dpath, dnames, fnames in os.walk(self.path_index_sources):
             relative_path = relpath(dpath, self.path_index_sources)
@@ -486,10 +488,10 @@ class Stock(StockBase):
                 self._sync(fpath)
 
     @property
-    def binaries(self) -> List[str]:
+    def binaries(self) -> list[str]:
         """List package binaries for this stock ->
                             [ relative/path/foo.deb, ... ]"""
-        relative_paths: List[str] = []
+        relative_paths: list[str] = []
         for dpath, dnames, fnames in os.walk(self.path_index_binaries):
             for fname in fnames:
                 fpath = join(dpath, fname)
@@ -498,7 +500,7 @@ class Stock(StockBase):
         return relative_paths
 
     @property
-    def sources(self) -> List[Tuple[str, List[str]]]:
+    def sources(self) -> list[tuple[str, list[str]]]:
         """List package sources for this stock ->
                             [ (relative/path/foo, versions), ... ]"""
         return list(self.source_versions.items())
@@ -514,7 +516,7 @@ class Stock(StockBase):
 
         # delete old cached versions
         for path in (self.path_index_sources, self.path_index_binaries):
-            if exists(path):
+            if path_exists(path):
                 shutil.rmtree(path)
                 mkdir(path)
 
@@ -540,9 +542,8 @@ class Stocks:
             self.subpools[stock.name] = stock.pool
         except CircularDependency:
             raise
-        except PoolError as e:
-            pass
-        except StockError as e:
+        except PoolError:
+            # StockError is a subclass of PoolError
             pass
 
         if not stock:
@@ -559,8 +560,8 @@ class Stocks:
 
     def _load_stocks(self) -> None:
         logger.debug('loading stocks')
-        self.stocks: Dict[str, StockBase] = {}
-        self.subpools: Dict[str, PoolKernel] = {}
+        self.stocks: dict[str, StockBase] = {}
+        self.subpools: dict[str, PoolKernel] = {}
 
         for stock_name in os.listdir(self.path):
             path_stock = join(self.path, stock_name)
@@ -574,7 +575,8 @@ class Stocks:
     def __init__(self,
                  path: AnyPath,
                  pkgcache: PackageCache,
-                 recursed_paths: Optional[List[str]] = None):
+                 recursed_paths: Optional[list[str]] = None
+                 ) -> None:
         if recursed_paths is None:
             recursed_paths = []
         self.path = path
@@ -598,7 +600,7 @@ class Stocks:
         return len(self.stocks) - len(self.subpools)
 
     @staticmethod
-    def _parse_stock(stock: str) -> Tuple[str, Optional[str]]:
+    def _parse_stock(stock: str) -> tuple[str, Optional[str]]:
         branch: Optional[str]
         try:
             dir, branch = stock.split("#", 1)
@@ -613,14 +615,14 @@ class Stocks:
     def register(self, stock_ref: str) -> None:
         logger.debug('Stocks.register')
         dir, branch = self._parse_stock(stock_ref)
-        logger.debug(f'parsed "{stock_ref}" -> dir={dir}, branch={branch}')
+        logger.debug(f'parsed "{stock_ref}" -> {dir=}, {branch=}')
         if not isdir(dir):
-            raise PoolError("not a directory `%s'" % dir)
+            raise PoolError(f"not a directory `{dir}'")
 
         git: Optional[Git]
         try:
             git = Git(dir)
-        except Git.GitError:
+        except GitError:
             git = None
 
         logger.debug(f'git = {git}')
@@ -628,7 +630,7 @@ class Stocks:
         if ((not git and branch) or
                 (git and branch and
                  not git.show_ref(branch.replace('%2F', '/')))):
-            raise PoolError("no such branch `%s' at `%s'" % (branch, dir))
+            raise PoolError(f"no such branch `{branch}' at `{dir}'")
 
         if git and not branch:
             ref_path = git.symbolic_ref("HEAD")
@@ -653,7 +655,7 @@ class Stocks:
         if branch:
             stock_name += "#" + branch
 
-        matches: List[Stock] = []
+        matches: list[Stock] = []
         for stock in self.stocks.values():
             if realpath(stock.link) == realpath(dir):
                 if not isinstance(stock, Stock):
@@ -675,14 +677,14 @@ class Stocks:
         else:
             # close sumo arena if it exists
             checkout_path = stock.path_checkout
-            if exists(join(checkout_path, "arena.internals")):
+            if path_exists(join(checkout_path, "arena.internals")):
                 command = f"cd {shlex.quote(checkout_path)} && sumo-close"
                 error = os.system(command)
                 if error:
                     raise PoolError("failed command: " + command)
 
             # remove cached binaries compiled from this stock
-            blacklist: Set[Tuple[str, str]] = set()
+            blacklist: set[tuple[str, str]] = set()
             for path, versions in stock.sources:
                 name = basename(path)
                 blacklist |= set([(name, version) for version in versions])
@@ -717,7 +719,8 @@ class Stocks:
     def exists_source_version(
             self,
             name: str,
-            version: Optional[str] = None) -> bool:
+            version: Optional[str] = None
+            ) -> bool:
         """Returns true if the package source exists in any of the stocks.
         If version is None (default), any version will match"""
 
@@ -732,7 +735,7 @@ class Stocks:
 
         return False
 
-    def get_subpools(self) -> List['PoolKernel']:
+    def get_subpools(self) -> list['PoolKernel']:
         return list(self.subpools.values())
 
 
@@ -754,16 +757,16 @@ class PoolKernel:
     PoolError = PoolError
 
     class Subpools:
-        def __get__(
-                self, obj: 'PoolKernel',
-                type: Type['PoolKernel']
-        ) -> List['PoolKernel']:
+        def __get__(self,
+                    obj: 'PoolKernel',
+                    type: Type['PoolKernel']
+                    ) -> list['PoolKernel']:
             return obj.stocks.get_subpools()
 
     subpools = Subpools()
 
     @staticmethod
-    def parse_package_id(package: str) -> Tuple[str, Optional[str]]:
+    def parse_package_id(package: str) -> tuple[str, Optional[str]]:
         """Parse package_id string
 
         <package> := package-name[=package-version]
@@ -789,12 +792,12 @@ class PoolKernel:
 
         return name + "=" + version
 
-    def __init__(
-            self,
-            path: Optional[AnyPath] = None,
-            recursed_paths: Optional[List[str]] = None,
-            autosync: bool = True,
-            debug: bool = False):
+    def __init__(self,
+                 path: Optional[AnyPath] = None,
+                 recursed_paths: Optional[list[str]] = None,
+                 autosync: bool = True,
+                 debug: bool = False
+                 ) -> None:
         """Initialize pool instance.
 
         if <autosync> is False, the user is expected to control syncing
@@ -826,8 +829,8 @@ class PoolKernel:
 
         self.full_path = spath
         self.path = dirname(spath)
-        if not exists(spath):
-            raise PoolError("no pool found (POOL_DIR=%s)" % self.path)
+        if not path_exists(spath):
+            raise PoolError(f"no pool found (POOL_DIR={self.path})")
 
         self.buildroot = os.readlink(self.path_build_root)
         self.pkgcache = PackageCache(self.path_pkgcache)
@@ -862,9 +865,10 @@ class PoolKernel:
 
     @sync
     def _list(self, all_versions: bool,
-              verbose: bool = False) -> List[Tuple[str, str]]:
+              verbose: bool = False
+              ) -> list[tuple[str, str]]:
         """List packages in pool -> list of (name, version) tuples."""
-        packages: Set[Tuple[str, str]] = set()
+        packages: set[tuple[str, str]] = set()
         for subpool in self.subpools:
             packages |= set(subpool._list(all_versions))
 
@@ -877,7 +881,7 @@ class PoolKernel:
         if all_versions:
             return list(packages)
 
-        newest: Dict[str, str] = {}
+        newest: dict[str, str] = {}
         for name, version in packages:
             try:
                 if name not in newest or \
@@ -894,7 +898,8 @@ class PoolKernel:
         return list(newest.items())
 
     def list(self, all_versions: bool = False,
-             verbose: bool = False) -> List[str]:
+             verbose: bool = False
+             ) -> list[str]:
         """List packages in pool -> list of packages.
 
         If all_versions is True, returns all versions of packages,
@@ -906,11 +911,11 @@ class PoolKernel:
         return [
             self.fmt_package_id(name, version)
             for name, version in self._list(all_versions, verbose=verbose)
-        ]
+            ]
 
     RS = TypeVar('RS', str, List[str])
 
-    def resolve(self, unresolved: RS) -> RS:
+    def resolve(self, unresolved: RS) -> List[str] | RS:
         """Resolve a list of unresolved packages.
         If unresolved is a single unresolved package,
         return a single resolved package.
@@ -918,11 +923,11 @@ class PoolKernel:
         If unresolved is a list of unresolved packages,
         return a list of resolved packages"""
 
-        args: List[str]
+        args: list[str]
         if isinstance(unresolved, str):
             args = [unresolved]
         else:
-            args = unresolved
+            args = list(unresolved)
 
         packages = dict(self._list(all_versions=False))
         resolved = []
@@ -950,7 +955,8 @@ class PoolKernel:
             source_path: str,
             name: str,
             version: str,
-            source: bool = False) -> None:
+            source: bool = False
+            ) -> None:
 
         build_outputdir = tempfile.mkdtemp(
             dir=self.path_tmp, prefix=f"{name}-{version}."
@@ -1003,11 +1009,11 @@ class PoolKernel:
         shutil.rmtree(build_outputdir)
 
     @sync
-    def getpath_deb(
-            self,
-            package: str,
-            build: bool = True,
-            source: bool = False) -> Optional[str]:
+    def getpath_deb(self,
+                    package: str,
+                    build: bool = True,
+                    source: bool = False
+                    ) -> Optional[str]:
         """Get path to package in pool if it exists or None if it doesn't.
 
         By default if package exists only in source, build and cache it first.
@@ -1043,10 +1049,11 @@ class PoolKernel:
 
         return path
 
-    class BuildLogs(object):
-        def __get__(
-                self, obj: 'PoolKernel',
-                type: Type['PoolKernel']) -> List[Tuple[str, str]]:
+    class BuildLogs:
+        def __get__(self,
+                    obj: 'PoolKernel',
+                    type: Type['PoolKernel']
+                    ) -> list[tuple[str, str]]:
             arr = []
             for fname in os.listdir(obj.path_build_logs):
                 fpath = join(obj.path_build_logs, fname)
@@ -1095,10 +1102,11 @@ class PoolKernel:
     @sync
     def gc(self,
            recurse: bool = True,
-           verbose: bool = True) -> None:
+           verbose: bool = True
+           ) -> None:
         """Garbage collect stale data from the pool's caches"""
 
-        whitelist: Set[Tuple[str, str]] = set()
+        whitelist: set[tuple[str, str]] = set()
         for stock in self.stocks:
             for path, versions in stock.sources:
                 name = basename(path)
@@ -1154,14 +1162,15 @@ def get_treedir(pkgname: str) -> str:
         return join(pkgname[:1], pkgname)
 
 
-class Pool(object):
+class Pool:
     PoolError = PoolError
 
     class PackageList:
         def __init__(self,
-                     sequence: Optional[Iterable[str]] = None):
+                     sequence: Optional[Iterable[str]] = None
+                     ) -> None:
             self.inner = [] if sequence is None else list(sequence)
-            self.missing: List[str] = []
+            self.missing: list[str] = []
 
         def __iter__(self):
             return iter(self.inner)
@@ -1180,10 +1189,10 @@ class Pool(object):
     fmt_package_id = staticmethod(PoolKernel.fmt_package_id)
 
     @classmethod
-    def init_create(
-            cls: Type['Pool'],
-            buildroot: AnyPath,
-            path: Optional[AnyPath] = None) -> 'Pool':
+    def init_create(cls: Type['Pool'],
+                    buildroot: AnyPath,
+                    path: Optional[AnyPath] = None
+                    ) -> 'Pool':
 
         if path is None:
             cwd = os.getcwd()
@@ -1195,7 +1204,6 @@ class Pool(object):
         spath = join(realpath(str_path(path)), '.pool')
         path_pkgcache = join(spath, 'pkgcache')
         path_stocks = join(spath, 'stocks')
-        path_tmp = join(spath, 'tmp')
         path_build = join(spath, 'build')
         path_build_root = join(spath, 'build/root')
         path_build_logs = join(spath, 'build/logs')
@@ -1206,15 +1214,17 @@ class Pool(object):
             raise PoolError("pool already initialized")
 
         if not isdir(buildroot):
-            raise PoolError("buildroot `%s' is not a directory" % buildroot)
+            raise PoolError(f"buildroot `{buildroot}' is not a directory")
 
         mkdir(path_stocks)
-        Git.set_gitignore(path_stocks, [
-                'index-sources',
-                'index-binaries',
-                'SYNC_HEAD',
-                'checkout'
-        ])
+        Git.set_gitignore(
+                path_stocks,
+                ['index-sources',
+                 'index-binaries',
+                 'SYNC_HEAD',
+                 'checkout'
+                 ]
+                )
 
         mkdir(path_pkgcache)
         Git.anchor(path_pkgcache)
@@ -1243,7 +1253,8 @@ class Pool(object):
 
     def __init__(self,
                  path: Optional[AnyPath] = None,
-                 debug: bool = False):
+                 debug: bool = False
+                 ) -> None:
         kernel = PoolKernel(path, debug=debug)
         if kernel.drop_privileges(pretend=True):
             def f() -> PoolKernel:
@@ -1257,8 +1268,11 @@ class Pool(object):
                           forked_constructor(f, print_traceback=True)())
         self.kernel = kernel
 
-    def list(self, all_versions: bool = False,
-             *globs: str, verbose: bool = False) -> 'Pool.PackageList':
+    def list(self,
+             all_versions: bool = False,
+             *globs: str,
+             verbose: bool = False
+             ) -> 'Pool.PackageList':
         """List packages in pool (sorted) ->
                         Pool.PackageList (list + .missing attr)
 
@@ -1267,8 +1281,8 @@ class Pool(object):
         """
         assert isinstance(all_versions, bool)
 
-        def filter_packages(packages: List[str],
-                            globs: List[str]) -> 'Pool.PackageList':
+        def filter_packages(packages: list[str],
+                            globs: list[str]) -> 'Pool.PackageList':
             filtered = Pool.PackageList()
             for glob in globs:
                 matches = []
@@ -1289,11 +1303,6 @@ class Pool(object):
         if globs:
             packages = filter_packages(list(packages), list(globs))
 
-        def _cmp(a: str, b: str) -> int:
-            a = Pool.parse_package_id(a)
-            b = Pool.parse_package_id(b)
-            return debian_support.version_compare(a[1], b[1])
-
         packages.sort(
                 key=(lambda p:
                      debian_support.Version(Pool.parse_package_id(p)[1])),
@@ -1306,12 +1315,12 @@ class Pool(object):
     def unregister(self, stock: str) -> None:
         self.kernel.unregister(stock)
 
-    def get(
-                self, output_dir: str,
-                packages: List[str],
-                tree_fmt: bool = False,
-                strict: bool = False,
-                source: bool = False) -> 'Pool.PackageList':
+    def get(self, output_dir: str,
+            packages: List[str],
+            tree_fmt: bool = False,
+            strict: bool = False,
+            source: bool = False
+            ) -> 'Pool.PackageList':
         """get packages to output_dir -> resolved Pool.PackageList of packages
 
         If strict missing packages raise an exception,
@@ -1343,7 +1352,8 @@ class Pool(object):
 
         try:
             for package in resolved:
-                path_from = self.kernel.getpath_deb(package, source=source)
+                path_from = str(self.kernel.getpath_deb(package,
+                                                        source=source))
                 fname = basename(path_from)
 
                 if tree_fmt:
@@ -1354,7 +1364,7 @@ class Pool(object):
                 else:
                     path_to = join(output_dir, basename(path_from))
 
-                if not exists(path_to):
+                if not path_exists(path_to):
                     hardlink_or_copy(path_from, path_to)
         finally:
             self.kernel.autosync = True

@@ -92,35 +92,36 @@ class Error(Exception):
 
 
 def forked_func(func: Callable[..., Any],
-                print_traceback: bool = False) -> Callable[..., Any]:
+                print_traceback: bool = False
+                ) -> Callable[..., Any]:
     def wrapper(*args: Any, **kws: Any) -> Any:
         r_fd, w_fd = os.pipe()
-        r_fh = os.fdopen(r_fd, "r", 0)
-        w_fh = os.fdopen(w_fd, "w", 0)
+        rb_fh = os.fdopen(r_fd, "rb", 0)
+        wb_fh = os.fdopen(w_fd, "wb", 0)
 
         pid = os.fork()
         if pid == 0:
             # child
-            r_fh.close()
+            rb_fh.close()
 
             try:
                 ret = func(*args, **kws)
             except Exception as e:
                 if print_traceback:
                     traceback.print_exc(file=sys.stderr)
-                pickle.dump(e, w_fh)
+                pickle.dump(e, wb_fh)
                 os._exit(1)
 
-            pickle.dump(ret, w_fh)
+            pickle.dump(ret, wb_fh)
             os._exit(0)
 
         # parent
-        w_fh.close()
+        wb_fh.close()
         pid, status = os.waitpid(pid, 0)
         if not os.WIFEXITED(status):
             raise Error("child terminated unexpectedly")
 
-        val = pickle.load(r_fh)
+        val = pickle.load(rb_fh)
         error = os.WEXITSTATUS(status)
         if error:
             raise val
@@ -132,8 +133,8 @@ def forked_func(func: Callable[..., Any],
 class Pipe:
     def __init__(self) -> None:
         r, w = os.pipe()
-        self.r: BinaryIO = os.fdopen(r, "r", 0)
-        self.w: BinaryIO = os.fdopen(w, "w", 0)
+        self.r: BinaryIO = os.fdopen(r, "rb", 0)
+        self.w: BinaryIO = os.fdopen(w, "wb", 0)
 
 
 class ObjProxyBase:
@@ -166,7 +167,7 @@ class ObjProxyServer(ObjProxyBase):
             elif op == self.OP_SET:
                 op_handler = self._handle_op_set
             else:
-                raise Error("illegal ObjProxy operation (%s)" % op)
+                raise Error(f"illegal ObjProxy operation ({op})")
 
             op_handler(params)
 
@@ -207,7 +208,18 @@ class ObjProxyServer(ObjProxyBase):
         setattr(self.obj, attrname, val)
 
 
-class ObjProxyClient(ObjProxyBase, object):
+def _read_result(op_method: Callable[..., None]) -> Callable[..., Any]:
+    def wrapper(self, *args, **kws):
+        op_method(self, *args, **kws)
+        error, val = pickle.load(self._r)
+        if error:
+            raise val
+        return val
+
+    return wrapper
+
+
+class ObjProxyClient(ObjProxyBase):
     """Object proxy client.
 
     Transparently handles:
@@ -222,17 +234,6 @@ class ObjProxyClient(ObjProxyBase, object):
     def __init__(self, r: BinaryIO, w: BinaryIO):
         self._r = r
         self._w = w
-
-    def _read_result(op_method: Callable[..., None]) -> Callable[..., Any]:
-        @no_type_check
-        def wrapper(self, *args, **kws):
-            op_method(self, *args, **kws)
-            error, val = pickle.load(self._r)
-            if error:
-                raise val
-            return val
-
-        return wrapper
 
     @_read_result
     def _op_call(self, attrname: str, args: list, kws: dict) -> None:

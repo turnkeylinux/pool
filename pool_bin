@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Copyright (c) TurnKey GNU/Linux - http://www.turnkeylinux.org
+# Copyright (c) TurnKey GNU/Linux - https://www.turnkeylinux.org
 #
 # This file is part of Pool
 #
@@ -8,13 +8,11 @@
 # Free Software Foundation; either version 3 of the License, or (at your
 # option) any later version.
 
-import os
 import sys
 import argparse
-import re
-import subprocess
-from os.path import basename, dirname, isdir
-from os.path import exists as path_exists
+from os.path import (basename, dirname, isdir, abspath, split,
+                     exists as path_exists)
+from typing import Optional, Callable, NoReturn
 
 from debian import debfile, debian_support
 
@@ -24,22 +22,24 @@ from pool_lib import Pool, PoolKernel, PoolError
 exitcode = 0
 PROG = "pool"
 DEBUG = False
+err_msg = str | PoolError | FileNotFoundError
 
 
-def warn(s):
+def warn(s: str) -> None:
     global exitcode
     exitcode = 1
     print("warning: " + str(s), file=sys.stderr)
 
 
-def fatal(msg, help=None):
+def fatal(msg: err_msg, help: Optional[Callable] = None) -> NoReturn:
     print("error: " + str(msg), file=sys.stderr)
     if help:
         help()
     sys.exit(1)
 
 
-def exists(package):
+def exists(package: str) -> Optional[str]:
+    istrue = False
     try:
         istrue = pool.Pool().exists(package)
     except PoolError as e:
@@ -47,7 +47,6 @@ def exists(package):
             fatal(e)
         else:
             raise
-
     if istrue:
         print("true")
     else:
@@ -55,7 +54,7 @@ def exists(package):
         sys.exit(1)
 
 
-def gc(disable_recursion=False):
+def gc(disable_recursion: bool = False) -> None:
     try:
         pool.Pool().gc(not disable_recursion)
     except PoolError as e:
@@ -65,7 +64,7 @@ def gc(disable_recursion=False):
             raise e
 
 
-def read_packages(in_file):
+def read_packages(in_file: str) -> list[str]:
     packages = []
     try:
         with open(in_file, "r") as fob:
@@ -82,24 +81,27 @@ def read_packages(in_file):
             raise e
 
 
-def get(
-        outputdir,
-        packages=None,
-        inputfile=None,
-        strict=False,
-        quiet=False,
-        tree=False,
-        debug=False,
-        source=False):
+def get(outputdir: str,
+        packages: Optional[list[str] | Pool.PackageList] = None,
+        inputfile: Optional[str] = None,
+        strict: bool = False,
+        quiet: bool = False,
+        tree: bool = False,
+        debug: bool = False,
+        source: bool = False
+        ) -> Pool.PackageList:
 
     this_exitcode = exitcode
     pool = Pool(debug=debug)
     package_list = []
 
+    # XXX Needs work? (below seems wrong):
+    # XXX the case of inputfile: str & packages: None is not handled?!
+    # TODO Check code that that's legit...
     if not packages and not inputfile:
         # if no packages specified, get all the newest versions
         packages = pool.list()
-    elif inputfile:
+    elif packages and inputfile:
         # treat all "packages" as plan files
         for plan_file in packages:
             package_list.extend(read_packages(plan_file))
@@ -108,6 +110,7 @@ def get(
         package_list = packages
 
     try:
+        assert package_list is not None
         packages = pool.get(
             outputdir, package_list, tree_fmt=tree,
             strict=strict, source=source
@@ -127,18 +130,8 @@ def get(
     sys.exit(this_exitcode)
 
 
-def init(pool_path):
-    try:
-        pool.Pool.init_create(os.path.abspath(buildroot))
-    except PoolError as e:
-        if not DEBUG:
-            fatal(e)
-        else:
-            raise e
-
-
 # # info_build
-def extract_source_name(path):
+def extract_source_name(path: str) -> Optional[str]:
     deb = debfile.DebFile(path)
     if "Source" in deb.debcontrol():
         return deb.debcontrol()["Source"]
@@ -146,7 +139,7 @@ def extract_source_name(path):
     return None
 
 
-def pkgcache_list_versions(pool, name):
+def pkgcache_list_versions(pool: Pool, name: str) -> list[str]:
     versions = [
         pkgcache_version
         for pkgcache_name, pkgcache_version in pool.pkgcache.list()
@@ -159,7 +152,7 @@ def pkgcache_list_versions(pool, name):
     return versions
 
 
-def pkgcache_getpath_newest(pool, name):
+def pkgcache_getpath_newest(pool: Pool, name: str) -> Optional[str]:
     versions = pkgcache_list_versions(pool, name)
     if not versions:
         return None
@@ -171,7 +164,7 @@ def pkgcache_getpath_newest(pool, name):
     return pool.getpath_deb(package, build=False)
 
 
-def binary2source(pool, package):
+def binary2source(pool: Pool, package: str) -> Optional[str]:
     """translate package from binary to source"""
     name, version = pool.parse_package_id(package)
     if version:
@@ -197,10 +190,10 @@ def binary2source(pool, package):
     return source_name
 
 
-def getpath_build_log(package):
+def getpath_build_log(package: str) -> None | NoReturn:
     try:
         pool = Pool()
-    except Pool.Error as e:
+    except PoolError as e:
         if not DEBUG:
             fatal(e)
         else:
@@ -220,14 +213,14 @@ def getpath_build_log(package):
     if not path:
         package_desc = repr(package)
         if source_package:
-            package_desc += " (%s)" % source_package
+            package_desc += f" ({source_package})"
         fatal("no build log for " + package_desc)
 
     return path
 
 
 # # info
-def print_registered(pool):
+def print_registered(pool: Pool) -> None:
     if pool.stocks:
         print("# stocks")
     print_stocks(pool)
@@ -239,7 +232,7 @@ def print_registered(pool):
         print_subpools(pool)
 
 
-def print_stocks(pool):
+def print_stocks(pool: Pool) -> None:
     for stock in pool.stocks:
         addr = stock.link
         if stock.branch:
@@ -247,37 +240,32 @@ def print_stocks(pool):
         print(addr)
 
 
-def print_subpools(pool):
+def print_subpools(pool: Pool) -> None:
     for subpool in pool.subpools:
         print(subpool.path)
 
 
-def print_build_root(pool):
+def print_build_root(pool: Pool) -> None:
     print(pool.buildroot)
 
 
-def print_pkgcache(pool):
+def print_pkgcache(pool: Pool) -> None:
     pool.sync()
     for name, version in pool.pkgcache.list():
         print(name + "=" + version)
 
 
-def print_stock_inventory(stock_inventory):
+def print_stock_inventory(stock_inventory: list[str]) -> None:
     package_width = max([len(vals[0]) for vals in stock_inventory])
     stock_name_width = max([len(vals[1]) for vals in stock_inventory])
 
     for package, stock_name, relative_path in stock_inventory:
-        print(
-            "%s  %s  %s"
-            % (
-                package.ljust(package_width),
-                stock_name.ljust(stock_name_width),
-                relative_path,
-            )
-        )
+        print(f"{package.ljust(package_width)}"
+              f"  {stock_name.ljust(stock_name_width)}"
+              f"  {relative_path}")
 
 
-def print_stock_sources(pool):
+def print_stock_sources(pool: Pool) -> None:
     pool.sync()
 
     stock_inventory = []
@@ -292,7 +280,7 @@ def print_stock_sources(pool):
         print_stock_inventory(stock_inventory)
 
 
-def print_stock_binaries(pool):
+def print_stock_binaries(pool: Pool) -> None:
     pool.sync()
 
     stock_inventory = []
@@ -306,12 +294,15 @@ def print_stock_binaries(pool):
         print_stock_inventory(stock_inventory)
 
 
-def print_build_logs(pool):
+def print_build_logs(pool: Pool) -> None:
     for log_name, log_version in pool.build_logs:
         print(log_name + "=" + log_version)
 
 
-def info(function, recursive=False, pool=None):
+def info(function: Callable,
+         recursive: bool = False,
+         pool: Optional[Pool | PoolKernel] = None
+         ) -> None:
     try:
         if pool is None:
             pool = PoolKernel()
@@ -334,9 +325,9 @@ def info(function, recursive=False, pool=None):
 
 
 # # init
-def init(buildroot):
+def init(buildroot: str) -> None:
     try:
-        pool.Pool.init_create(os.path.abspath(buildroot))
+        pool.Pool.init_create(abspath(buildroot))
     except PoolError as e:
         if not DEBUG:
             fatal(e)
@@ -345,10 +336,18 @@ def init(buildroot):
 
 
 # # list
-def p_list(globs=[], all_versions=False, name_only=False, verbose=False):
+def p_list(globs: Optional[list] = None,
+           all_versions: bool = False,
+           name_only: bool = False,
+           verbose: bool = False
+           ) -> None:
+
+    if not globs:
+        globs = []
+
     packages = Pool().list(all_versions, *globs, verbose=verbose)
     for glob in packages.missing:
-        print("warning: %s: no matching packages" % glob, file=sys.stderr)
+        print(f"warning: {glob}: no matching packages", file=sys.stderr)
 
     for package in packages:
         if name_only:
@@ -358,7 +357,7 @@ def p_list(globs=[], all_versions=False, name_only=False, verbose=False):
 
 
 # # register
-def register(stock):
+def register(stock: str) -> None:
     print(repr(stock))
     try:
         pool.Pool().register(stock)
@@ -370,7 +369,7 @@ def register(stock):
 
 
 # # unregister
-def unregister(stock):
+def unregister(stock: str) -> None:
     try:
         pool.Pool().unregister(stock)
     except PoolError as e:
@@ -380,10 +379,10 @@ def unregister(stock):
             raise e
 
 
-def main():
+def main() -> None:
     # process 'pool-COMMAND' symlinks to be 'pool COMMAND
 
-    command = os.path.split(sys.argv[0])[-1]
+    command = split(sys.argv[0])[-1]
     sys.argv[0] = PROG
     if command.startswith(PROG + "-"):
         subcommand = command[len(PROG + "-"):]
