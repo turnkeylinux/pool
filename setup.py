@@ -4,11 +4,10 @@ from distutils.core import setup
 
 setup(
     name="pool",
-    version="2.0rc1",
+    version="1.1.x",
     author="Jeremy Davis",
     author_email="jeremy@turnkeylinux.org",
     url="https://github.com/turnkeylinux/pool",
     packages=["pool_lib"],
-    scripts=["pool_bin"]
+    scripts=["pool"]
 )
-
