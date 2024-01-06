@@ -263,6 +263,8 @@ class StockBase:
     path_pool: str
     path_root: str
 
+    branch: Optional[str]
+
     def _get_workdir(self) -> Optional[str]:
         ...
 
@@ -534,6 +536,8 @@ class Stocks:
     Iterating an instance of this class produces all non-subpool type stocks.
     """
 
+    subpools: dict[str, 'PoolKernel'] = {}
+
     def _load_stock(self, path_stock: AnyPath) -> None:
         logger.debug(f'loading stock from {path_stock}')
         stock: Optional[StockBase] = None
@@ -561,7 +565,6 @@ class Stocks:
     def _load_stocks(self) -> None:
         logger.debug('loading stocks')
         self.stocks: dict[str, StockBase] = {}
-        self.subpools: dict[str, PoolKernel] = {}
 
         for stock_name in os.listdir(self.path):
             path_stock = join(self.path, stock_name)
@@ -831,8 +834,11 @@ class PoolKernel:
         self.path = dirname(spath)
         if not path_exists(spath):
             raise PoolError(f"no pool found (POOL_DIR={self.path})")
-
-        self.buildroot = os.readlink(self.path_build_root)
+        try:
+            self.buildroot = os.readlink(self.path_build_root)
+        except FileNotFoundError | OSError:
+            raise PoolError("buildroot symlink missing/incorrect:"
+                            f" {self.path_build_root}")
         self.pkgcache = PackageCache(self.path_pkgcache)
         self.stocks = Stocks(
             self.path_stocks, self.pkgcache, recursed_paths + [self.path]
@@ -1316,11 +1322,11 @@ class Pool:
         self.kernel.unregister(stock)
 
     def get(self, output_dir: str,
-            packages: List[str],
+            packages: List[str] | PackageList,
             tree_fmt: bool = False,
             strict: bool = False,
             source: bool = False
-            ) -> 'Pool.PackageList':
+            ) -> PackageList:
         """get packages to output_dir -> resolved Pool.PackageList of packages
 
         If strict missing packages raise an exception,

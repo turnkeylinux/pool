@@ -41,7 +41,7 @@ def fatal(msg: err_msg, help: Optional[Callable] = None) -> NoReturn:
 def exists(package: str) -> Optional[str]:
     istrue = False
     try:
-        istrue = pool.Pool().exists(package)
+        istrue = PoolKernel().exists(package)
     except PoolError as e:
         if not DEBUG:
             fatal(e)
@@ -125,7 +125,7 @@ def get(outputdir: str,
 
     if not quiet:
         for package in packages.missing:
-            warn("no such package (%s)" % package)
+            warn(f"no such package ({package})")
 
     sys.exit(this_exitcode)
 
@@ -139,7 +139,7 @@ def extract_source_name(path: str) -> Optional[str]:
     return None
 
 
-def pkgcache_list_versions(pool: Pool, name: str) -> list[str]:
+def pkgcache_list_versions(pool: PoolKernel, name: str) -> list[str]:
     versions = [
         pkgcache_version
         for pkgcache_name, pkgcache_version in pool.pkgcache.list()
@@ -152,7 +152,7 @@ def pkgcache_list_versions(pool: Pool, name: str) -> list[str]:
     return versions
 
 
-def pkgcache_getpath_newest(pool: Pool, name: str) -> Optional[str]:
+def pkgcache_getpath_newest(pool: PoolKernel, name: str) -> Optional[str]:
     versions = pkgcache_list_versions(pool, name)
     if not versions:
         return None
@@ -164,7 +164,7 @@ def pkgcache_getpath_newest(pool: Pool, name: str) -> Optional[str]:
     return pool.getpath_deb(package, build=False)
 
 
-def binary2source(pool: Pool, package: str) -> Optional[str]:
+def binary2source(pool: PoolKernel, package: str) -> Optional[str]:
     """translate package from binary to source"""
     name, version = pool.parse_package_id(package)
     if version:
@@ -190,7 +190,7 @@ def binary2source(pool: Pool, package: str) -> Optional[str]:
     return source_name
 
 
-def getpath_build_log(package: str) -> None | NoReturn:
+def getpath_build_log(package: str) -> str | NoReturn:
     try:
         pool = Pool()
     except PoolError as e:
@@ -199,16 +199,16 @@ def getpath_build_log(package: str) -> None | NoReturn:
         else:
             raise e
 
-    path = pool.getpath_build_log(package)
+    path = pool.kernel.getpath_build_log(package)
     if path:
         return path
 
     # maybe package is a binary name?
     # try mapping it to a source name and trying again
 
-    source_package = binary2source(pool, package)
+    source_package = binary2source(pool.kernel, package)
     if source_package:
-        path = pool.getpath_build_log(source_package)
+        path = pool.kernel.getpath_build_log(source_package)
 
     if not path:
         package_desc = repr(package)
@@ -220,7 +220,7 @@ def getpath_build_log(package: str) -> None | NoReturn:
 
 
 # # info
-def print_registered(pool: Pool) -> None:
+def print_registered(pool: PoolKernel) -> None:
     if pool.stocks:
         print("# stocks")
     print_stocks(pool)
@@ -232,7 +232,7 @@ def print_registered(pool: Pool) -> None:
         print_subpools(pool)
 
 
-def print_stocks(pool: Pool) -> None:
+def print_stocks(pool: PoolKernel) -> None:
     for stock in pool.stocks:
         addr = stock.link
         if stock.branch:
@@ -240,16 +240,16 @@ def print_stocks(pool: Pool) -> None:
         print(addr)
 
 
-def print_subpools(pool: Pool) -> None:
+def print_subpools(pool: PoolKernel) -> None:
     for subpool in pool.subpools:
         print(subpool.path)
 
 
-def print_build_root(pool: Pool) -> None:
+def print_build_root(pool: PoolKernel) -> None:
     print(pool.buildroot)
 
 
-def print_pkgcache(pool: Pool) -> None:
+def print_pkgcache(pool: PoolKernel) -> None:
     pool.sync()
     for name, version in pool.pkgcache.list():
         print(name + "=" + version)
@@ -265,7 +265,7 @@ def print_stock_inventory(stock_inventory: list[str]) -> None:
               f"  {relative_path}")
 
 
-def print_stock_sources(pool: Pool) -> None:
+def print_stock_sources(pool: PoolKernel) -> None:
     pool.sync()
 
     stock_inventory = []
@@ -280,7 +280,7 @@ def print_stock_sources(pool: Pool) -> None:
         print_stock_inventory(stock_inventory)
 
 
-def print_stock_binaries(pool: Pool) -> None:
+def print_stock_binaries(pool: PoolKernel) -> None:
     pool.sync()
 
     stock_inventory = []
@@ -294,14 +294,14 @@ def print_stock_binaries(pool: Pool) -> None:
         print_stock_inventory(stock_inventory)
 
 
-def print_build_logs(pool: Pool) -> None:
+def print_build_logs(pool: PoolKernel) -> None:
     for log_name, log_version in pool.build_logs:
         print(log_name + "=" + log_version)
 
 
 def info(function: Callable,
          recursive: bool = False,
-         pool: Optional[Pool | PoolKernel] = None
+         pool: Optional[PoolKernel] = None
          ) -> None:
     try:
         if pool is None:
