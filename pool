@@ -1,0 +1,305 @@
+#!/usr/bin/python3
+# Copyright (c) 2019-2024 TurnKey GNU/Linux - https://www.turnkeylinux.org
+#
+# This file is part of Pool
+#
+# Pool is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
+
+import sys
+import click
+from os.path import abspath, split
+from typing import Optional, Callable
+
+from pool_lib import Pool, PoolKernel, PoolError, utils, pool_info
+
+exitcode = 0
+PROG = "pool"
+DEBUG = False
+
+
+@click.group()
+@click.version_option()
+def cli():
+    """Maintain a pool of packages from source and binary stocks."""
+    # process 'pool-COMMAND' symlinks to be 'pool COMMAND
+
+    command = split(sys.argv[0])[-1]
+    sys.argv[0] = PROG
+    if command.startswith(PROG + "-"):
+        subcommand = command[len(PROG + "-"):]
+        sys.argv.insert(1, subcommand)
+
+
+# pool exists
+@cli.command()
+@click.argument('package')
+def exists(package: str) -> Optional[str]:
+    """Check if package exists in pool (Prints true/false; exit code 0/1
+    respectively).
+
+    PACKAGE     Package to check for"""
+    istrue = False
+    try:
+        istrue = PoolKernel().exists(package)
+    except PoolError as e:
+        if not DEBUG:
+            utils.fatal(e)
+        else:
+            raise
+    if istrue:
+        print("true")
+    else:
+        print("false")
+        sys.exit(1)
+
+
+# pool gc
+@cli.command()
+@click.option('-R', '--disable-recursion',
+              is_flag=True,
+              help="Disable recursive garbage collection of subpools")
+def gc(disable_recursion: bool = False) -> None:
+    """Garbage collect stale data from the pool's caches."""
+    try:
+        Pool().gc(not disable_recursion)
+    except PoolError as e:
+        if not DEBUG:
+            utils.fatal(e)
+        else:
+            raise
+
+
+# pool get
+@cli.command()
+@click.option('-i', '--input', 'inputfile',
+              is_flag=True,
+              help="Read packages from file(s).")
+@click.option('-s', '--strict',
+              is_flag=True,
+              help="fatal error on missing packages")
+@click.option('-q', '--quiet',
+              is_flag=True,
+              help="suppress warnings about missing packages")
+@click.option('-t', '--tree',
+              is_flag=True,
+              help="output dir is in a package tree format (like a"
+                   " repository)")
+@click.option('-d', '--debug',
+              is_flag=True,
+              help="leave build chroot intact after build")
+@click.option('-o', '--source',
+              is_flag=True,
+              help="build source packages in addition to binary packages")
+@click.argument('outputdir')
+@click.argument('packages', nargs=-1)
+def get(outputdir: str,
+        packages: Optional[list[str] | Pool.PackageList] = None,
+        inputfile: Optional[str] = None,
+        strict: bool = False,
+        quiet: bool = False,
+        tree: bool = False,
+        debug: bool = False,
+        source: bool = False
+        ) -> Pool.PackageList:
+    """Get packages from pool.
+
+    OUTPUTDIR   /path/to/output/dir
+
+    PACKAGES    packagename(s) to build
+    """
+    this_exitcode = exitcode
+    pool = Pool(debug=debug)
+    package_list = []
+
+    # XXX Needs work? (below seems wrong):
+    # XXX the case of inputfile: str & packages: None is not handled?!
+    # TODO Check code that that's legit...
+    if not packages and not inputfile:
+        # if no packages specified, get all the newest versions
+        packages = pool.list()
+    elif packages and inputfile:
+        # treat all "packages" as plan files
+        for plan_file in packages:
+            package_list.extend(utils.read_packages(plan_file))
+    else:
+        # assume that it's a list of package names
+        package_list = packages
+
+    try:
+        assert package_list is not None
+        packages = pool.get(
+            outputdir, package_list, tree_fmt=tree,
+            strict=strict, source=source
+        )
+    except PoolError as e:
+        if not DEBUG:
+            utils.fatal(e)
+        else:
+            raise e
+    if strict and packages.missing:
+        this_exitcode = 1
+
+    if not quiet:
+        for package in packages.missing:
+            utils.warn(f"no such package ({package})")
+
+    sys.exit(this_exitcode)
+
+
+# pool info-build
+@cli.command()
+@click.argument('package')
+def info_build(package):
+    """Prints source build log for package.
+
+    PACKAGE     Package to show build into for"""
+    # Implementation of info_get
+    raise NotImplementedError('Missing function...')
+
+
+# pool info
+@cli.command()
+@click.option('--registered', 'function',
+              default=True, flag_value='print_registered', type=str,
+              help="Prints list of registered stocks and subpools (default)")
+@click.option('--stocks', 'function',
+              flag_value='print_stocks', type=str,
+              help="Prints list of registered stocks")
+@click.option('--subpools', 'function', type=str,
+              flag_value='print_subpools',
+              help="Prints list of registered subpools")
+@click.option('--build-root', 'function',
+              flag_value='print_build_root', type=str,
+              help="Prints build-root")
+@click.option('--build-logs', 'function',
+              flag_value='print_build_logs', type=str,
+              help="Prints a list of build logs for source packages")
+@click.option('--pkgcache', 'function',
+              flag_value='print_pkgcache', type=str,
+              help="Prints list of cached packages")
+@click.option('--stock-sources', 'function',
+              flag_value='print_stock_sources', type=str,
+              help="Prints list of package sources in registered stocks")
+@click.option('--stock-binaries', 'function',
+              flag_value='print_stock_binaries', type=str,
+              help="Prints list of package binaries in registered stocks")
+@click.option('-r', '--recursive',
+              is_flag=True,
+              help="Lookup pool info recursively in subpools")
+def info(function: Callable,
+         recursive: bool = False,
+         pool: Optional[PoolKernel] = None
+         ) -> None:
+    """Prints pool info."""
+
+    try:
+        if pool is None:
+            pool = PoolKernel()
+            pool.drop_privileges()
+    except PoolError as e:
+        if not DEBUG:
+            utils.fatal(e)
+        else:
+            raise e
+    if recursive:
+        print("### POOL_DIR=" + pool.path)
+
+    if function:
+        assert isinstance(function, str)
+        func = getattr(pool_info, function)
+        func(pool)
+        if recursive:
+            for subpool in pool.subpools:
+                print()
+                info(func, recursive, subpool)
+
+
+# pool init
+@cli.command()
+@click.argument('buildroot')
+def init(buildroot: str) -> None:
+    """Initialize a new pool.
+
+    BUILDROOT   /path/to/build-chroot"""
+    try:
+        Pool.init_create(abspath(buildroot))
+    except PoolError as e:
+        if not DEBUG:
+            utils.fatal(e)
+        else:
+            raise
+
+
+# pool list
+@cli.command('list')
+@click.option('-a', '--all-versions',
+              is_flag=True,
+              help="print all available versions of a package in"
+                   " the pool (default: print the newest versions only)")
+@click.option('-v', '--verbose',
+              is_flag=True,
+              help="show warnings for skipped package versions")
+@click.option('-n', '--name-only',
+              is_flag=True,
+              help="print only the names of packages in the pool")
+@click.argument('globs', nargs=-1)
+def list_(globs: Optional[list] = None,
+          all_versions: bool = False,
+          name_only: bool = False,
+          verbose: bool = False
+          ) -> None:
+    """List packages in pool.
+
+    GLOBS   all packagenames matching glob"""
+    if not globs:
+        globs = []
+
+    packages = Pool().list(all_versions, *globs, verbose=verbose)
+    for glob in packages.missing:
+        utils.warn(f"{glob}: no matching packages")
+
+    for package in packages:
+        if name_only:
+            print(Pool.parse_package_id(package)[0])
+        else:
+            print(package)
+
+
+# pool register
+@cli.command()
+@click.argument('stock')
+def register(stock: str) -> None:
+    """Register a package stock into the pool.
+
+    STOCK   /path/to/stock[#branch]"""
+    print(repr(stock))
+    try:
+        Pool().register(stock)
+    except PoolError as e:
+        if not DEBUG:
+            utils.fatal(e)
+        else:
+            raise
+
+
+# pool unregister
+@cli.command()
+@click.argument('stock')
+def unregister(stock: str) -> None:
+    """Unregister a package stock from the pool.
+
+    STOCK   /path/to/stock[#branch]"""
+    try:
+        Pool().unregister(stock)
+    except PoolError as e:
+        if not DEBUG:
+            utils.fatal(e)
+        else:
+            raise
+
+
+if __name__ == '__main__':
+    cli()
