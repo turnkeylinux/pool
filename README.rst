@@ -96,6 +96,10 @@ Environment variables::
 
     POOL_DIR            Location of pool (defaults to '.')
     DEBINFO_DIR         Location of debinfo cache (default: $HOME/.debinfo)
+    POOL_ARCH           Architecture to 'pool get' for
+                            - if not set, falls back to FAB_ARCH
+                            - if FAB_ARCH not set, falls back to host arch
+                            - see -a|--arch below for options
 
 Initialize a new pool
 '''''''''''''''''''''
@@ -191,6 +195,16 @@ Options::
   -q --quiet            suppress warnings about missing packages
 
   -t --tree             output dir is in a package tree format (like a repository)
+
+  -a|--arch ARCH        Architecture tp build for - overrides POOL_ARCH
+                            - package(s) being built must support ARCH
+                            - must be of:
+                                'amd64' - supported on amd64 host only
+                                'arm64' - supported on amd64 or arm64 host
+                                'all'   - supported on amd64 or arm64 host
+                                'any'   - on arm64 host; will only build arm64 pkgs
+
+
 
 Garbage collect stale data from the pool's caches
 '''''''''''''''''''''''''''''''''''''''''''''''''
