@@ -99,13 +99,18 @@ def get(
     pool = Pool(debug=debug)
     package_list = []
 
+    if not packages:
+        packages = []
     if not packages and not inputfile:
         # if no packages specified, get all the newest versions
         packages = pool.list()
     elif inputfile:
         # treat all "packages" as plan files
         for plan_file in packages:
-            package_list.extend(read_packages(plan_file))
+            pkgs_read = read_packages(plan_file)
+            if not pkgs_read:
+                pkgs_read = []
+            package_list.extend(pkgs_read)
     else:
         # assume that it's a list of package names
         package_list = packages
