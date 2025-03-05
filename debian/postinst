@@ -1,16 +1,17 @@
 #!/bin/sh -e
 
 FAB_PATH=${FAB_PATH:-/turnkey/fab}
+HOST_ARCH=$(dpkg --print-architecture)
+FAB_ARCH=${FAB_ARCH:-$HOST_ARCH}
 CODENAME=$(lsb_release -cs)
-POOL_PATH=$FAB_PATH/pools/$CODENAME
-CHANKO_PATH=$FAB_PATH/chankos/$CODENAME.chanko
-BUILDROOT=$FAB_PATH/buildroots/$CODENAME
+POOL_PATH=$FAB_PATH/pools/$CODENAME-$FAB_ARCH
+BUILDROOT=$FAB_PATH/buildroots/$CODENAME-$FAB_ARCH
 
-mkdir -p $POOL_PATH
-mkdir -p $BUILDROOT
+mkdir -p "$POOL_PATH"
+mkdir -p "$BUILDROOT"
 
-cd $POOL_PATH
-pool-init $BUILDROOT || true
+cd "$POOL_PATH"
+pool-init "$BUILDROOT" || true
 
 #DEBHELPER#
 
