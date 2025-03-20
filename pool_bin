@@ -11,8 +11,6 @@
 import os
 import sys
 import argparse
-import re
-import subprocess
 from os.path import basename, dirname, isdir
 from os.path import exists as path_exists
 
@@ -40,6 +38,7 @@ def fatal(msg, help=None):
 
 
 def exists(package):
+    istrue = None
     try:
         istrue = pool.Pool().exists(package)
     except PoolError as e:
@@ -96,13 +95,18 @@ def get(
     pool = Pool(debug=debug)
     package_list = []
 
+    if not packages:
+        packages = []
     if not packages and not inputfile:
         # if no packages specified, get all the newest versions
         packages = pool.list()
     elif inputfile:
         # treat all "packages" as plan files
         for plan_file in packages:
-            package_list.extend(read_packages(plan_file))
+            pkgs_read = read_packages(plan_file)
+            if not pkgs_read:
+                pkgs_read = []
+            package_list.extend(pkgs_read)
     else:
         # assume that it's a list of package names
         package_list = packages
@@ -200,7 +204,7 @@ def binary2source(pool, package):
 def getpath_build_log(package):
     try:
         pool = Pool()
-    except Pool.Error as e:
+    except PoolError as e:
         if not DEBUG:
             fatal(e)
         else:

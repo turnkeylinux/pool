@@ -22,7 +22,7 @@ from contextlib import contextmanager
 from typing import (
     Optional, Union, Generator, Type, Iterator,
     TypeVar, Iterable, no_type_check, cast,
-    List # in a couple of places, if "list" isn't used, there are type erorrs?
+    List # in a couple of places, if "list" isn't used, there are type errors?
 )
 import logging
 
@@ -542,9 +542,7 @@ class Stocks:
             self.subpools[stock.name] = stock.pool
         except CircularDependency:
             raise
-        except StockError:
-            pass
-        except PoolError:
+        except (StockError, PoolError):
             pass
 
         if not stock:
@@ -1293,6 +1291,7 @@ class Pool(object):
         if globs:
             packages = filter_packages(list(packages), list(globs))
 
+        # TODO - unused code, should be completely removed...
         #def _cmp(a: str, b: str) -> int:
         #    a = Pool.parse_package_id(a)
         #    b = Pool.parse_package_id(b)
