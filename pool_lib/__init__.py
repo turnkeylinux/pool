@@ -37,8 +37,18 @@ from gitwrapper import Git, GitError
 from .forked import forked_constructor
 from fnmatch import fnmatch
 
+# IMPORTANT: ONLY add new arch to the end of SUPPORTED_ARCH tuple!
+# See set_arch_to_build() doc string below for more context and info.
+SUPPORTED_ARCH = ("amd64", "arm64")
+SPECIAL_ARCH = ["any", "all", "all-supported"]
+
 logger = logging.getLogger('pool')
-level = os.getenv('POOL_LOG_LEVEL', '').lower()
+# allow 'DEBUG' env var to override 'POOL_LOG_LEVEL'
+if 'DEBUG' in os.environ.keys():
+    level = 'debug'
+else:
+    level = os.getenv('POOL_LOG_LEVEL', '').lower()
+
 if level == 'info':
     loglevel = logging.INFO
 elif level == 'debug':
@@ -73,6 +83,65 @@ class StockError(PoolError):
 
 class CircularDependency(PoolError):
     pass
+
+
+def set_arch_to_build(arch_to_build: list[str] | None = None
+                      ) -> dict[str, str]:
+    """Process 'arch_to_build' and set actual arches to build
+
+    "master arch" (first value in 'SUPPORTED_ARCH') is special in that
+    it is the only host arch that can build foreign arch packages
+    (may change in future)
+
+    For item in 'arch_to_build' list:
+
+    - specific 'SUPPORTED_ARCH': build packages for specific arch
+        - if NOT host arch and NOT "master arch"; will raise a PoolError
+    - "all" - build "all" arch packages
+    - "any" - build host specific arch "any" packages
+        - if "master arch" host and foreign arch also in 'arch_to_build',
+          build foreign arch "any" packages for all noted foreign arch
+    - "all-supported" - same as "any" & host specific arch
+        - "master arch" will also build "all" packages
+        - "master arch" will also build "any" and foreign arch packages
+          for any foreign arch included in 'arch_to_build'
+
+    If arch_to_build == None; "all-supported" is assumed
+    """
+    _arch_to_build = {}
+    for arch in [*SUPPORTED_ARCH, "all", "any"]:
+        _arch_to_build[arch] = False
+    master_arch = False
+    if not arch_to_build:
+        arch_to_build = ["all-supported"]
+    host_arch = subprocess.run(
+                    ["dpkg", "--print-architecture"],
+                    capture_output=True,
+                    text=True,
+                    ).stdout.strip()
+    if host_arch not in SUPPORTED_ARCH:
+        raise PoolError(f"host arch '{host_arch}' not supported")
+    elif host_arch == SUPPORTED_ARCH[0]:
+        master_arch = True
+    for arch in arch_to_build:
+        if arch in SUPPORTED_ARCH:
+            if arch == host_arch or master_arch:
+                _arch_to_build[arch] = True
+            else:
+                raise PoolError(
+                    f"Only '{SUPPORTED_ARCH[0]}' host can build foreign arch;"
+                    f" '{arch}' can not be built on '{host_arch}' host"
+                    )
+        elif arch in SPECIAL_ARCH:
+            if arch == "all-supported":
+                _arch_to_build["any"] = True
+                if master_arch:
+                    _arch_to_build["all"] = True
+            else:
+                _arch_to_build[arch] = True
+        else:
+            raise PoolError(f"Unknown arch '{arch}'")
+    return _arch_to_build
 
 
 def deb_get_packages(

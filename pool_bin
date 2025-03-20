@@ -27,7 +27,8 @@ SUPPORTED_ARCH = HOST_ARCH + SPECIAL_ARCH
 exitcode = 0
 PROG = "pool"
 DEBUG = False
-
+if 'DEBUG' in os.environ.keys():
+    DEBUG = True
 
 def warn(s):
     global exitcode
