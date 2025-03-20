@@ -26,7 +26,7 @@ from typing import (
 )
 import logging
 
-from debian import debfile, debian_support
+from debian import debfile, debian_support, deb822
 #from functools import cmp_to_key
 
 import errno
@@ -75,16 +75,22 @@ class CircularDependency(PoolError):
     pass
 
 
-def deb_get_packages(srcpath: AnyPath) -> list[str]:
+def deb_get_packages(
+        srcpath: AnyPath,
+        get_arch: bool = False,
+        ) -> list[str] | list[tuple[str, str]]:
     path = str_path(srcpath)
     controlfile = join(path, "debian/control")
 
-    lines = []
-    for line in open(controlfile):
-        if re.match(r'^Package:', line, re.I):
-            lines.append(re.sub(r'^.*?:', '', line).strip())
-    return lines
-
+    pkgs = []
+    with open(controlfile) as fob:
+        for stanza in deb822.Sources.iter_paragraphs(fob):
+            if "Package" in stanza.keys():
+                this_pkg = stanza["Package"]
+                if get_arch and "Architecture" in stanza.keys():
+                    this_pkg = (this_pkg, stanza["Architecture"])
+                pkgs.append(this_pkg)
+    return pkgs
 
 def parse_package_filename(filename: str) -> tuple[str, str]:
     """Parses package filename -> (name, version)"""
@@ -449,12 +455,19 @@ class Stock(StockBase):
         source_versions_path = join(self.path_index_sources, relative_path)
         mkdir(source_versions_path)
 
+        arch = ""
         for package in packages:
-            with open(join(source_versions_path, package), "w") as fob:
+            if isinstance(package, tuple):
+                pkg, arch = package
+            else:
+                pkg = package
+            with open(join(source_versions_path, pkg), "w") as fob:            
                 for version in versions:
                     fob.write(version + '\n')
 
-            self.source_versions[join(relative_path, package)] = versions
+            self.source_versions[join(relative_path, pkg)] = versions
+            self.arch = arch
+
 
     def _sync_update_binary_versions(self, path: str) -> None:
         logger.debug(f'Stock[name={self.name!r}]._sync_update_binary_versions'
@@ -521,6 +534,7 @@ class Stock(StockBase):
                 mkdir(path)
 
         self.source_versions = {}
+        self.arch = ""
 
         self._sync()
 

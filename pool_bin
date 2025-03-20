@@ -11,6 +11,7 @@
 import os
 import sys
 import argparse
+import subprocess
 from os.path import basename, dirname, isdir
 from os.path import exists as path_exists
 
@@ -18,6 +19,10 @@ from debian import debfile, debian_support
 
 import pool_lib as pool
 from pool_lib import Pool, PoolKernel, PoolError
+
+HOST_ARCH = ["amd64", "arm64"]
+SPECIAL_ARCH = ["all", "any"]
+SUPPORTED_ARCH = HOST_ARCH + SPECIAL_ARCH
 
 exitcode = 0
 PROG = "pool"
@@ -54,6 +59,14 @@ def exists(package):
         sys.exit(1)
 
 
+def host_arch() -> str:
+    return subprocess.run(
+            ["dpkg", "--print-architecture"],
+            capture_output=True,
+            text=True,
+            ).stdout.strip()
+
+
 def gc(disable_recursion=False):
     try:
         pool.Pool().gc(not disable_recursion)
@@ -63,16 +76,33 @@ def gc(disable_recursion=False):
         else:
             raise e
 
-
-def read_packages(in_file):
+def read_packages(in_file: str,
+                  arch_to_get: list[str] | None = None,
+                  ):
+    if not arch_to_get:
+        # include all packages that cen be built on host arch
+        _arch_to_get = [host_arch(), *SPECIAL_ARCH]
+    else:
+        _arch_to_get = arch_to_get
     packages = []
     try:
         with open(in_file, "r") as fob:
             for line in fob.readlines():
-                line = line.split("#")[0].strip()
-                if not line:
+                line_tuple = tuple(
+                        map(
+                            str.strip,
+                            line.split("#")[0].strip().split("\t", 1)
+                            )
+                        )
+                if not line_tuple[0]:
                     continue
-                packages.append(line)
+
+                if len(line_tuple) == 1:
+                    # just return list of packages if none specified in plan
+                    packages.append(line_tuple[0])
+                elif line_tuple[1] in _arch_to_get:
+                    packages.append(line_tuple)
+
         return packages
     except FileNotFoundError as e:
         if not DEBUG:
@@ -89,21 +119,28 @@ def get(
         quiet=False,
         tree=False,
         debug=False,
-        source=False):
+        source=False,
+        arch: list[str] | None = None
+        ):
 
     this_exitcode = exitcode
     pool = Pool(debug=debug)
     package_list = []
 
+    if not arch:
+        arch_to_get = None
+    else:
+        arch_to_get = arch
     if not packages:
         packages = []
     if not packages and not inputfile:
         # if no packages specified, get all the newest versions
-        packages = pool.list()
+        # list_arch=True returns list of tuples [(pkg_name, arch), (...
+        package_list = pool.list(list_arch=True)
     elif inputfile:
         # treat all "packages" as plan files
         for plan_file in packages:
-            pkgs_read = read_packages(plan_file)
+            pkgs_read = read_packages(plan_file, arch_to_get=arch_to_get)
             if not pkgs_read:
                 pkgs_read = []
             package_list.extend(pkgs_read)
@@ -114,7 +151,8 @@ def get(
     try:
         packages = pool.get(
             outputdir, package_list, tree_fmt=tree,
-            strict=strict, source=source
+            strict=strict, source=source,
+            get_arch=arch_to_get,
         )
     except PoolError as e:
         if not DEBUG:
@@ -349,16 +387,22 @@ def init(buildroot):
 
 
 # # list
-def p_list(globs=[], all_versions=False, name_only=False, verbose=False):
-    packages = Pool().list(all_versions, *globs, verbose=verbose)
+def p_list(globs=[], all_versions=False, name_only=False, verbose=False,
+           get_arch: bool = False):
+    packages = Pool().list(all_versions, *globs, verbose=verbose,
+                           get_arch=get_arch)
     for glob in packages.missing:
         print("warning: %s: no matching packages" % glob, file=sys.stderr)
 
     for package in packages:
-        if name_only:
-            print(Pool.parse_package_id(package)[0])
+        if isinstance(package, tuple):
+            pkg, arch = package
         else:
-            print(package)
+            pkg = package
+            arch = ''
+        if name_only:
+            pkg = Pool.parse_package_id(pkg)[0]
+        print(f"{pkg}\t{arch}".strip())
 
 
 # # register
@@ -459,6 +503,14 @@ def main():
         "--source",
         action="store_true",
         help="build source packages in addition to binary packages",
+    )
+    parser_get.add_argument(
+        "-a",
+        "--arch",
+        action='append',
+        choices=SUPPORTED_ARCH,
+        help="build package for specific architecture - will skip package"
+             " if package with arch"
     )
     parser_get.add_argument("outputdir", help="Output directory")
     parser_get.add_argument(
