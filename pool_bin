@@ -23,7 +23,8 @@ from pool_lib import Pool, PoolKernel, PoolError
 exitcode = 0
 PROG = "pool"
 DEBUG = False
-
+if 'DEBUG' in os.environ.keys():
+    DEBUG = True
 
 def warn(msg: str) -> None:
     global exitcode

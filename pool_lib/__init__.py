@@ -39,7 +39,12 @@ from .forked import forked_constructor
 from fnmatch import fnmatch
 
 logger = logging.getLogger('pool')
-level = os.getenv('POOL_LOG_LEVEL', '').lower()
+# allow 'DEBUG' env var to override 'POOL_LOG_LEVEL'
+if 'DEBUG' in os.environ.keys():
+    level = 'debug'
+else:
+    level = os.getenv('POOL_LOG_LEVEL', '').lower()
+
 if level == 'info':
     loglevel = logging.INFO
 elif level == 'debug':
