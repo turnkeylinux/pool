@@ -414,7 +414,8 @@ def unregister(stock: Any) -> None:
 
 
 def main():
-    # process 'pool-COMMAND' symlinks to be 'pool COMMAND
+    # support for "one word"'/usr/bin/pool-COMMAND' are all symlinks to '/usr/bin/pool' and
+    # COMMAND becomes the first argument
 
     command = os.path.split(sys.argv[0])[-1]
     sys.argv[0] = PROG
@@ -424,9 +425,16 @@ def main():
 
     parser = argparse.ArgumentParser(
         prog=PROG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
         description=(
             "Maintain a pool of packages from source and binary stocks"
-        )
+        ),
+        epilog=("env vars:"
+                "\n    POOL_DIR\t\tPath to the pool directory (defaults to '.')"
+                "\n    POOL_LOG_LEVEL\tSet log level for pool (no logging by"
+                " default)"
+                "\n    DEBUG\t\tSet log level to 'debug' (overrides"
+                " 'POOL_LOG_LEVEL')")
     )
     subparsers = parser.add_subparsers(dest='cmd')
 
