@@ -10,7 +10,8 @@
 import os
 from os.path import (
         exists, isfile, isdir, islink, dirname, basename, abspath,
-        join, splitext, abspath, realpath, relpath)
+        join, splitext, abspath, realpath, relpath
+        )
 import re
 import shlex
 import sys
@@ -27,16 +28,16 @@ from typing import (
 import logging
 
 from debian import debfile, debian_support
+from fnmatch import fnmatch
+
 # TODO this should be removed - also see related commented code below
 #from functools import cmp_to_key
 
 import errno
 import verseek_lib as verseek
-
 from gitwrapper import Git, GitError
 
 from .forked import forked_constructor
-from fnmatch import fnmatch
 
 logger = logging.getLogger('pool')
 # allow 'DEBUG' env var to override 'POOL_LOG_LEVEL'
