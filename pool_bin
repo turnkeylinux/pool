@@ -22,6 +22,7 @@ from pool_lib import Pool, PoolKernel, PoolError, logger
 
 exitcode = 0
 PROG = "pool"
+DEBUG = False
 if logger.level == "debug":
     DEBUG = True
 
