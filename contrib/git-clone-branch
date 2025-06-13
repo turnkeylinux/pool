@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/bash -e
+
 # Copyright (c) TurnKey Linux - http://www.turnkeylinux.org
 #
 # This file is part of Pool
@@ -13,21 +14,18 @@ if [[ "$#" != "3" ]]; then
     exit 1
 fi
 
-set -e
-
 src=$1
 branch=$2
 dst=$3
 
-if ! git --git-dir=$src/.git show-ref -q $branch; then
-    echo error: no such branch \'$branch\'
+if ! git --git-dir="$src"/.git show-ref -q "$branch"; then
+    echo "error: no such branch '$branch'"
     exit 1
 fi
 
-git-clone -n -s $src $dst
-cd $dst
+git-clone -n -s "$src" "$dst"
+cd "$dst"
 rm -f .git/refs/remotes/origin/HEAD
 mv .git/refs/remotes/origin/* .git/refs/heads
 
-git-checkout -q $branch
-
+git-checkout -q "$branch"
