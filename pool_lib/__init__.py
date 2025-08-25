@@ -11,7 +11,7 @@ import os
 from os.path import (
         exists, isfile, isdir, islink, dirname, basename, abspath,
         join, splitext, abspath, realpath, relpath
-        )
+)
 import re
 import shlex
 import sys
@@ -58,7 +58,7 @@ logging.basicConfig(
         "%(asctime)s - [%(levelname)-7s]"
         "%(filename)s:%(lineno)d %(message)s"),
         level=loglevel
-        )
+    )
 
 AnyPath = str | os.PathLike
 
@@ -108,7 +108,6 @@ def hardlink_or_copy(src: AnyPath, dst: AnyPath) -> None:
     dst = os.fspath(dst)
     if exists(dst):
         os.remove(dst)
-
     try:
         os.link(src, dst)
     except OSError as e:
@@ -139,7 +138,7 @@ class PackageCache:
             if (
                     not isfile(filepath) or
                     not splitext(filename)[1] in (".deb", ".udeb")
-               ):
+            ):
                 continue
 
             yield filename
@@ -156,7 +155,7 @@ class PackageCache:
     def _unregister(self, name: str, version: str) -> None:
         logger.debug(
                 f"PackageCache({self.path})._unregister({name}, {version})"
-                )
+        )
         del self.filenames[(name, version)]
         self.namerefs[name] -= 1
         if not self.namerefs[name]:
@@ -184,13 +183,10 @@ class PackageCache:
 
         <name> := filename | package-name
         """
-
         if version:
             return (name, version) in self.filenames
-
         if name in self.namerefs:
             return True
-
         return exists(join(self.path, basename(name)))
 
     def add(self, path: AnyPath) -> None:
@@ -282,24 +278,27 @@ class StockBase:
         self.name = basename(path_)
         if not exists(self.link_path):
             raise StockBase.StockBaseError(
-                    f"stock link {self.link_path!r} doesn't exist")
+                    f"stock link {self.link_path!r} doesn't exist"
+            )
 
         self.link = os.readlink(self.link_path)
         if not isdir(self.link):
             raise StockBase.StockBaseError(
-                    f"stock link to non-directory `{self.link}'")
+                    f"stock link to non-directory `{self.link}'"
+            )
 
 
 class StockPool(StockBase):
     """Class for managing a subpool-type stock"""
 
-    def __init__(self,
-                 path: AnyPath,
-                 recursed_paths: list[str] | None = None
-                 ):
+    def __init__(
+            self,
+            path: AnyPath,
+            recursed_paths: list[str] | None = None
+    ):
         logger.debug(
                 f"StockPool(path={path!r}, recursed_paths={recursed_paths!r})"
-                )
+        )
         super().__init__(path)
         if recursed_paths is None:
             recursed_paths = []
@@ -319,10 +318,8 @@ class _Workdir:
     """
 
     def __get__(self, obj: StockBase, _: Type[StockBase]) -> str | None:
-
         if not obj._workdir:
             obj._workdir = obj._get_workdir()
-
         return obj._workdir
 
     def __set__(self, obj: StockBase, val: str | None) -> None:
@@ -339,7 +336,7 @@ class _SyncHead:
     def __get__(self,
                 obj: "StockBase",
                 _: Type["StockBase"]
-                ) -> str | None:
+    ) -> str | None:
         path = obj.path_sync_head
         if exists(path):
             with open(path) as fob:
@@ -451,8 +448,10 @@ class Stock(StockBase):
 
     def _sync_update_source_versions(self, directory: str) -> None:
         """update versions for a particular source package at <dir>"""
-        logger.debug(f"Stock[name={self.name!r}]._sync_update_source_versions"
-                     f"({directory=})")
+        logger.debug(
+                f"Stock[name={self.name!r}]._sync_update_source_versions"
+                f"({directory=})"
+        )
         packages = deb_get_packages(directory)
         versions = verseek.list_versions(directory)
 
@@ -468,8 +467,9 @@ class Stock(StockBase):
             self.source_versions[join(relative_path, package)] = versions
 
     def _sync_update_binary_versions(self, path: str) -> None:
-        logger.debug(f"Stock[name={self.name!r}]._sync_update_binary_versions"
-                     f"({path=})")
+        logger.debug(
+            f"Stock[name={self.name!r}]._sync_update_binary_versions ({path=})"
+        )
         binary_version_path = join(self.path_index_binaries,
                                    relpath(path, self.workdir))
         mkdir(dirname(binary_version_path))
@@ -479,8 +479,9 @@ class Stock(StockBase):
     def _sync(self, directory: str | None = None) -> None:
         """recursive sync back-end.
         updates versions of source packages and adds binaries to cache"""
-        logger.debug(f"Stock[name={self.name!r}]._sync(directory="
-                     f"{directory!r})")
+        logger.debug(
+            f"Stock[name={self.name!r}]._sync(directory={directory!r})"
+        )
 
         directory = self.workdir if directory is None else directory
         assert directory is not None
@@ -494,7 +495,6 @@ class Stock(StockBase):
                     splitext(fname)[1] in (".deb", ".udeb"):
                 self.pkgcache.add(fpath)
                 self._sync_update_binary_versions(fpath)
-
             if isdir(fpath):
                 self._sync(fpath)
 
@@ -524,17 +524,13 @@ class Stock(StockBase):
             if (Git(self.link).rev_parse(self.branch.replace("%2F", "/"))
                     == self.sync_head):
                 return
-
         # delete old cached versions
         for path in (self.path_index_sources, self.path_index_binaries):
             if exists(path):
                 shutil.rmtree(path)
                 mkdir(path)
-
         self.source_versions = {}
-
         self._sync()
-
         if self.branch:
             self.sync_head = Git(self.path_checkout).rev_parse("HEAD")
 
@@ -564,7 +560,6 @@ class Stocks:
                 logger.warning(
                     "failed to get stock from package cache, ignoring...")
                 return
-
         if stock:
             self.stocks[stock.name] = stock
 
@@ -582,10 +577,12 @@ class Stocks:
             logging.info(f"loading {path_stock}")
             self._load_stock(path_stock)
 
-    def __init__(self,
-                 path: AnyPath,
-                 pkgcache: PackageCache,
-                 recursed_paths: list[str] | None = None):
+    def __init__(
+            self,
+            path: AnyPath,
+            pkgcache: PackageCache,
+            recursed_paths: list[str] | None = None
+    ):
         if recursed_paths is None:
             recursed_paths = []
         self.path = path
@@ -636,9 +633,10 @@ class Stocks:
 
         logger.debug(f"git = {git}")
 
-        if ((not git and branch) or
-                (git and branch and
-                 not git.show_ref(branch.replace("%2F", "/")))):
+        if (
+            (not git and branch) or
+            (git and branch and not git.show_ref(branch.replace("%2F", "/")))
+        ):
             raise PoolError(f"no such branch `{branch}' at `{_dir}'")
 
         if git and not branch:
@@ -723,14 +721,13 @@ class Stocks:
                     wd = stock.workdir
                     assert wd is not None
                     return join(wd, dirname(path))
-
         return None
 
     def exists_source_version(
             self,
             name: str,
             version: str | None = None
-            ) -> bool:
+    ) -> bool:
         """Returns true if the package source exists in any of the stocks.
         If version is None (default), any version will match"""
 
@@ -808,7 +805,7 @@ class PoolKernel:
             recursed_paths: list[str] | None = None,
             autosync: bool = True,
             debug: bool = False
-            ):
+    ):
         """Initialize pool instance.
 
         if <autosync> is False, the user is expected to control syncing
@@ -900,8 +897,10 @@ class PoolKernel:
                     newest[name] = version
             except ValueError as e:
                 if verbose:
-                    print(f"Warning: skipping {name} {version} - {e}",
-                          file=sys.stderr)
+                    print(
+                            f"Warning: skipping {name} {version} - {e}",
+                            file=sys.stderr
+                    )
                 else:
                     pass
 
@@ -965,10 +964,12 @@ class PoolKernel:
             source_path: str,
             name: str,
             version: str,
-            source: bool = False) -> None:
+            source: bool = False
+    ) -> None:
 
         build_outputdir = tempfile.mkdtemp(
-            dir=self.path_tmp, prefix=f"{name}-{version}."
+            dir=self.path_tmp,
+            prefix=f"{name}-{version}."
         )
 
         package = self.fmt_package_id(name, version)
@@ -1022,7 +1023,8 @@ class PoolKernel:
             self,
             package: str,
             build: bool = True,
-            source: bool = False) -> str | None:
+            source: bool = False
+    ) -> str | None:
         """Get path to package in pool if it exists or None if it doesn't.
 
         By default if package exists only in source, build and cache it first.
@@ -1030,8 +1032,9 @@ class PoolKernel:
         """
         name, version = self.parse_package_id(package)
         if version is None:
-            raise PoolError(f"getpath_deb requires explicit version for"
-                            f" `{package}'")
+            raise PoolError(
+                f"getpath_deb requires explicit version for `{package}'"
+            )
 
         path = self.pkgcache.getpath(name, version)
         if path:
@@ -1053,15 +1056,17 @@ class PoolKernel:
 
         path = self.pkgcache.getpath(name, version)
         if not path:
-            raise PoolError(f"recently built package `{package}' missing"
-                            " from cache")
+            raise PoolError(
+                f"recently built package `{package}' missing from cache"
+            )
 
         return path
 
     class BuildLogs(object):
         def __get__(
                 self, obj: "PoolKernel",
-                _: Type["PoolKernel"]) -> list[tuple[str, str]]:
+                _: Type["PoolKernel"]
+        ) -> list[tuple[str, str]]:
             arr = []
             for fname in os.listdir(obj.path_build_logs):
                 fpath = join(obj.path_build_logs, fname)
@@ -1083,8 +1088,10 @@ class PoolKernel:
         log_versions = []
 
         def get_log_path(log_name: str, log_version: str) -> str:
-            return join(self.path_build_logs,
-                        f"{log_name}_{log_version}.build")
+            return join(
+                self.path_build_logs,
+                f"{log_name}_{log_version}.build"
+            )
 
         for log_name, log_version in self.build_logs:
             if name == log_name:
@@ -1108,9 +1115,11 @@ class PoolKernel:
         return None
 
     @sync
-    def gc(self,
-           recurse: bool = True,
-           verbose: bool = True) -> None:
+    def gc(
+            self,
+            recurse: bool = True,
+            verbose: bool = True
+    ) -> None:
         """Garbage collect stale data from the pool's caches"""
 
         whitelist: set[tuple[str, str]] = set()
@@ -1119,10 +1128,10 @@ class PoolKernel:
                 name = basename(path)
                 whitelist |= set([(name, version) for version in versions])
 
-            whitelist |= set(
-                [parse_package_filename(basename(path))
-                 for path in stock.binaries]
-            )
+            whitelist |= set([
+                parse_package_filename(basename(path))
+                for path in stock.binaries
+            ])
 
         print(f"ignoring {len(whitelist)} whitelisted items")
         removelist = set(self.pkgcache.list()) - whitelist
@@ -1173,8 +1182,10 @@ class Pool(object):
     PoolError = PoolError
 
     class PackageList:
-        def __init__(self,
-                     sequence: Iterable[str] | None = None):
+        def __init__(
+                self,
+                sequence: Iterable[str] | None = None
+        ):
             self.inner = [] if sequence is None else list(sequence)
             self.missing: list[str] = []
 
@@ -1199,7 +1210,7 @@ class Pool(object):
             cls: Type["Pool"],
             buildroot: AnyPath,
             path: AnyPath | None = None
-            ) -> "Pool":
+    ) -> "Pool":
 
         if path is None:
             cwd = os.getcwd()
@@ -1231,8 +1242,8 @@ class Pool(object):
                     "index-binaries",
                     "SYNC_HEAD",
                     "checkout"
-                    ]
-                )
+                ]
+        )
 
         mkdir(path_pkgcache)
         Git.anchor(path_pkgcache)
@@ -1243,7 +1254,7 @@ class Pool(object):
         Git.set_gitignore(
                 path_srcpkgcache,
                 ["*.tar.xz", "*.tar.gz", "*.tar.bz2"]
-                )
+        )
 
         mkdir(path_build)
 
@@ -1261,10 +1272,11 @@ class Pool(object):
 
         return cls(path)
 
-    def __init__(self,
-                 path: AnyPath | None = None,
-                 debug: bool = False
-                 ):
+    def __init__(
+            self,
+            path: AnyPath | None = None,
+            debug: bool = False
+    ):
         kernel = PoolKernel(path, debug=debug)
         if kernel.drop_privileges(pretend=True):
             def f() -> PoolKernel:
@@ -1274,12 +1286,18 @@ class Pool(object):
             # returns ObjProxy "pretending" to be a kernel, since we actually
             # want to pretend that it really is a kernel, we'll ask mypy to
             # play along
-            kernel = cast("PoolKernel",
-                          forked_constructor(f, print_traceback=True)())
+            kernel = cast(
+                "PoolKernel",
+                forked_constructor(f, print_traceback=True)()
+            )
         self.kernel = kernel
 
-    def list(self, all_versions: bool = False,
-             *globs: str, verbose: bool = False) -> "Pool.PackageList":
+    def list(
+            self,
+            all_versions: bool = False,
+            *globs: str,
+            verbose: bool = False
+    ) -> "Pool.PackageList":
         """List packages in pool (sorted) ->
                         Pool.PackageList (list + .missing attr)
 
@@ -1288,8 +1306,10 @@ class Pool(object):
         """
         assert isinstance(all_versions, bool)
 
-        def filter_packages(packages: list[str],
-                            globs: list[str]) -> "Pool.PackageList":
+        def filter_packages(
+                packages: list[str],
+                globs: list[str]
+        ) -> "Pool.PackageList":
             filtered = Pool.PackageList()
             for glob in globs:
                 matches = []
@@ -1309,15 +1329,18 @@ class Pool(object):
                 self.kernel.list(
                     all_versions,
                     verbose=verbose
-                    )
                 )
+        )
         if globs:
             packages = filter_packages(list(packages), list(globs))
 
         packages.sort(
-                key=(lambda p:
-                     debian_support.Version(Pool.parse_package_id(p)[1])),
-                reverse=True)
+                key=(
+                    lambda p:
+                    debian_support.Version(Pool.parse_package_id(p)[1])
+                ),
+                reverse=True
+        )
         return packages
 
     def register(self, stock: str) -> None:
@@ -1327,12 +1350,14 @@ class Pool(object):
         self.kernel.unregister(stock)
 
     def get(
-                self, output_dir: str,
-                packages: List[str], # as per above; 'list[]' here gives a
-                                     # type error
-                tree_fmt: bool = False,
-                strict: bool = False,
-                source: bool = False) -> "Pool.PackageList":
+            self,
+            output_dir: str,
+            packages: List[str], # as per above; 'list[]' here gives a type
+                                 # error
+            tree_fmt: bool = False,
+            strict: bool = False,
+            source: bool = False
+    ) -> "Pool.PackageList":
         """get packages to output_dir -> resolved Pool.PackageList of packages
 
         If strict missing packages raise an exception,

@@ -388,7 +388,7 @@ def pool_list(
         all_versions: bool = False,
         name_only: bool = False,
         verbose: bool = False
-        ) -> None:
+) -> None:
     logger.debug(f"pool_list({globs=}, {all_versions=}, {name_only=}, {verbose=})")
     if not globs:
         globs = []
