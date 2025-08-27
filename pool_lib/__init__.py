@@ -1222,7 +1222,6 @@ class Pool(object):
         spath = join(realpath(str_path(path)), ".pool")
         path_pkgcache = join(spath, "pkgcache")
         path_stocks = join(spath, "stocks")
-        #path_tmp = join(spath, "tmp")
         path_build = join(spath, "build")
         path_build_root = join(spath, "build/root")
         path_build_logs = join(spath, "build/logs")
