@@ -1128,10 +1128,10 @@ class PoolKernel:
                 name = basename(path)
                 whitelist |= set([(name, version) for version in versions])
 
-            whitelist |= set([
-                parse_package_filename(basename(path))
-                for path in stock.binaries
-            ])
+            whitelist |= {
+                    parse_package_filename(basename(path))
+                    for path in stock.binaries
+            }
 
         print(f"ignoring {len(whitelist)} whitelisted items")
         removelist = set(self.pkgcache.list()) - whitelist
