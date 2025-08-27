@@ -95,7 +95,7 @@ def deb_get_packages(srcpath: AnyPath) -> list[str]:
 def parse_package_filename(filename: str) -> tuple[str, str]:
     """Parses package filename -> (name, version)"""
 
-    if not splitext(filename)[1] in (".deb", ".udeb"):
+    if splitext(filename)[1] not in (".deb", ".udeb"):
         raise PoolError(f"not a package `{filename}'")
 
     name, version = filename.split("_")[:2]
@@ -137,7 +137,7 @@ class PackageCache:
 
             if (
                     not isfile(filepath) or
-                    not splitext(filename)[1] in (".deb", ".udeb")
+                    splitext(filename)[1] not in (".deb", ".udeb")
             ):
                 continue
 
