@@ -9,7 +9,7 @@
 
 import os
 from os.path import (
-        exists, isfile, isdir, islink, dirname, basename, abspath,
+        exists, isfile, isdir, islink, dirname, basename,
         join, splitext, abspath, realpath, relpath
 )
 import re
