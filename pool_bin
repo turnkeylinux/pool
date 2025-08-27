@@ -76,7 +76,7 @@ def pool_gc(disable_recursion: bool = False) -> None | NoReturn:
 
 # pool-get function
 def read_packages(in_file: str) -> list[str] | NoReturn:
-    logger.debug(f"read_packages((in_file=})")
+    logger.debug(f"read_packages({in_file=})")
     packages = []
     try:
         with open(in_file, "r") as fob:
