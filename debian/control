@@ -22,6 +22,4 @@ Depends:
  python3-debian,
  python3-packaging,
  verseek,
-Recommends:
- chanko,
 Description: maintain a pool of packages from source and binary stocks
