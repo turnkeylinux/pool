@@ -655,6 +655,7 @@ class Stocks:
         stock_path = join(self.path, stock_name)
         Stock.create(stock_path, _dir)
         self._load_stock(stock_path)
+        print(f"registered stock: {stock_path}")
 
     def unregister(self, stock_ref: str) -> None:
         dir, branch = self._parse_stock(stock_ref)
@@ -707,6 +708,7 @@ class Stocks:
                 self.pkgcache.remove(name, version)
 
         shutil.rmtree(stock.path_root)
+        print(f"unregistered stock: {stock.name}")
 
     def sync(self) -> None:
         """sync all non-subpool stocks"""
