@@ -18,7 +18,7 @@ src=$1
 branch=$2
 dst=$3
 
-if ! git --git-dir="$src"/.git show-ref -q "$branch"; then
+if ! git --git-dir="$src/.git" show-ref -q "$branch"; then
     echo "error: no such branch '$branch'"
     exit 1
 fi
