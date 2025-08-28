@@ -8,3 +8,4 @@
 /usr/bin/pool_bin   /usr/bin/pool-list
 /usr/bin/pool_bin   /usr/bin/pool-register
 /usr/bin/pool_bin   /usr/bin/pool-unregister
+/usr/bin/pool_bin   /usr/bin/pool-refresh
