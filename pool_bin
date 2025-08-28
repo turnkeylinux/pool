@@ -231,33 +231,27 @@ def binary2source(pool: PoolKernel, package: str) -> str | None:
     return source_name
 
 
-def getpath_build_log(package: str) -> None | NoReturn:
+def getpath_build_log(package: str) -> str | None | NoReturn:
+    """This function doesn't appear to be used anywhere?!"""
     logger.debug(f"getpath_build_log({package=})")
     try:
-        pool = Pool()
+        pool = Pool().kernel
     except PoolError as e:
         if DEBUG:
             raise e
         else:
             fatal(e)
 
-    # `Cannot access member "getpath_build_log" for type "Pool"`
-    # - getpath_build_log() is a PoolKernel method
-    path = pool.getpath_build_log(package)  # type: ignore
+    path = pool.getpath_build_log(package)
     if path:
         return path
 
     # maybe package is a binary name?
     # try mapping it to a source name and trying again
 
-
-    # `Argument of type "Pool" cannot be assigned to parameter "pool"
-    #       of type "PoolKernel" in function "binary2source"`
-    source_package = binary2source(pool, package)  # type: ignore
+    source_package = binary2source(pool, package)
     if source_package:
-        # `Cannot access member "getpath_build_log" for type "Pool"`
-        # - getpath_build_log() is a PoolKernel method
-        path = pool.getpath_build_log(source_package)  # type: ignore
+        path = pool.getpath_build_log(source_package)
 
     if not path:
         package_desc = repr(package)
