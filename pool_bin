@@ -422,7 +422,7 @@ def pool_list(
 
 def pool_register(stock: str) -> None:
     logger.debug(f"pool_register({stock=})")
-    print(repr(stock))
+    logger.debug(f"{repr(stock)=}")
     try:
         Pool().register(stock)
     except PoolError as e:
