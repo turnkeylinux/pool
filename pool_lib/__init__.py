@@ -747,6 +747,12 @@ class Stocks:
     def get_subpools(self) -> list["PoolKernel"]:
         return list(self.subpools.values())
 
+    def __str__(self) -> str:
+        str_list = []
+        for key, value in self.stocks:
+            str_list.append(f"{key}: {value}")
+        return "\n".join(str_list)
+
 
 @no_type_check
 def sync(method):
@@ -849,6 +855,16 @@ class PoolKernel:
         )
         mkdir(self.path_tmp)
         self.autosync = autosync
+
+    def __str__(self) -> str:
+        str_lines = [
+                f"buildroot: {self.buildroot}",
+                "stocks:"
+        ]
+        str_lines.append("stocks:")
+        for stock in self.stocks:
+            str_lines.append(f"  {stock}")
+        return "\n".join(str_lines)
 
     def register(self, stock: str) -> None:
         self.stocks.register(stock)
