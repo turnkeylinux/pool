@@ -443,6 +443,14 @@ def pool_unregister(stock: str) -> None:
             fatal(e)
 
 
+def pool_refresh(stock: str) -> None:
+    logger.debug(f"pool_refresh({stock=})")
+    pool_unregister(stock)
+    print("Garbage collecting stable package cache")
+    pool_gc()  # TODO - just garbage collect the refreshed stock
+    pool_register(stock)
+
+
 def main():
     # support for "one word" '/usr/bin/pool-COMMAND'
     # - symlinks to '/usr/bin/pool'; COMMAND becomes the first argument
@@ -714,6 +722,16 @@ def main():
     )
     parser_unregister.add_argument("stock", help="/path/to/stock[#branch]")
     parser_unregister.set_defaults(func=pool_unregister)
+
+    # pool-refresh
+    parser_refresh = subparsers.add_parser(
+        "refresh",
+        help="Refresh a package stock by unregistering/reregistering it from"
+             " (only makes sense for git stocks)",
+        **parser_epilog
+    )
+    parser_refresh.add_argument("stock", help="/path/to/stock[#branch]")
+    parser_refresh.set_defaults(func=pool_refresh)
 
     args = parser.parse_args()
     logger.debug(f"{args=}")
