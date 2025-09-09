@@ -30,26 +30,23 @@ if logger.level == "debug":
 def warn(msg: str) -> None:
     global exitcode
     exitcode = 1
-    print(f"warning: {str(msg)}", file=sys.stderr)
+    print(f"warning: {msg}", file=sys.stderr)
 
 
 def fatal(
-        msg: str | PoolError | FileNotFoundError,
-        help: Callable | None = None
+    msg: str | PoolError | FileNotFoundError, help: Callable | None = None
 ) -> NoReturn:
-    print(f"error: {str(msg)}", file=sys.stderr)
+    print(f"error: {msg}", file=sys.stderr)
     if help:
         help()
     sys.exit(1)
 
 
-def pool_exists(package: str) -> None | NoReturn:
+def pool_exists(package: str) -> None:
     istrue: bool = False
     logger.debug(f"exists({package=})")
     try:
-        # `Cannot access member "exists" for type "Pool"`
-        # - only PoolKernel actually has exists() method?!
-        istrue = Pool().exists(package)  # type: ignore
+        istrue = Pool().kernel.exists(package)
     except PoolError as e:
         if DEBUG:
             raise e
@@ -63,7 +60,7 @@ def pool_exists(package: str) -> None | NoReturn:
         sys.exit(1)
 
 
-def pool_gc(disable_recursion: bool = False) -> None | NoReturn:
+def pool_gc(disable_recursion: bool = False) -> None:
     logger.debug(f"gc({disable_recursion=})")
     try:
         Pool().gc(not disable_recursion)
@@ -75,11 +72,11 @@ def pool_gc(disable_recursion: bool = False) -> None | NoReturn:
 
 
 # pool-get function
-def read_packages(in_file: str) -> list[str] | NoReturn:
+def read_packages(in_file: str) -> list[str]:
     logger.debug(f"read_packages({in_file=})")
     packages = []
     try:
-        with open(in_file, "r") as fob:
+        with open(in_file) as fob:
             for line in fob.readlines():
                 line = line.split("#")[0].strip()
                 if not line:
@@ -88,25 +85,25 @@ def read_packages(in_file: str) -> list[str] | NoReturn:
         return packages
     except FileNotFoundError as e:
         if DEBUG:
-            raise PoolError(e)
+            raise PoolError(e) from e
         else:
             fatal(e)
 
 
 # #
 def pool_get(
-        outputdir: str,
-        packages: Pool.PackageList | list[str] | None = None,
-        inputfile: str | None = None,
-        strict: bool = False,
-        quiet: bool = False,
-        tree: bool = False,
-        debug: bool = False,
-        source: bool = False
+    outputdir: str,
+    packages: Pool.PackageList | list[str] | None = None,
+    inputfile: str | None = None,
+    strict: bool = False,
+    quiet: bool = False,
+    tree: bool = False,
+    debug: bool = False,
+    source: bool = False,
 ) -> NoReturn:
     logger.debug(
-            f"get({outputdir=}, {packages=}, {inputfile=}, {strict=},"
-            f" {strict=}, {quiet=}, {tree=}, {debug=}, {source=})"
+        f"get({outputdir=}, {packages=}, {inputfile=}, {strict=},"
+        f" {strict=}, {quiet=}, {tree=}, {debug=}, {source=})"
     )
     this_exitcode = exitcode
     pool = Pool(debug=debug)
@@ -134,7 +131,7 @@ def pool_get(
             list(package_list),
             tree_fmt=tree,
             strict=strict,
-            source=source
+            source=source,
         )
     except PoolError as e:
         if DEBUG:
@@ -214,7 +211,7 @@ def binary2source(pool: PoolKernel, package: str) -> str | None:
     return source_name
 
 
-def getpath_build_log(package: str) -> str | None | NoReturn:
+def getpath_build_log(package: str) -> str | None:
     """This function doesn't appear to be used anywhere?!"""
     logger.debug(f"getpath_build_log({package=})")
     try:
@@ -260,14 +257,12 @@ def print_registered(pool: PoolKernel) -> None:
 
 def print_stocks(pool: PoolKernel) -> None:
     logger.debug(f"print_stocks({pool=})")
-    # `Cannot access member "stocks" for type "Pool"`
-    # - stocks is a PoolKernel property
     for stock in pool.stocks:
         addr = stock.link
         # `Cannot access member "branch" for type "StockBase"`
         # - branch is a StockBase property; although Stock subclasses StockBase?!
-        if stock.branch:  # type: ignore
-            addr += "#" + stock.branch.replace('%2F', '/')  # type: ignore
+        if stock.branch:
+            addr += "#" + stock.branch.replace("%2F", "/")  # type: ignore
         print(addr)
 
 
@@ -289,16 +284,16 @@ def print_pkgcache(pool: PoolKernel) -> None:
         print(f"{name}={version}")
 
 
-def print_stock_inventory(stock_inventory: list[str]) -> None:
+def print_stock_inventory(stock_inventory: list[tuple[str, str, str]]) -> None:
     logger.debug(f"print_stock_inventory({stock_inventory=})")
     package_width = max([len(vals[0]) for vals in stock_inventory])
     stock_name_width = max([len(vals[1]) for vals in stock_inventory])
 
     for package, stock_name, _ in stock_inventory:
         print(
-                f"{package.ljust(package_width)}"
-                f" {stock_name.ljust(stock_name_width)}"
-                f" relative_path"
+            f"{package.ljust(package_width)}"
+            f" {stock_name.ljust(stock_name_width)}"
+            f" relative_path"
         )
 
 
@@ -340,9 +335,7 @@ def print_build_logs(pool: PoolKernel) -> None:
 
 
 def pool_info(
-        function: Callable,
-        recursive: bool = False,
-        pool: PoolKernel | None = None
+    function: Callable, recursive: bool = False, pool: PoolKernel | None = None
 ) -> None:
     logger.debug(f"pool_info({function=}, {recursive=}, {pool=})")
     try:
@@ -378,12 +371,14 @@ def pool_init(buildroot: str) -> None:
 
 
 def pool_list(
-        globs: list[str] | None = None,
-        all_versions: bool = False,
-        name_only: bool = False,
-        verbose: bool = False
+    globs: list[str] | None = None,
+    all_versions: bool = False,
+    name_only: bool = False,
+    verbose: bool = False,
 ) -> None:
-    logger.debug(f"pool_list({globs=}, {all_versions=}, {name_only=}, {verbose=})")
+    logger.debug(
+        f"pool_list({globs=}, {all_versions=}, {name_only=}, {verbose=})"
+    )
     if not globs:
         globs = []
     packages = Pool().list(all_versions, *globs, verbose=verbose)
@@ -399,7 +394,7 @@ def pool_list(
 
 def pool_register(stock: str) -> None:
     logger.debug(f"pool_register({stock=})")
-    logger.debug(f"{repr(stock)=}")
+    logger.debug(f"{stock=}")
     try:
         Pool().register(stock)
     except PoolError as e:
@@ -428,14 +423,14 @@ def pool_refresh(stock: str) -> None:
     pool_register(stock)
 
 
-def main():
+def main() -> None:
     # support for "one word" '/usr/bin/pool-COMMAND'
     # - symlinks to '/usr/bin/pool'; COMMAND becomes the first argument
 
     command = os.path.split(sys.argv[0])[-1]
     sys.argv[0] = PROG
     if command.startswith(PROG + "-"):
-        subcommand = command[len(PROG + "-"):]
+        subcommand = command[len(PROG + "-") :]
         sys.argv.insert(1, subcommand)
 
     parser_epilog = {
@@ -446,7 +441,7 @@ def main():
             "\n    POOL_LOG_LEVEL\tSet log level for pool (no logging by"
             " default)"
             "\n    DEBUG\t\tGlobal 'debug' log level override"
-            )
+        ),
     }
 
     parser = argparse.ArgumentParser(
@@ -456,15 +451,15 @@ def main():
             "Maintain a pool of packages from source and binary stocks"
         ),
         epilog=(
-                "env vars:"
-                "\n    POOL_DIR\t\tPath to the pool directory (defaults to '.')"
-                "\n    POOL_LOG_LEVEL\tSet log level for pool (no logging by"
-                " default)"
-                "\n    DEBUG\t\tSet log level to 'debug' (overrides"
-                " 'POOL_LOG_LEVEL')"
-        )
+            "env vars:"
+            "\n    POOL_DIR\t\tPath to the pool directory (defaults to '.')"
+            "\n    POOL_LOG_LEVEL\tSet log level for pool (no logging by"
+            " default)"
+            "\n    DEBUG\t\tSet log level to 'debug' (overrides"
+            " 'POOL_LOG_LEVEL')"
+        ),
     )
-    subparsers = parser.add_subparsers(dest='cmd')
+    subparsers = parser.add_subparsers(dest="cmd")
 
     # pool-exists
     parser_exists = subparsers.add_parser(
@@ -472,7 +467,7 @@ def main():
         help=(
             "Check if package exists in pool (Prints true/false; exit code"
             " 0/1 respectively)"
-        )
+        ),
     )
     parser_exists.add_argument("package", help="Package to check for")
     parser_exists.set_defaults(func=pool_exists)
@@ -481,7 +476,7 @@ def main():
     parser_gc = subparsers.add_parser(
         "gc",
         help="Garbage collect stale data from the pool's caches",
-        **parser_epilog
+        **parser_epilog,
     )
     parser_gc.add_argument(
         "-R",
@@ -493,21 +488,20 @@ def main():
 
     # pool-get
     parser_get = subparsers.add_parser(
-        "get",
-        help="Get packages from pool",
-        **parser_epilog
+        "get", help="Get packages from pool", **parser_epilog
     )
     parser_get.add_argument(
         "-i",
         "--input",
         dest="inputfile",
         action="store_true",
-        help="Read packages from file(s)."
+        help="Read packages from file(s).",
     )
     parser_get.add_argument(
-        "-s", "--strict",
+        "-s",
+        "--strict",
         action="store_true",
-        help="fatal error on missing packages"
+        help="fatal error on missing packages",
     )
     parser_get.add_argument(
         "-q",
@@ -535,27 +529,25 @@ def main():
     )
     parser_get.add_argument("outputdir", help="Output directory")
     parser_get.add_argument(
-        "packages", nargs="+",
+        "packages",
+        nargs="+",
         default=[],
         help=(
             "Package(s) or file containing packages (optionally with versions)"
-        )
+        ),
     )
     parser_get.set_defaults(func=pool_get)
 
     # pool-info-build
     parser_info_build = subparsers.add_parser(
-        "info-get",
-        help="Prints source build log for package"
+        "info-get", help="Prints source build log for package"
     )
     parser_info_build.add_argument("package", help="Package name")
     parser_info_build.set_defaults(func=pool_get)
 
     # pool-info
     parser_info = subparsers.add_parser(
-        "info",
-        help="Prints pool info",
-        **parser_epilog
+        "info", help="Prints pool info", **parser_epilog
     )
     # pool-info conflicting args
     parser_info_conflicts = parser_info.add_mutually_exclusive_group()
@@ -627,18 +619,14 @@ def main():
 
     # pool-init
     parser_init = subparsers.add_parser(
-        "init",
-        help="Initialize a new pool",
-        **parser_epilog
+        "init", help="Initialize a new pool", **parser_epilog
     )
     parser_init.add_argument("buildroot", help="/path/to/build-chroot")
     parser_init.set_defaults(func=pool_init)
 
     # pool-list
     parser_list = subparsers.add_parser(
-        "list",
-        help="List packages in pool",
-        **parser_epilog
+        "list", help="List packages in pool", **parser_epilog
     )
     parser_list.add_argument(
         "-a",
@@ -666,7 +654,7 @@ def main():
     parser_register = subparsers.add_parser(
         "register",
         help="Register a package stock into the pool",
-        **parser_epilog
+        **parser_epilog,
     )
     parser_register.add_argument("stock", help="/path/to/stock[#branch]")
     parser_register.set_defaults(func=pool_register)
@@ -675,7 +663,7 @@ def main():
     parser_unregister = subparsers.add_parser(
         "unregister",
         help="Unregister a package stock from the pool",
-        **parser_epilog
+        **parser_epilog,
     )
     parser_unregister.add_argument("stock", help="/path/to/stock[#branch]")
     parser_unregister.set_defaults(func=pool_unregister)
@@ -684,8 +672,8 @@ def main():
     parser_refresh = subparsers.add_parser(
         "refresh",
         help="Refresh a package stock by unregistering/reregistering it from"
-             " (only makes sense for git stocks)",
-        **parser_epilog
+        " (only makes sense for git stocks)",
+        **parser_epilog,
     )
     parser_refresh.add_argument("stock", help="/path/to/stock[#branch]")
     parser_refresh.set_defaults(func=pool_refresh)
@@ -696,14 +684,14 @@ def main():
         func = args.func
         args = vars(args)
         # only pass debug for pool-get
-        if func.__name__ != 'get' and "debug" in args:
+        if func.__name__ != "get" and "debug" in args:
             del args["debug"]
         del args["cmd"]
         del args["func"]
-        if 'outputdir' in args.keys():
-            if not path_exists(args['outputdir']):
+        if "outputdir" in args.keys():
+            if not path_exists(args["outputdir"]):
                 fatal(f"{args['outputdir']} does not exist")
-            elif not isdir(args['outputdir']):
+            elif not isdir(args["outputdir"]):
                 fatal(f"{args['outputdir']} exists, but is not a directory")
         try:
             func(**args)
