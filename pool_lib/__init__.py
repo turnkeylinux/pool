@@ -33,13 +33,10 @@ from os.path import (
     relpath,
     splitext,
 )
-from typing import (
-    List,  # in a couple of places, if "list" is used, there are type errors!?
-    Type,
-    TypeVar,
-    cast,
-    no_type_check,
-)
+
+# 'List' is deprecated but in a couple of places, if "list" is used, there are
+# type errors!?
+from typing import List, TypeVar, cast, no_type_check
 
 import verseek_lib as verseek
 from debian import debfile, debian_support
@@ -173,7 +170,7 @@ class PackageCache:
         if not self.namerefs[name]:
             del self.namerefs[name]
 
-    def __init__(self, path: AnyPath):
+    def __init__(self, path: AnyPath) -> None:
         self.path = str_path(path)
 
         self.filenames: dict[tuple[str, str], str] = {}
@@ -256,10 +253,10 @@ class StockBase:
         logger.debug(f"ln -s {link} {path}/link")
 
     @property
-    def sources(self) -> list[tuple[str, list[str]]]: ...
+    def sources(self) -> None: ...
 
     @property
-    def binaries(self) -> list[str]: ...
+    def binaries(self) -> None: ...
 
     def sync(self) -> None: ...
 
@@ -276,7 +273,7 @@ class StockBase:
 
     def _get_workdir(self) -> str | None: ...
 
-    def __init__(self, path: AnyPath):
+    def __init__(self, path: AnyPath) -> None:
         logger.debug(f"StockBase(path={path!r})")
         path_ = str_path(path)
         self.path_root = path_
@@ -298,7 +295,9 @@ class StockBase:
 class StockPool(StockBase):
     """Class for managing a subpool-type stock"""
 
-    def __init__(self, path: AnyPath, recursed_paths: list[str] | None = None):
+    def __init__(
+        self, path: AnyPath, recursed_paths: list[str] | None = None
+    ) -> None:
         logger.debug(
             f"StockPool(path={path!r}, recursed_paths={recursed_paths!r})"
         )
@@ -320,7 +319,7 @@ class _Workdir:
     If workdir is False, we evaluate its value.
     """
 
-    def __get__(self, obj: StockBase, _: Type[StockBase]) -> str | None:
+    def __get__(self, obj: StockBase, _: type[StockBase]) -> str | None:
         if not obj._workdir:
             obj._workdir = obj._get_workdir()
         return obj._workdir
@@ -336,7 +335,7 @@ class _SyncHead:
     Get reads the value from it.
     """
 
-    def __get__(self, obj: "StockBase", _: Type["StockBase"]) -> str | None:
+    def __get__(self, obj: "StockBase", _: type["StockBase"]) -> str | None:
         path = obj.path_sync_head
         if exists(path):
             with open(path) as fob:
@@ -428,7 +427,7 @@ class Stock(StockBase):
                 source_versions[join(relative_path, fname)] = versions
         return source_versions
 
-    def __init__(self, path: AnyPath, pkgcache: PackageCache):
+    def __init__(self, path: AnyPath, pkgcache: PackageCache) -> None:
         StockBase.__init__(self, path)
         logger.debug(f"Stock(path={path!r}, pkgcache={pkgcache!r})")
         spath = join(str_path(path), ".pool")
@@ -589,7 +588,7 @@ class Stocks:
         path: AnyPath,
         pkgcache: PackageCache,
         recursed_paths: list[str] | None = None,
-    ):
+    ) -> None:
         if recursed_paths is None:
             recursed_paths = []
         self.path = path
@@ -756,7 +755,7 @@ class Stocks:
 
     def __str__(self) -> str:
         str_list = []
-        for key, value in self.stocks:
+        for key, value in self.stocks.items():
             str_list.append(f"{key}: {value}")
         return "\n".join(str_list)
 
@@ -780,7 +779,7 @@ class PoolKernel:
 
     class Subpools:
         def __get__(
-            self, obj: "PoolKernel", _: Type["PoolKernel"]
+            self, obj: "PoolKernel", _: type["PoolKernel"]
         ) -> list["PoolKernel"]:
             return obj.stocks.get_subpools()
 
@@ -819,7 +818,7 @@ class PoolKernel:
         recursed_paths: list[str] | None = None,
         autosync: bool = True,
         debug: bool = False,
-    ):
+    ) -> None:
         """Initialize pool instance.
 
         if <autosync> is False, the user is expected to control syncing
@@ -857,7 +856,7 @@ class PoolKernel:
         self.buildroot = os.readlink(self.path_build_root)
         self.pkgcache = PackageCache(self.path_pkgcache)
         self.stocks = Stocks(
-            self.path_stocks, self.pkgcache, recursed_paths + [self.path]
+            self.path_stocks, self.pkgcache, [*recursed_paths, self.path]
         )
         mkdir(self.path_tmp)
         self.autosync = autosync
@@ -915,7 +914,9 @@ class PoolKernel:
             try:
                 if (
                     name not in newest
-                    or debian_support.version_compare(newest[name], version) < 0
+                    or debian_support.version_compare(
+                        newest[name], version
+                    ) < 0
                 ):
                     newest[name] = version
             except ValueError as e:
@@ -1094,7 +1095,7 @@ class PoolKernel:
 
     class BuildLogs:
         def __get__(
-            self, obj: "PoolKernel", _: Type["PoolKernel"]
+            self, obj: "PoolKernel", _: type["PoolKernel"]
         ) -> list[tuple[str, str]]:
             arr = []
             for fname in os.listdir(obj.path_build_logs):
@@ -1117,7 +1118,9 @@ class PoolKernel:
         log_versions = []
 
         def get_log_path(log_name: str, log_version: str) -> str:
-            return join(self.path_build_logs, f"{log_name}_{log_version}.build")
+            return join(
+                self.path_build_logs, f"{log_name}_{log_version}.build"
+            )
 
         for log_name, log_version in self.build_logs:
             if name == log_name:
@@ -1204,7 +1207,7 @@ class Pool:
     PoolError = PoolError
 
     class PackageList:
-        def __init__(self, sequence: Iterable[str] | None = None):
+        def __init__(self, sequence: Iterable[str] | None = None) -> None:
             self.inner = [] if sequence is None else list(sequence)
             self.missing: list[str] = []
 
@@ -1226,7 +1229,7 @@ class Pool:
 
     @classmethod
     def init_create(
-        cls: Type["Pool"], buildroot: AnyPath, path: AnyPath | None = None
+        cls: type["Pool"], buildroot: AnyPath, path: AnyPath | None = None
     ) -> "Pool":
         if path is None:
             cwd = os.getcwd()
@@ -1282,7 +1285,9 @@ class Pool:
 
         return cls(path)
 
-    def __init__(self, path: AnyPath | None = None, debug: bool = False):
+    def __init__(
+        self, path: AnyPath | None = None, debug: bool = False
+    ) -> None:
         kernel = PoolKernel(path, debug=debug)
         if kernel.drop_privileges(pretend=True):
 
@@ -1334,7 +1339,9 @@ class Pool:
             packages = filter_packages(list(packages), list(globs))
 
         packages.sort(
-            key=(lambda p: debian_support.Version(Pool.parse_package_id(p)[1])),
+            key=(
+                lambda p: debian_support.Version(Pool.parse_package_id(p)[1])
+            ),
             reverse=True,
         )
         return packages
@@ -1391,7 +1398,9 @@ class Pool:
 
                 if tree_fmt:
                     package_name = package.split("=")[0]
-                    path_to = join(output_dir, get_treedir(package_name), fname)
+                    path_to = join(
+                        output_dir, get_treedir(package_name), fname
+                    )
                     mkdir(dirname(path_to))
                 else:
                     path_to = join(output_dir, basename(path_from))
