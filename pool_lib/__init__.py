@@ -987,6 +987,11 @@ class PoolKernel:
     def _build_package_source(
         self, source_path: str, name: str, version: str, source: bool = False
     ) -> None:
+        logger.debug(
+            f"PoolKernel._build_package_source(self, {source_path=}, {name=},"
+            f" {version=}, {source=})"
+            f"\n{self.debug=}"
+        )
         build_outputdir = tempfile.mkdtemp(
             dir=self.path_tmp, prefix=f"{name}-{version}."
         )
