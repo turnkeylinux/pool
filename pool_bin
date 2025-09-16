@@ -8,17 +8,16 @@
 # Free Software Foundation; either version 3 of the License, or (at your
 # option) any later version.
 
+import argparse
 import os
 import sys
-import argparse
 from os.path import basename, dirname, isdir
 from os.path import exists as path_exists
-from typing import NoReturn, Callable
+from typing import Callable, NoReturn
 
 from debian import debfile
 from packaging.version import Version
-
-from pool_lib import Pool, PoolKernel, PoolError, logger
+from pool_lib import Pool, PoolError, PoolKernel, logger
 
 exitcode = 0
 PROG = "pool"
