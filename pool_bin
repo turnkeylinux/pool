@@ -101,15 +101,18 @@ def pool_get(
         strict: bool = False,
         quiet: bool = False,
         tree: bool = False,
-        debug: bool = False,
+        preserve_buildroot: str | None = None,
         source: bool = False
 ) -> NoReturn:
+    if preserve_buildroot is None:
+        preserve_buildroot = 'error'
     logger.debug(
             f"get({outputdir=}, {packages=}, {inputfile=}, {strict=},"
-            f" {strict=}, {quiet=}, {tree=}, {debug=}, {source=})"
+            f" {strict=}, {quiet=}, {tree=}, {preserve_buildroot=},"
+            f" {source=})"
     )
     this_exitcode = exitcode
-    pool = Pool(debug=debug)
+    pool = Pool(preserve_buildroot=preserve_buildroot)
     package_list = []
 
     if not packages:
@@ -519,11 +522,31 @@ def main():
         action="store_true",
         help="output dir is in a package tree format (like a repository)",
     )
-    parser_get.add_argument(
-        "-d",
-        "--debug",
-        action="store_true",
-        help="leave build chroot intact after build",
+
+    buildroot_cleanup_args = parser_get.add_mutually_exclusive_group()
+    buildroot_cleanup_args.add_argument(
+        "-e",
+        "--preserve-buildroot-on-error",
+        action="store_const",
+        const="error",
+        dest="preserve_buildroot",
+        help="leave build chroot intact after build if failure (default)",
+    )
+    buildroot_cleanup_args.add_argument(
+        "-p",
+        "--preserve-buildroot-always",
+        action="store_const",
+        const="always",
+        dest="preserve_buildroot",
+        help="always leave build chroot intact after build",
+    )
+    buildroot_cleanup_args.add_argument(
+        "-n",
+        "--preserve-buildroot-never",
+        action="store_const",
+        const="never",
+        dest="preserve_buildroot",
+        help="never leave build chroot intact after build",
     )
     parser_get.add_argument(
         "-o",
