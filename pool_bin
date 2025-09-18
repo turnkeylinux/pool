@@ -144,12 +144,14 @@ def pool_get(
             raise e
         else:
             fatal(e)
-    if strict and packages.missing:
+    if strict and (packages.missing or packages.failed):
         this_exitcode = 1
 
     if not quiet:
         for package in packages.missing:
             warn(f"no such package ({package})")
+        for package in packages.failed:
+            warn(f"package build failed ({package})")
 
     sys.exit(this_exitcode)
 

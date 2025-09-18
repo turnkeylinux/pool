@@ -1192,6 +1192,7 @@ class Pool:
         ):
             self.inner = [] if sequence is None else list(sequence)
             self.missing: list[str] = []
+            self.failed: list[str] = []
 
         def __iter__(self):
             return iter(self.inner)
@@ -1363,8 +1364,9 @@ class Pool:
     ) -> "Pool.PackageList":
         """get packages to output_dir -> resolved Pool.PackageList of packages
 
-        If strict missing packages raise an exception,
-        otherwise they are listed in .missing attr of the returned PackageList
+        If strict missing packages and failed builds raise an exception,
+        otherwise they are listed in .missing and .failed attrs respectively
+        of the returned PackageList
         
         If preserve_buildroot == 'always' then always leave buildroot intact
         after build
@@ -1400,20 +1402,27 @@ class Pool:
 
         try:
             for package in resolved:
-                raw_path_from = self.kernel.getpath_deb(package, source=source)
-                path_from = raw_path_from if raw_path_from else ""
-                fname = basename(path_from)
+                try:
+                    raw_path_from = self.kernel.getpath_deb(package, source=source)
+                    path_from = raw_path_from if raw_path_from else ""
+                    fname = basename(path_from)
 
-                if tree_fmt:
-                    package_name = package.split("=")[0]
-                    path_to = join(output_dir, get_treedir(package_name),
-                                   fname)
-                    mkdir(dirname(path_to))
-                else:
-                    path_to = join(output_dir, basename(path_from))
+                    if tree_fmt:
+                        package_name = package.split("=")[0]
+                        path_to = join(output_dir, get_treedir(package_name),
+                                       fname)
+                        mkdir(dirname(path_to))
+                    else:
+                        path_to = join(output_dir, basename(path_from))
 
-                if not exists(path_to):
-                    hardlink_or_copy(path_from, path_to)
+                    if not exists(path_to):
+                        hardlink_or_copy(path_from, path_to)
+                except Exception as e:
+                    if strict:
+                        raise e
+                    else:
+                        resolved.failed.append(package)
+
         finally:
             self.kernel.autosync = True
 
