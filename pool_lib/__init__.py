@@ -1201,6 +1201,9 @@ class Pool:
             self.inner += other
             return self
 
+        def __len__(self):
+            return self.inner.__len__()
+
         def append(self, pkg: str):
             self.inner.append(pkg)
 
