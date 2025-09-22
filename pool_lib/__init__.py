@@ -804,7 +804,7 @@ class PoolKernel:
             path: AnyPath | None = None,
             recursed_paths: list[str] | None = None,
             autosync: bool = True,
-            debug: bool = False
+            preserve_buildroot: str = 'error'
     ):
         """Initialize pool instance.
 
@@ -814,7 +814,7 @@ class PoolKernel:
 
         if recursed_paths is None:
             recursed_paths = []
-        self.debug = debug
+        self.preserve_buildroot = preserve_buildroot
 
         if path is None:
             cwd = os.getcwd()
@@ -980,7 +980,7 @@ class PoolKernel:
         # seek to version, build the package, seek back
         verseek.seek_version(source_path, version)
         args = []
-        if self.debug:
+        if self.preserve_buildroot in ('always', 'error'):
             args.append("--preserve-build")
         if source:
             args.append("--build-source")
@@ -992,9 +992,12 @@ class PoolKernel:
 
         if error:
             msg = f"package `{package}' failed to build"
-            if not self.debug:
+            if self.preserve_buildroot == 'never':
                 shutil.rmtree(build_outputdir)
-                msg = f"{msg} - to preserve build dir, rerun with -d|--debug"
+                msg = (
+                    f"{msg} - cleaning buildroot because "
+                    "--preserve-buildroot=never"
+                )
             else:
                 msg = (f"{msg} - build dir preserved for debugging:"
                        f" {build_outputdir}")
@@ -1275,9 +1278,9 @@ class Pool:
     def __init__(
             self,
             path: AnyPath | None = None,
-            debug: bool = False
+            preserve_buildroot: str = 'error'
     ):
-        kernel = PoolKernel(path, debug=debug)
+        kernel = PoolKernel(path, preserve_buildroot=preserve_buildroot)
         if kernel.drop_privileges(pretend=True):
             def f() -> PoolKernel:
                 kernel.drop_privileges()
@@ -1362,7 +1365,15 @@ class Pool:
 
         If strict missing packages raise an exception,
         otherwise they are listed in .missing attr of the returned PackageList
-        If debug, leave build chroot intact
+        
+        If preserve_buildroot == 'always' then always leave buildroot intact
+        after build
+        
+        If preserve_buildroot == 'error' then leave buildroot intact after
+        build if error
+        
+        If preserve_buildroot == 'never' then don't leave buildroot intact
+        after build
         """
 
         self.kernel.autosync = False
