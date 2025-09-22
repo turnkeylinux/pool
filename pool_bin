@@ -144,12 +144,26 @@ def pool_get(
             raise e
         else:
             fatal(e)
-    if strict and packages.missing:
+    if strict and (packages.missing or packages.failed):
         this_exitcode = 1
 
     if not quiet:
+        all_packages = set([
+            *packages,
+            *packages.missing,
+            *packages.failed
+        ])
+
+        print('build summary')
+        print('=============')
+        print(f"{len(all_packages)-(len(packages.missing) + len(packages.failed))}/{len(all_packages)} builds successful")
+
+        for package in all_packages-set([*packages.failed, *packages.missing]):
+            print(f" - {package!r} built successfully")
         for package in packages.missing:
-            warn(f"no such package ({package})")
+            print(f" - {package!r} not registered")
+        for package in packages.failed:
+            print(f" - {package!r} failed to build")
 
     sys.exit(this_exitcode)
 
