@@ -306,7 +306,7 @@ def print_pkgcache(pool: PoolKernel) -> None:
         print(f"{name}={version}")
 
 
-def print_stock_inventory(stock_inventory: list[str]) -> None:
+def print_stock_inventory(stock_inventory: list[tuple[str, str, str]]) -> None:
     logger.debug(f"print_stock_inventory({stock_inventory=})")
     package_width = max([len(vals[0]) for vals in stock_inventory])
     stock_name_width = max([len(vals[1]) for vals in stock_inventory])
@@ -373,7 +373,7 @@ def pool_info(
     if recursive:
         print(f"### POOL_DIR={pool.path}")
 
-    if function:
+    if function():
         function(pool)
         if recursive:
             for subpool in pool.subpools:
@@ -455,16 +455,13 @@ def main() -> None:
         subcommand = command[len(PROG + "-") :]
         sys.argv.insert(1, subcommand)
 
-    parser_epilog = {
-        "formatter_class": argparse.RawDescriptionHelpFormatter,
-        "epilog": (
-            "env vars:"
-            "\n    POOL_DIR\t\tPath to the pool directory (defaults to '.')"
-            "\n    POOL_LOG_LEVEL\tSet log level for pool (no logging by"
-            " default)"
-            "\n    DEBUG\t\tGlobal 'debug' log level override"
-        ),
-    }
+    env_vars = (
+        "env vars:"
+        "\n    POOL_DIR\t\tPath to the pool directory (defaults to '.')"
+        "\n    POOL_LOG_LEVEL\tSet log level for pool (no logging by default)"
+        "\n    DEBUG\t\tGlobal 'debug' log level override"
+        "\n    DEBUG\t\tSet log level to 'debug' (overrides 'POOL_LOG_LEVEL')"
+    )
 
     parser = argparse.ArgumentParser(
         prog=PROG,
@@ -472,14 +469,7 @@ def main() -> None:
         description=(
             "Maintain a pool of packages from source and binary stocks"
         ),
-        epilog=(
-            "env vars:"
-            "\n    POOL_DIR\t\tPath to the pool directory (defaults to '.')"
-            "\n    POOL_LOG_LEVEL\tSet log level for pool (no logging by"
-            " default)"
-            "\n    DEBUG\t\tSet log level to 'debug' (overrides"
-            " 'POOL_LOG_LEVEL')"
-        ),
+        epilog=env_vars,
     )
     subparsers = parser.add_subparsers(dest="cmd")
 
@@ -498,7 +488,8 @@ def main() -> None:
     parser_gc = subparsers.add_parser(
         "gc",
         help="Garbage collect stale data from the pool's caches",
-        **parser_epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=env_vars,
     )
     parser_gc.add_argument(
         "-R",
@@ -510,7 +501,10 @@ def main() -> None:
 
     # pool-get
     parser_get = subparsers.add_parser(
-        "get", help="Get packages from pool", **parser_epilog
+        "get",
+        help="Get packages from pool",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=env_vars,
     )
     parser_get.add_argument(
         "-i",
@@ -589,7 +583,10 @@ def main() -> None:
 
     # pool-info
     parser_info = subparsers.add_parser(
-        "info", help="Prints pool info", **parser_epilog
+        "info",
+        help="Prints pool info",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=env_vars,
     )
     # pool-info conflicting args
     parser_info_conflicts = parser_info.add_mutually_exclusive_group()
@@ -661,14 +658,20 @@ def main() -> None:
 
     # pool-init
     parser_init = subparsers.add_parser(
-        "init", help="Initialize a new pool", **parser_epilog
+        "init",
+        help="Initialize a new pool",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=env_vars,
     )
     parser_init.add_argument("buildroot", help="/path/to/build-chroot")
     parser_init.set_defaults(func=pool_init)
 
     # pool-list
     parser_list = subparsers.add_parser(
-        "list", help="List packages in pool", **parser_epilog
+        "list",
+        help="List packages in pool",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=env_vars,
     )
     parser_list.add_argument(
         "-a",
@@ -696,7 +699,8 @@ def main() -> None:
     parser_register = subparsers.add_parser(
         "register",
         help="Register a package stock into the pool",
-        **parser_epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=env_vars,
     )
     parser_register.add_argument("stock", help="/path/to/stock[#branch]")
     parser_register.set_defaults(func=pool_register)
@@ -705,7 +709,8 @@ def main() -> None:
     parser_unregister = subparsers.add_parser(
         "unregister",
         help="Unregister a package stock from the pool",
-        **parser_epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=env_vars,
     )
     parser_unregister.add_argument("stock", help="/path/to/stock[#branch]")
     parser_unregister.set_defaults(func=pool_unregister)
@@ -715,7 +720,8 @@ def main() -> None:
         "refresh",
         help="Refresh a package stock by unregistering/reregistering it from"
         " (only makes sense for git stocks)",
-        **parser_epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=env_vars,
     )
     parser_refresh.add_argument("stock", help="/path/to/stock[#branch]")
     parser_refresh.set_defaults(func=pool_refresh)
@@ -724,18 +730,18 @@ def main() -> None:
     logger.debug(f"{args=}")
     if args.cmd:
         func = args.func
-        args = vars(args)
+        args_dict = vars(args)
         # only pass debug for pool-get
         if func.__name__ != "get" and "debug" in args:
-            del args["debug"]
-        del args["cmd"]
-        del args["func"]
+            del args_dict["debug"]
+        del args_dict["cmd"]
+        del args_dict["func"]
         if "outputdir" in args.keys():
-            if not path_exists(args["outputdir"]):
-                fatal(f"{args['outputdir']} does not exist")
-            elif not isdir(args["outputdir"]):
-                fatal(f"{args['outputdir']} exists, but is not a directory")
-        func(**args)
+            if not path_exists(args.outputdir):
+                fatal(f"{args.outputdir} does not exist")
+            elif not isdir(args.outputdir):
+                fatal(f"{args.outputdir} exists, but is not a directory")
+        func(**args_dict)
     else:
         fatal("Subcommand required.", parser.print_help)
 
