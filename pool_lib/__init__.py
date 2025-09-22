@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from builtins import list as List
 from collections.abc import Generator, Iterable, Iterator
 from contextlib import contextmanager
 from fnmatch import fnmatch
@@ -35,7 +36,6 @@ from os.path import (
 )
 from typing import (
     Callable,
-    List,  # in a couple of places, if "list" is used, there are type errors!?
     Self,
     TypeVar,
     cast,
@@ -950,7 +950,6 @@ class PoolKernel:
             for name, version in self._list(all_versions, verbose=verbose)
         ]
 
-    # if this 'List' is replaced with 'list' it gives a type error here?!
     RS = TypeVar("RS", str, List[str])
 
     def resolve(self, unresolved: RS) -> RS:
@@ -1364,8 +1363,7 @@ class Pool:
     def get(
         self,
         output_dir: str,
-        packages: List[str],  # as per above; 'list[]' here gives a type
-        # error
+        packages: List[str],
         tree_fmt: bool = False,
         strict: bool = False,
         source: bool = False,
