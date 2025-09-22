@@ -79,12 +79,11 @@ Example usage:
 """
 
 import os
-import sys
-
-import traceback
 import pickle as pickle
+import sys
+import traceback
 import types
-from typing import Callable, Any, Tuple, BinaryIO, no_type_check
+from typing import Any, BinaryIO, Callable, ClassVar, no_type_check
 
 
 class Error(Exception):
@@ -96,8 +95,8 @@ def forked_func(
 ) -> Callable[..., Any]:
     def wrapper(*args: Any, **kws: Any) -> Any:
         r_fd, w_fd = os.pipe()
-        r_fh = os.fdopen(r_fd, "r", 0)
-        w_fh = os.fdopen(w_fd, "w", 0)
+        r_fh = os.fdopen(r_fd, "rb", 0)
+        w_fh = os.fdopen(w_fd, "wb", 0)
 
         pid = os.fork()
         if pid == 0:
@@ -133,8 +132,8 @@ def forked_func(
 class Pipe:
     def __init__(self) -> None:
         r, w = os.pipe()
-        self.r: BinaryIO = os.fdopen(r, "r", 0)
-        self.w: BinaryIO = os.fdopen(w, "w", 0)
+        self.r: BinaryIO = os.fdopen(r, "rb", 0)
+        self.w: BinaryIO = os.fdopen(w, "wb", 0)
 
 
 class ObjProxyBase:
@@ -147,7 +146,7 @@ class ObjProxyBase:
 class ObjProxyServer(ObjProxyBase):
     def __init__(
         self, r: BinaryIO, w: BinaryIO, obj: Any, print_traceback: bool = False
-    ):
+    ) -> None:
         self.r = r
         self.w = w
         self.obj = obj
@@ -167,7 +166,7 @@ class ObjProxyServer(ObjProxyBase):
             elif op == self.OP_SET:
                 op_handler = self._handle_op_set
             else:
-                raise Error("illegal ObjProxy operation (%s)" % op)
+                raise Error(f"illegal ObjProxy operation ({op})")
 
             op_handler(params)
 
@@ -187,15 +186,15 @@ class ObjProxyServer(ObjProxyBase):
         return wrapper
 
     @_write_result.__func__
-    def _handle_op_call(self, params: Tuple[str, list, dict]) -> Any:
+    def _handle_op_call(self, params: tuple[str, list, dict]) -> Any:
         attrname, args, kws = params
         attr = getattr(self.obj, attrname)
         if not callable(attr):
-            raise Error("'%s' is not callable" % attrname)
+            raise Error(f"'{attrname}' is not callable")
         return attr(*args, **kws)
 
     @_write_result.__func__
-    def _handle_op_get(self, params: Tuple[str]) -> Any:
+    def _handle_op_get(self, params: tuple[str]) -> Any:
         (attrname,) = params
         val = getattr(self.obj, attrname)
         if callable(val):
@@ -203,12 +202,12 @@ class ObjProxyServer(ObjProxyBase):
         return val
 
     @_write_result.__func__
-    def _handle_op_set(self, params: Tuple[str, list]) -> Any:
+    def _handle_op_set(self, params: tuple[str, list]) -> Any:
         attrname, val = params
         setattr(self.obj, attrname, val)
 
 
-class ObjProxyClient(ObjProxyBase, object):
+class ObjProxyClient(ObjProxyBase):
     """Object proxy client.
 
     Transparently handles:
@@ -218,9 +217,9 @@ class ObjProxyClient(ObjProxyBase, object):
 
     """
 
-    __local_attr__ = ["_r", "_w"]
+    __local_attr__: ClassVar[list[str]] = ["_r", "_w"]
 
-    def __init__(self, r: BinaryIO, w: BinaryIO):
+    def __init__(self, r: BinaryIO, w: BinaryIO) -> None:
         self._r = r
         self._w = w
 
@@ -267,7 +266,7 @@ class ObjProxyClient(ObjProxyBase, object):
         return method
 
 
-def forkpipe() -> Tuple[int, BinaryIO, BinaryIO]:
+def forkpipe() -> tuple[int, BinaryIO, BinaryIO]:
     """Forks and create a bi-directional pipe -> (pid, r, w)"""
     pipe_input = Pipe()
     pipe_output = Pipe()
@@ -334,11 +333,11 @@ def test():
         return pg
 
     forkedpg = forked_constructor(dummy)()
-    print("pg.getpid() = %d" % pg.getpid())
-    print("forkedpg.getpid() = %d" % forkedpg.getpid())
+    print(f"pg.getpid() = {pg.getpid()}")
+    print(f"forkedpg.getpid() = {forkedpg.getpid()}")
     assert pg.getpid() != forkedpg.getpid()
 
-    class Attr(object):
+    class Attr:
         def __init__(self, attr):
             self.attr = attr
 
