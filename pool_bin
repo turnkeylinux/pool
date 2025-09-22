@@ -8,17 +8,16 @@
 # Free Software Foundation; either version 3 of the License, or (at your
 # option) any later version.
 
+import argparse
 import os
 import sys
-import argparse
 from os.path import basename, dirname, isdir
 from os.path import exists as path_exists
-from typing import NoReturn, Callable
+from typing import Callable, NoReturn
 
 from debian import debfile
 from packaging.version import Version
-
-from pool_lib import Pool, PoolKernel, PoolError, logger
+from pool_lib import Pool, PoolError, PoolKernel, logger
 
 exitcode = 0
 PROG = "pool"
@@ -30,19 +29,19 @@ if logger.level == "debug":
 def warn(msg: str) -> None:
     global exitcode
     exitcode = 1
-    print(f"warning: {str(msg)}", file=sys.stderr)
+    print(f"warning: {msg!s}", file=sys.stderr)
 
 
 def fatal(
     msg: str | PoolError | FileNotFoundError, help: Callable | None = None
 ) -> NoReturn:
-    print(f"error: {str(msg)}", file=sys.stderr)
+    print(f"error: {msg!s}", file=sys.stderr)
     if help:
         help()
     sys.exit(1)
 
 
-def pool_exists(package: str) -> None | NoReturn:
+def pool_exists(package: str) -> None:
     istrue: bool = False
     logger.debug(f"exists({package=})")
     try:
@@ -62,7 +61,7 @@ def pool_exists(package: str) -> None | NoReturn:
         sys.exit(1)
 
 
-def pool_gc(disable_recursion: bool = False) -> None | NoReturn:
+def pool_gc(disable_recursion: bool = False) -> None:
     logger.debug(f"gc({disable_recursion=})")
     try:
         Pool().gc(not disable_recursion)
@@ -74,11 +73,11 @@ def pool_gc(disable_recursion: bool = False) -> None | NoReturn:
 
 
 # pool-get function
-def read_packages(in_file: str) -> list[str] | NoReturn:
+def read_packages(in_file: str) -> list[str]:
     logger.debug(f"read_packages({in_file=})")
     packages = []
     try:
-        with open(in_file, "r") as fob:
+        with open(in_file) as fob:
             for line in fob.readlines():
                 line = line.split("#")[0].strip()
                 if not line:
@@ -87,7 +86,7 @@ def read_packages(in_file: str) -> list[str] | NoReturn:
         return packages
     except FileNotFoundError as e:
         if DEBUG:
-            raise PoolError(e)
+            raise PoolError(e) from e
         else:
             fatal(e)
 
@@ -128,7 +127,7 @@ def pool_get(
             package_list.extend(pkgs_read)
     else:
         # assume that it's a list of package names
-        package_list = packages
+        package_list = list(packages)
 
     try:
         packages = pool.get(
@@ -151,9 +150,10 @@ def pool_get(
 
         print("build summary")
         print("=============")
-        print(
-            f"{len(all_packages) - (len(packages.missing) + len(packages.failed))}/{len(all_packages)} builds successful"
+        no_of_successful_pkgs = (
+            len(all_packages) - (len(packages.missing) + len(packages.failed))
         )
+        print(f"{no_of_successful_pkgs}/{len(all_packages)} builds successful")
 
         for package in all_packages - set(
             [*packages.failed, *packages.missing]
@@ -230,7 +230,7 @@ def binary2source(pool: PoolKernel, package: str) -> str | None:
     return source_name
 
 
-def getpath_build_log(package: str) -> str | None | NoReturn:
+def getpath_build_log(package: str) -> str | None:
     """This function doesn't appear to be used anywhere?!"""
     logger.debug(f"getpath_build_log({package=})")
     try:
@@ -281,7 +281,8 @@ def print_stocks(pool: PoolKernel) -> None:
     for stock in pool.stocks:
         addr = stock.link
         # `Cannot access member "branch" for type "StockBase"`
-        # - branch is a StockBase property; although Stock subclasses StockBase?!
+        # - branch is a StockBase property; although Stock subclasses
+        #   StockBase?!
         if stock.branch:  # type: ignore
             addr += "#" + stock.branch.replace("%2F", "/")  # type: ignore
         print(addr)
@@ -415,7 +416,7 @@ def pool_list(
 
 def pool_register(stock: str) -> None:
     logger.debug(f"pool_register({stock=})")
-    logger.debug(f"{repr(stock)=}")
+    logger.debug(f"{stock=!r}")
     try:
         Pool().register(stock)
     except PoolError as e:
@@ -444,7 +445,7 @@ def pool_refresh(stock: str) -> None:
     pool_register(stock)
 
 
-def main():
+def main() -> None:
     # support for "one word" '/usr/bin/pool-COMMAND'
     # - symlinks to '/usr/bin/pool'; COMMAND becomes the first argument
 
