@@ -507,8 +507,10 @@ class Stock(StockBase):
 
     @property
     def binaries(self) -> list[str]:
-        """List package binaries for this stock ->
-        [ relative/path/foo.deb, ... ]"""
+        """List package binaries for this stock.
+
+        Returns [ relative/path/foo.deb, ... ]
+        """
         relative_paths: list[str] = []
         for dpath, _, fnames in os.walk(self.path_index_binaries):
             for fname in fnames:
@@ -519,8 +521,10 @@ class Stock(StockBase):
 
     @property
     def sources(self) -> list[tuple[str, list[str]]]:
-        """List package sources for this stock ->
-        [ (relative/path/foo, versions), ... ]"""
+        """List package sources for this stock
+
+        Returns [ (relative/path/foo, versions), ... ]
+        """
         return list(self.source_versions.items())
 
     def sync(self) -> None:
@@ -1314,8 +1318,9 @@ class Pool:
     def list(
         self, all_versions: bool = False, *globs: str, verbose: bool = False
     ) -> "Pool.PackageList":
-        """List packages in pool (sorted) ->
-                        Pool.PackageList (list + .missing attr)
+        """List packages in pool (sorted)
+
+        Returns Pool.PackageList (list + .missing attr)
 
         If no globs are specified, lists all packages.
         Globs that didn't match are listed in PackageList.missing
