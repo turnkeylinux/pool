@@ -35,11 +35,13 @@ def warn(msg: str) -> None:
 
 def fatal(
     msg: str | PoolError | FileNotFoundError,
-    help: Callable[[IO[str] | None], None] | None = None,
+    pool_help: Callable[[IO[str] | None], None] | None = None,
 ) -> NoReturn:
     print(f"error: {msg!s}", file=sys.stderr)
-    if help:
-        help(None)
+    if pool_help:
+        # argparse.ArgumentParser().print_help(file=None)
+        # explicitly passing None to satisfy mypy (otherwise 'too few args')
+        pool_help(None)
     sys.exit(1)
 
 
