@@ -459,8 +459,7 @@ def main() -> None:
         "env vars:"
         "\n    POOL_DIR\t\tPath to the pool directory (defaults to '.')"
         "\n    POOL_LOG_LEVEL\tSet log level for pool (no logging by default)"
-        "\n    DEBUG\t\tGlobal 'debug' log level override"
-        "\n    DEBUG\t\tSet log level to 'debug' (overrides 'POOL_LOG_LEVEL')"
+        "\n    DEBUG\t\tGlobal 'debug' log level (overrides 'POOL_LOG_LEVEL')"
     )
 
     parser = argparse.ArgumentParser(
@@ -511,7 +510,7 @@ def main() -> None:
         "--input",
         dest="inputfile",
         action="store_true",
-        help="Read packages from file(s).",
+        help="Read packages from file(s) - one package[=version] per line.",
     )
     parser_get.add_argument(
         "-s",
@@ -529,7 +528,7 @@ def main() -> None:
         "-t",
         "--tree",
         action="store_true",
-        help="output dir is in a package tree format (like a repository)",
+        help="output packages in a Debian apt repo like filesystem tree",
     )
 
     buildroot_cleanup_args = parser_get.add_mutually_exclusive_group()

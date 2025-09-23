@@ -1,0 +1,21 @@
+v1.2.0 Release Notes
+====================
+
+* new options for improved "preserve buildroot" behavior:
+
+    --preserve-buildroot-on-error (default)
+    --preserve-buildroot-always
+    --preserve-buildroot-never
+
+* display build summary on exit
+    - show package status - success or failure
+    - if failure; note cause (failed build or missing stock)
+
+* 'pool-get' bugfix when "getting" multiple packages:
+    - if package fails, continue with other packages
+        - was exiting immediately if a package failed
+
+* code tidying and improvement:
+    - linting: fixes
+    - formatting: improved consistency and better readability
+    - typing: fixes, modernization and additional coverage
