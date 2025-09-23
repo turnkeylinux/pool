@@ -373,12 +373,11 @@ def pool_info(
     if recursive:
         print(f"### POOL_DIR={pool.path}")
 
-    if function():
-        function(pool)
-        if recursive:
-            for subpool in pool.subpools:
-                print()
-                pool_info(function, recursive, subpool)
+    function(pool)
+    if recursive:
+        for subpool in pool.subpools:
+            print()
+            pool_info(function, recursive, subpool)
 
 
 def pool_init(buildroot: str) -> None:
