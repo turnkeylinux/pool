@@ -1217,10 +1217,7 @@ class Pool:
             self.missing: list[str] = []
             self.failed: list[str] = []
 
-        def __iter__(self):
-            # by my understanding this should return 'Iterable[str]' but then
-            # use of a PackageList instance gives a linting error:
-            # "Iterable[str]" has no attribute "__next__" [attr-defined]
+        def __iter__(self) -> Iterator[str]:
             return iter(self.inner)
 
         def __iadd__(self, other: list[str]) -> Self:
