@@ -11,9 +11,10 @@
 import argparse
 import os
 import sys
+from collections.abc import Callable
 from os.path import basename, dirname, isdir
 from os.path import exists as path_exists
-from typing import Callable, NoReturn
+from typing import IO, NoReturn
 
 from debian import debfile
 from packaging.version import Version
@@ -33,11 +34,12 @@ def warn(msg: str) -> None:
 
 
 def fatal(
-    msg: str | PoolError | FileNotFoundError, help: Callable | None = None
+    msg: str | PoolError | FileNotFoundError,
+    help: Callable[[IO[str] | None], None] | None = None,
 ) -> NoReturn:
     print(f"error: {msg!s}", file=sys.stderr)
     if help:
-        help()
+        help(None)
     sys.exit(1)
 
 
@@ -357,7 +359,9 @@ def print_build_logs(pool: PoolKernel) -> None:
 
 
 def pool_info(
-    function: Callable, recursive: bool = False, pool: PoolKernel | None = None
+    function: Callable[[PoolKernel], None],
+    recursive: bool = False,
+    pool: PoolKernel | None = None,
 ) -> None:
     logger.debug(f"pool_info({function=}, {recursive=}, {pool=})")
     try:
