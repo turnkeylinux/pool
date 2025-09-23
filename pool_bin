@@ -231,7 +231,7 @@ def binary2source(pool: PoolKernel, package: str) -> str | None:
 
 
 def getpath_build_log(package: str) -> str | None:
-    """This function doesn't appear to be used anywhere?!"""
+    # XXX This function doesn't appear to be used anywhere?!
     logger.debug(f"getpath_build_log({package=})")
     try:
         pool = Pool().kernel
