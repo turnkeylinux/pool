@@ -740,7 +740,7 @@ def main() -> None:
             del args_dict["debug"]
         del args_dict["cmd"]
         del args_dict["func"]
-        if "outputdir" in args.keys():
+        if "outputdir" in args:
             if not path_exists(args.outputdir):
                 fatal(f"{args.outputdir} does not exist")
             elif not isdir(args.outputdir):
