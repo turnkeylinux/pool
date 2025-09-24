@@ -83,17 +83,26 @@ import pickle as pickle
 import sys
 import traceback
 import types
-from typing import Any, BinaryIO, Callable, ClassVar, no_type_check
+from collections.abc import Callable
+from typing import BinaryIO, ClassVar, ParamSpec, Self, TypeVar, no_type_check
 
 
 class Error(Exception):
     pass
 
 
+ForkedFuncParams = ParamSpec("ForkedFuncParams")
+ForkedFuncTypev = TypeVar("ForkedFuncTypev")
+
+
 def forked_func(
-    func: Callable[..., Any], print_traceback: bool = False
-) -> Callable[..., Any]:
-    def wrapper(*args: Any, **kws: Any) -> Any:
+    func: Callable[ForkedFuncParams, ForkedFuncTypev],
+    print_traceback: bool = False,
+) -> Callable[ForkedFuncParams, ForkedFuncTypev]:
+    def wrapper(
+        *args: ForkedFuncParams.args,
+        **kws: ForkedFuncParams.kwargs
+    ) -> ForkedFuncTypev:
         r_fd, w_fd = os.pipe()
         r_fh = os.fdopen(r_fd, "rb", 0)
         w_fh = os.fdopen(w_fd, "wb", 0)
@@ -136,6 +145,10 @@ class Pipe:
         self.w: BinaryIO = os.fdopen(w, "wb", 0)
 
 
+ObjProxyParams = ParamSpec("ObjProxyParams")
+ObjProxyTypev = TypeVar("ObjProxyTypev")
+
+
 class ObjProxyBase:
     OP_CALL = "call"
     OP_GET = "get"
@@ -145,7 +158,11 @@ class ObjProxyBase:
 
 class ObjProxyServer(ObjProxyBase):
     def __init__(
-        self, r: BinaryIO, w: BinaryIO, obj: Any, print_traceback: bool = False
+        self,
+        r: BinaryIO,
+        w: BinaryIO,
+        obj: ObjProxyTypev,
+        print_traceback: bool = False,
     ) -> None:
         self.r = r
         self.w = w
@@ -160,20 +177,25 @@ class ObjProxyServer(ObjProxyBase):
                 break
 
             if op == self.OP_CALL:
-                op_handler = self._handle_op_call
+                self._handle_op_call(params)
             elif op == self.OP_GET:
-                op_handler = self._handle_op_get
+                self._handle_op_get(params)
             elif op == self.OP_SET:
-                op_handler = self._handle_op_set
+                self._handle_op_set(params)
             else:
                 raise Error(f"illegal ObjProxy operation ({op})")
 
-            op_handler(params)
-
     @staticmethod
-    def _write_result(method: Callable[..., None]) -> Callable[..., None]:
+    def _write_result(
+        method: Callable[ObjProxyParams, ObjProxyTypev]
+    ) -> Callable[ObjProxyParams, ObjProxyTypev]:
+
         @no_type_check
-        def wrapper(self, *args: Any, **kws: Any) -> Any:
+        def wrapper(
+                self: Self,
+                *args: ObjProxyParams.args,
+                **kws: ObjProxyParams.kwargs
+        ) -> ObjProxyTypev:
             try:
                 ret = method(self, *args, **kws)
                 pickle.dump((False, ret), self.w)
@@ -182,27 +204,28 @@ class ObjProxyServer(ObjProxyBase):
                     if not isinstance(e, AttributeError):
                         traceback.print_exc(file=sys.stderr)
                 pickle.dump((True, e), self.w)
-
         return wrapper
 
-    @_write_result.__func__
-    def _handle_op_call(self, params: tuple[str, list, dict]) -> Any:
+    @_write_result
+    def _handle_op_call(
+        self, params: tuple[str, list, dict]
+    ) -> tuple[str, list, dict]:
         attrname, args, kws = params
         attr = getattr(self.obj, attrname)
         if not callable(attr):
             raise Error(f"'{attrname}' is not callable")
         return attr(*args, **kws)
 
-    @_write_result.__func__
-    def _handle_op_get(self, params: tuple[str]) -> Any:
+    @_write_result
+    def _handle_op_get(self, params: tuple[str]) -> str:
         (attrname,) = params
         val = getattr(self.obj, attrname)
         if callable(val):
             return self.ATTR_CALLABLE
         return val
 
-    @_write_result.__func__
-    def _handle_op_set(self, params: tuple[str, list]) -> Any:
+    @_write_result
+    def _handle_op_set(self, params: tuple[str, list]) -> None:
         attrname, val = params
         setattr(self.obj, attrname, val)
 
@@ -223,9 +246,16 @@ class ObjProxyClient(ObjProxyBase):
         self._r = r
         self._w = w
 
-    def _read_result(op_method: Callable[..., None]) -> Callable[..., Any]:
+    @staticmethod
+    def _read_result(
+        op_method: Callable[ObjProxyParams, ObjProxyTypev]
+    ) -> Callable[ObjProxyParams, ObjProxyTypev]:
         @no_type_check
-        def wrapper(self, *args, **kws):
+        def wrapper(
+            self: Self,
+            *args: ObjProxyParams.args,
+            **kws: ObjProxyParams.kwargs
+        ) -> ObjProxyTypev:
             op_method(self, *args, **kws)
             error, val = pickle.load(self._r)
             if error:
@@ -243,22 +273,28 @@ class ObjProxyClient(ObjProxyBase):
         pickle.dump((self.OP_GET, (attrname,)), self._w)
 
     @_read_result
-    def _op_set(self, attrname: str, val: Any) -> None:
+    def _op_set(self, attrname: str, val: str) -> None:
         pickle.dump((self.OP_SET, (attrname, val)), self._w)
 
-    def __setattr__(self, attrname: str, val: Any) -> None:
+    def __setattr__(self, attrname: str, val: str) -> None:
         if attrname in self.__local_attr__:
             return object.__setattr__(self, attrname, val)
 
         return self._op_set(attrname, val)
 
-    def __getattr__(self, attrname: str) -> Any:
+    def __getattr__(
+        self, attrname: str
+    ) -> Callable[ObjProxyParams, ObjProxyTypev] | None:
         val = self._op_get(attrname)
         if val != self.ATTR_CALLABLE:
             return val
 
         @no_type_check
-        def unbound_method(self, *args, **kws):
+        def unbound_method(
+            self: Self,
+            *args: ObjProxyParams.args,
+            **kws: ObjProxyParams.kwargs,
+        ) -> ObjProxyParams:
             return self._op_call(attrname, args, kws)
 
         method = types.MethodType(unbound_method, self)
@@ -284,14 +320,22 @@ def forkpipe() -> tuple[int, BinaryIO, BinaryIO]:
         return (pid, pipe_output.r, pipe_input.w)
 
 
+ForkedConstructParams = ParamSpec("ForkedConstructParams")
+ForkedConstructTypev = TypeVar("ForkedConstructTypev")
+
+
 def forked_constructor(
-    constructor: Callable[..., Any], print_traceback: bool = False
-) -> Callable[..., ObjProxyClient]:
+    constructor: Callable[ForkedConstructParams, ForkedConstructTypev],
+    print_traceback: bool = False,
+) -> Callable[ForkedConstructParams, ObjProxyClient]:
     """Wraps a constructor so that instances are created in a subprocess.
     Returns a new constructor"""
 
     @no_type_check
-    def wrapper(*args, **kws):
+    def wrapper(
+        *args: ForkedConstructParams.args,
+        **kws: ForkedConstructParams.kwargs,
+    ) -> ForkedConstructTypev:
         pid, r, w = forkpipe()
         if pid == 0:
             obj = constructor(*args, **kws)
@@ -303,8 +347,9 @@ def forked_constructor(
     return wrapper
 
 
-def test():
-    def add(a, b):
+@no_type_check
+def test() -> None:
+    def add(a, b):  # noqa: ANN001, ANN202
         return a + b
 
     forkedadd = forked_func(add)
@@ -312,7 +357,7 @@ def test():
     print(forkedadd(1, 1))
 
     class Adder:
-        def add(self, a, b):
+        def add(self, a, b):  # noqa: ANN001, ANN202
             return a + b
 
     ForkedAdder = forked_constructor(Adder)
@@ -324,12 +369,12 @@ def test():
     print(instance.add(1, 1))
 
     class PidGetter:
-        def getpid(self):
+        def getpid(self) -> int:
             return os.getpid()
 
     pg = PidGetter()
 
-    def dummy():
+    def dummy():  # noqa: ANN202
         return pg
 
     forkedpg = forked_constructor(dummy)()
@@ -338,13 +383,13 @@ def test():
     assert pg.getpid() != forkedpg.getpid()
 
     class Attr:
-        def __init__(self, attr):
+        def __init__(self, attr) -> None:  # noqa: ANN001
             self.attr = attr
 
-        def getattr(self):
+        def getattr(self):  # noqa: ANN202
             return self.attr
 
-        def setattr(self, attr):
+        def setattr(self, attr):  # noqa: ANN001, ANN202
             self.attr = attr
 
     attr = forked_constructor(Attr)(666)
