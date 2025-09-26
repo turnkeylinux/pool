@@ -49,9 +49,7 @@ def pool_exists(package: str) -> None:
     istrue: bool = False
     logger.debug(f"exists({package=})")
     try:
-        # `Cannot access member "exists" for type "Pool"`
-        # - only PoolKernel actually has exists() method?!
-        istrue = Pool().exists(package)  # type: ignore
+        istrue = PoolKernel().exists(package)
     except PoolError as e:
         if DEBUG:
             raise e
