@@ -1022,9 +1022,11 @@ class PoolKernel:
 
         if deckdebuild_exitcode != 0:
             msg = f"package `{package}' failed to build"
-            if self.preserve_buildroot == "never":
+            if self.preserve_buildroot in ("never", "on-error"):
                 shutil.rmtree(build_outputdir)
             raise PoolError(msg)
+        elif self.preserve_buildroot == "never":
+            shutil.rmtree(build_outputdir)
 
         print()
 
