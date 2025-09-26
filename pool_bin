@@ -49,7 +49,7 @@ def pool_exists(package: str) -> None:
     istrue: bool = False
     logger.debug(f"exists({package=})")
     try:
-        istrue = PoolKernel().exists(package)
+        istrue = Pool().kernel.exists(package)
     except PoolError as e:
         if DEBUG:
             raise e
