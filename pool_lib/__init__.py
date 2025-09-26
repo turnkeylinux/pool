@@ -825,7 +825,7 @@ class PoolKernel:
         path: AnyPath | None = None,
         recursed_paths: list[str] | None = None,
         autosync: bool = True,
-        preserve_buildroot: str = "error",
+        preserve_buildroot: str = "on-error",
     ) -> None:
         """Initialize pool instance.
 
@@ -1006,9 +1006,7 @@ class PoolKernel:
 
         # seek to version, build the package, seek back
         verseek.seek_version(source_path, version)
-        args = []
-        if self.preserve_buildroot in ("always", "error"):
-            args.append("--preserve-build")
+        args = [f"--preserve-buildroot-{self.preserve_buildroot}"]
         if source:
             args.append("--build-source")
         with in_dir(source_path):
@@ -1019,22 +1017,13 @@ class PoolKernel:
                 build_outputdir,
             ]
             print(f"# {' '.join(command)}")
-            error = subprocess.run(command).returncode
+            deckdebuild_exitcode = subprocess.run(command).returncode
         verseek.seek_version(source_path)
 
-        if error:
+        if deckdebuild_exitcode != 0:
             msg = f"package `{package}' failed to build"
             if self.preserve_buildroot == "never":
                 shutil.rmtree(build_outputdir)
-                msg = (
-                    f"{msg} - cleaning buildroot because "
-                    "--preserve-buildroot=never"
-                )
-            else:
-                msg = (
-                    f"{msg} - build dir preserved for debugging:"
-                    f" {build_outputdir}"
-                )
             raise PoolError(msg)
 
         print()
@@ -1295,7 +1284,7 @@ class Pool:
         return cls(path)
 
     def __init__(
-        self, path: AnyPath | None = None, preserve_buildroot: str = "error"
+        self, path: AnyPath | None = None, preserve_buildroot: str = "on-error"
     ) -> None:
         kernel = PoolKernel(path, preserve_buildroot=preserve_buildroot)
         if kernel.drop_privileges(pretend=True):
@@ -1379,7 +1368,7 @@ class Pool:
         If preserve_buildroot == 'always' then always leave buildroot intact
         after build
 
-        If preserve_buildroot == 'error' then leave buildroot intact after
+        If preserve_buildroot == 'on-error' then leave buildroot intact after
         build if error
 
         If preserve_buildroot == 'never' then don't leave buildroot intact

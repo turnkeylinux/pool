@@ -107,7 +107,7 @@ def pool_get(
     source: bool = False,
 ) -> NoReturn:
     if preserve_buildroot is None:
-        preserve_buildroot = "error"
+        preserve_buildroot = "on-error"
     logger.debug(
         f"get({outputdir=}, {packages=}, {inputfile=}, {strict=},"
         f" {strict=}, {quiet=}, {tree=}, {preserve_buildroot=},"
@@ -552,7 +552,7 @@ def main() -> None:
         "-e",
         "--preserve-buildroot-on-error",
         action="store_const",
-        const="error",
+        const="on-error",
         dest="preserve_buildroot",
         help="leave build chroot intact after build if failure (default)",
     )
