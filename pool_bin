@@ -265,6 +265,17 @@ def getpath_build_log(package: str) -> str | None:
     return path
 
 
+def pool_info_build(pool: PoolKernel, package: str) -> None:
+    # TODO - this needs to be completed
+    # - all the functionality required should be in the functions above
+    logger.debug(f"pool_info({pool=}, {package=})")
+    warn(
+        "pool-info-build command is incomplete; please see $POOL_PATH/.pool/"
+        f"build/buildinfo/{package}_<version>_<arch>.buildinfo for buildlog"
+        " and/or pool-info and/or pool-list."
+    )
+
+
 # # pool-info functions
 def print_registered(pool: PoolKernel) -> None:
     logger.debug(f"print_registered({pool=})")
@@ -580,10 +591,10 @@ def main() -> None:
 
     # pool-info-build
     parser_info_build = subparsers.add_parser(
-        "info-get", help="Prints source build log for package"
+        "info-build", help="Prints source build log for package"
     )
     parser_info_build.add_argument("package", help="Package name")
-    parser_info_build.set_defaults(func=pool_get)
+    parser_info_build.set_defaults(func=pool_info_build)
 
     # pool-info
     parser_info = subparsers.add_parser(
