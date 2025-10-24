@@ -61,20 +61,20 @@ is stored directly as filesystem constructs::
     .pool/
         build/
             buildinfo/
-                <package>_<version>_<arch>.buildinfo
+                <binary_package_name>_<version>_<arch>.buildinfo
                     # info about the build env
             root -> /path/to/buildroot
                 # symbolic link
             logs/
-                <package>_<version>.build
+                <binary_package_name>_<version>.build
                     # log of the build process
            
         pkgcache/
-            <package>_<version>_<arch>.deb
+            <binary_package_name>_<version>_<arch>.deb
                 # maybe in a pool-like tree
         
         srcpkgcache/
-            <package>_<version>_<arch>.tar.gz
+            <binary_package_name>_<version>_<arch>.tar.gz
                 # package source archive; requires --source switch
 
         stocks/
@@ -82,12 +82,12 @@ is stored directly as filesystem constructs::
                 # if stock is git repo of package source
                 link -> /path/to/stock
                     # symbolic link to the stock
-                .pool/CHECKOUT
+                CHECKOUT
                     # local clone of git source branch
-                .pool/SYNC_HEAD
+                SYNC_HEAD
                     # text file containing commit id of HEAD (full SHA)
-                .pool/index-sources
-                    <package>
+                index-sources
+                    <binary-package-name>
                         # text file containing available package version/s (one
                         # version per line) - version/s calculated using
                         # 'autoversion'
