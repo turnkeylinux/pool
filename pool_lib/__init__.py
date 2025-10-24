@@ -825,7 +825,7 @@ class PoolKernel:
         path: AnyPath | None = None,
         recursed_paths: list[str] | None = None,
         autosync: bool = True,
-        preserve_buildroot: str = "on-error",
+        preserve_buildroot: str | None = None,
     ) -> None:
         """Initialize pool instance.
 
@@ -1006,7 +1006,10 @@ class PoolKernel:
 
         # seek to version, build the package, seek back
         verseek.seek_version(source_path, version)
-        args = [f"--preserve-buildroot-{self.preserve_buildroot}"]
+        if self.preserve_buildroot is not None:
+            args = [f"--preserve-buildroot={self.preserve_buildroot}"]
+        else:
+            args = []
         if source:
             args.append("--build-source")
         with in_dir(source_path):

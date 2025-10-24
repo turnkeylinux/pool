@@ -104,8 +104,6 @@ def pool_get(
     preserve_buildroot: str | None = None,
     source: bool = False,
 ) -> NoReturn:
-    if preserve_buildroot is None:
-        preserve_buildroot = "on-error"
     logger.debug(
         f"get({outputdir=}, {packages=}, {inputfile=}, {strict=},"
         f" {strict=}, {quiet=}, {tree=}, {preserve_buildroot=},"
