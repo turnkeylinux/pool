@@ -434,7 +434,7 @@ class Stock(StockBase):
     def __init__(self, path: AnyPath, pkgcache: PackageCache) -> None:
         StockBase.__init__(self, path)
         logger.debug(f"Stock(path={path!r}, pkgcache={pkgcache!r})")
-        spath = join(str_path(path), ".pool")
+        spath = str_path(path)
         self.path_index_sources = join(spath, "index-sources")
         self.path_index_binaries = join(spath, "index-binaries")
         self.path_sync_head = join(spath, "SYNC_HEAD")
