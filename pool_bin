@@ -104,8 +104,6 @@ def pool_get(
     preserve_buildroot: str | None = None,
     source: bool = False,
 ) -> NoReturn:
-    if preserve_buildroot is None:
-        preserve_buildroot = "on-error"
     logger.debug(
         f"get({outputdir=}, {packages=}, {inputfile=}, {strict=},"
         f" {strict=}, {quiet=}, {tree=}, {preserve_buildroot=},"
@@ -474,6 +472,7 @@ def main() -> None:
         "\n    POOL_DIR\t\tPath to the pool directory (defaults to '.')"
         "\n    POOL_LOG_LEVEL\tSet log level for pool (no logging by default)"
         "\n    DEBUG\t\tGlobal 'debug' log level (overrides 'POOL_LOG_LEVEL')"
+        "\n    DECKDEBUILD_*\tEnv vars will be forwarded to deckdebuild"
     )
 
     parser = argparse.ArgumentParser(
