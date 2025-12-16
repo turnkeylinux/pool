@@ -18,7 +18,7 @@ import subprocess
 import sys
 import tempfile
 from builtins import list as List
-from collections.abc import Generator, Iterable, Iterator
+from collections.abc import Callable, Generator, Iterable, Iterator
 from contextlib import contextmanager
 from fnmatch import fnmatch
 from os.path import (
@@ -34,13 +34,7 @@ from os.path import (
     relpath,
     splitext,
 )
-from typing import (
-    Callable,
-    Self,
-    TypeVar,
-    cast,
-    no_type_check,
-)
+from typing import Self, TypeVar, cast, no_type_check
 
 import verseek_lib as verseek
 from debian import debfile, debian_support
