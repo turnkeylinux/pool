@@ -110,6 +110,23 @@ def parse_package_filename(filename: str) -> tuple[str, str]:
     return name, version
 
 
+def deckdebuild_env_file(filename: str) -> dict[str, str]:
+    """Read 'DECKDEBUILD_*' env vars from file."""
+    deckdebuild_env: dict[str, str] = {}
+    if not exists(filename):
+        return deckdebuild_env
+    with open(filename) as fob:
+        for line in map(str.strip, fob):
+            if (
+                line
+                and line.startswith("DECKDEBUILD")
+                and "=" in line
+            ):
+                env_var, env_val = line.split("=", 1)
+                deckdebuild_env[env_var] = env_val
+    return deckdebuild_env
+
+
 def hardlink_or_copy(src: AnyPath, dst: AnyPath) -> None:
     src = os.fspath(src)
     dst = os.fspath(dst)
@@ -1006,6 +1023,10 @@ class PoolKernel:
             args = []
         if source:
             args.append("--build-source")
+        # read DECKDEBUILD_ENV if it exists, but existing env takes precidence
+        deckdebuild_env = deckdebuild_env_file(
+            join(source_path, "DECKDEBUILD_ENV")
+        ) | os.environ.copy()
         with in_dir(source_path):
             command = [
                 "/usr/bin/deckdebuild",
@@ -1013,8 +1034,13 @@ class PoolKernel:
                 self.buildroot,
                 build_outputdir,
             ]
-            print(f"# {' '.join(command)}")
-            deckdebuild_exitcode = subprocess.run(command).returncode
+            print(
+                f"# {' '.join(command)} (DECKDEBUILD_ENV: {deckdebuild_env})"
+            )
+            deckdebuild_env |= os.environ.copy()
+            deckdebuild_exitcode = subprocess.run(
+                command, env=deckdebuild_env
+            ).returncode
         verseek.seek_version(source_path)
 
         if deckdebuild_exitcode != 0:
