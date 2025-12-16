@@ -110,8 +110,12 @@ def parse_package_filename(filename: str) -> tuple[str, str]:
     return name, version
 
 
-def deckdebuild_env_file(filename: str) -> dict[str, str]:
-    """Read 'DECKDEBUILD_*' env vars from file."""
+def set_deckdebuild_env(filename: str) -> dict[str, str]:
+    """Read 'DECKDEBUILD_*' env vars from file.
+
+    Return dict of 'DECKDEBUILD_*' values. Values are read from repo env file
+    and existing env. Existing env values take precedence over file.
+    """
     deckdebuild_env: dict[str, str] = {}
     if not exists(filename):
         return deckdebuild_env
@@ -124,6 +128,10 @@ def deckdebuild_env_file(filename: str) -> dict[str, str]:
             ):
                 env_var, env_val = line.split("=", 1)
                 deckdebuild_env[env_var] = env_val
+    # load any exsting env vars - overriding values from file
+    for env_var, env_val in os.environ.items():
+        if env_var.startswith("DECKDEBUILD"):
+            deckdebuild_env[env_var] = env_val
     return deckdebuild_env
 
 
@@ -1024,9 +1032,7 @@ class PoolKernel:
         if source:
             args.append("--build-source")
         # read DECKDEBUILD_ENV if it exists, but existing env takes precidence
-        deckdebuild_env = deckdebuild_env_file(
-            join(source_path, "DECKDEBUILD_ENV")
-        ) | os.environ.copy()
+        build_env = set_deckdebuild_env(join(source_path, "DECKDEBUILD_ENV"))
         with in_dir(source_path):
             command = [
                 "/usr/bin/deckdebuild",
@@ -1035,11 +1041,12 @@ class PoolKernel:
                 build_outputdir,
             ]
             print(
-                f"# {' '.join(command)} (DECKDEBUILD_ENV: {deckdebuild_env})"
+                f"# {' '.join(command)} (DECKDEBUILD_ENV: {build_env})"
             )
-            deckdebuild_env |= os.environ.copy()
+            # run deckdebuild with full env
+            build_env |= os.environ.copy()
             deckdebuild_exitcode = subprocess.run(
-                command, env=deckdebuild_env
+                command, env=build_env
             ).returncode
         verseek.seek_version(source_path)
 
