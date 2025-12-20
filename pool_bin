@@ -776,7 +776,10 @@ def main() -> None:
                 fatal(f"{args.outputdir} does not exist")
             elif not isdir(args.outputdir):
                 fatal(f"{args.outputdir} exists, but is not a directory")
-        func(**args_dict)
+        try:
+            func(**args_dict)
+        except PoolError as e:
+            fatal(e)
     else:
         fatal("Subcommand required.", parser.print_help)
 
