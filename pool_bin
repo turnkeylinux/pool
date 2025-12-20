@@ -767,7 +767,7 @@ def main() -> None:
             # if no_buildroot == True then buildroot is None
             del args_dict["no_buildroot"]
         # only pass debug for pool-get
-        if func.__name__ != "get" and "debug" in args:
+        if args.cmd != "get" and "debug" in args:
             del args_dict["debug"]
         del args_dict["cmd"]
         del args_dict["func"]
