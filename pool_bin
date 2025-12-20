@@ -101,7 +101,7 @@ def pool_get(
     strict: bool = False,
     quiet: bool = False,
     tree: bool = False,
-    preserve_buildroot: str | None = None,
+    preserve_buildroot: str = "on-error",
     source: bool = False,
 ) -> NoReturn:
     logger.debug(
