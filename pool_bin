@@ -393,10 +393,10 @@ def pool_info(
             pool_info(function, recursive, subpool)
 
 
-def pool_init(buildroot: str) -> None:
+def pool_init(buildroot: str | None) -> None:
     logger.debug(f"pool_init({buildroot=})")
     try:
-        Pool.init_create(os.path.abspath(buildroot))
+        Pool.init_create(buildroot)
     except PoolError as e:
         if DEBUG:
             raise e
@@ -675,7 +675,20 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=env_vars,
     )
-    parser_init.add_argument("buildroot", help="/path/to/build-chroot")
+    parser_init_conflicts = parser_init.add_mutually_exclusive_group()
+    parser_init_conflicts.add_argument(
+        "buildroot",
+        nargs="?",
+        default=None,
+        help="/path/to/build-chroot",
+    )
+    parser_init_conflicts.add_argument(
+        "-N",
+        "--no-buildroot",
+        action="store_true",
+        help="create pool with no buildroot (for pool of pools or pre-built"
+        " packages)"
+    )
     parser_init.set_defaults(func=pool_init)
 
     # pool-list
@@ -743,6 +756,16 @@ def main() -> None:
     if args.cmd:
         func = args.func
         args_dict = vars(args)
+        if args.cmd == "init":
+            # argparse handles error if both buildroot and --no-buildroot, but
+            # to force user to make explicit choice, error if neither set
+            if args.buildroot is None and not args.no_buildroot:
+                fatal(
+                    "pool-init requires one of /path/to/buildroot or"
+                    " --no-buildroot"
+                )
+            # if no_buildroot == True then buildroot is None
+            del args_dict["no_buildroot"]
         # only pass debug for pool-get
         if func.__name__ != "get" and "debug" in args:
             del args_dict["debug"]

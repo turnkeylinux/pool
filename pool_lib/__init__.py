@@ -1259,7 +1259,9 @@ class Pool:
 
     @classmethod
     def init_create(
-        cls: type["Pool"], buildroot: AnyPath, path: AnyPath | None = None
+        cls: type["Pool"],
+        buildroot: AnyPath | None,
+        path: AnyPath | None = None,
     ) -> "Pool":
         if path is None:
             cwd = os.getcwd()
@@ -1280,7 +1282,7 @@ class Pool:
         if isdir(spath):
             raise PoolError("pool already initialized")
 
-        if not isdir(buildroot):
+        if buildroot is not None and not isdir(buildroot):
             raise PoolError(f"buildroot `{buildroot}' is not a directory")
 
         mkdir(path_stocks)
@@ -1311,7 +1313,11 @@ class Pool:
 
         Git.set_gitignore(spath, ["tmp"])
 
-        os.symlink(buildroot, path_build_root)
+        # if set, symlink path_build_root -> buildroot, otherwise touch
+        if buildroot is not None:
+            os.symlink(abspath(buildroot), path_build_root)
+        else:
+            open(path_build_root, "w").close()
 
         return cls(path)
 
