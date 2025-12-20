@@ -464,7 +464,7 @@ def main() -> None:
     command = os.path.split(sys.argv[0])[-1]
     sys.argv[0] = PROG
     if command.startswith(PROG + "-"):
-        subcommand = command[len(PROG + "-") :]
+        subcommand = command[len(PROG + "-"):]
         sys.argv.insert(1, subcommand)
 
     env_vars = (
