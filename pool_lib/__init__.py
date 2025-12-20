@@ -880,7 +880,12 @@ class PoolKernel:
         if not exists(spath):
             raise PoolError(f"no pool found (POOL_DIR={self.path})")
 
-        self.buildroot = os.readlink(self.path_build_root)
+        self.buildroot: str | None
+        if islink(self.path_build_root):
+            self.buildroot = os.readlink(self.path_build_root)
+        else:
+            self.buildroot = None
+
         self.pkgcache = PackageCache(self.path_pkgcache)
         self.stocks = Stocks(
             self.path_stocks, self.pkgcache, [*recursed_paths, self.path]
