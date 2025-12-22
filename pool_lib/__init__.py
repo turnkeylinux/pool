@@ -1327,7 +1327,9 @@ class Pool:
         return cls(path)
 
     def __init__(
-        self, path: AnyPath | None = None, preserve_buildroot: str = "on-error"
+        self,
+        path: AnyPath | None = None,
+        preserve_buildroot: str | None = "on-error",
     ) -> None:
         kernel = PoolKernel(path, preserve_buildroot=preserve_buildroot)
         if kernel.drop_privileges(pretend=True):
