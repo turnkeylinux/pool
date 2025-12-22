@@ -110,7 +110,7 @@ def parse_package_filename(filename: str) -> tuple[str, str]:
     return name, version
 
 
-def set_deckdebuild_env(filename: str) -> dict[str, str]:
+def read_pkg_deckdebuild_env(filename: str) -> dict[str, str]:
     """Read 'DECKDEBUILD_*' env vars from file.
 
     Return dict of 'DECKDEBUILD_*' values. Values are read from repo env file
@@ -1037,7 +1037,9 @@ class PoolKernel:
         if source:
             args.append("--build-source")
         # read DECKDEBUILD_ENV if it exists, but existing env takes precidence
-        build_env = set_deckdebuild_env(join(source_path, "DECKDEBUILD_ENV"))
+        build_env = read_pkg_deckdebuild_env(
+            join(source_path, "DECKDEBUILD_ENV")
+        )
         with in_dir(source_path):
             command = [
                 "/usr/bin/deckdebuild",
