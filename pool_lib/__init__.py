@@ -1019,6 +1019,11 @@ class PoolKernel:
     def _build_package_source(
         self, source_path: str, name: str, version: str, source: bool = False
     ) -> None:
+        if self.buildroot is None:
+            raise PoolError(
+                "Cannot build a package in a pool without a buildroot"
+                " configured"
+            )
         build_outputdir = tempfile.mkdtemp(
             dir=self.path_tmp, prefix=f"{name}-{version}."
         )
