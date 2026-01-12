@@ -110,7 +110,7 @@ def parse_package_filename(filename: str) -> tuple[str, str]:
     return name, version
 
 
-def set_deckdebuild_env(filename: str) -> dict[str, str]:
+def read_pkg_deckdebuild_env(filename: str) -> dict[str, str]:
     """Read 'DECKDEBUILD_*' env vars from file.
 
     Return dict of 'DECKDEBUILD_*' values. Values are read from repo env file
@@ -880,7 +880,12 @@ class PoolKernel:
         if not exists(spath):
             raise PoolError(f"no pool found (POOL_DIR={self.path})")
 
-        self.buildroot = os.readlink(self.path_build_root)
+        self.buildroot: str | None
+        if islink(self.path_build_root):
+            self.buildroot = os.readlink(self.path_build_root)
+        else:
+            self.buildroot = None
+
         self.pkgcache = PackageCache(self.path_pkgcache)
         self.stocks = Stocks(
             self.path_stocks, self.pkgcache, [*recursed_paths, self.path]
@@ -1014,6 +1019,11 @@ class PoolKernel:
     def _build_package_source(
         self, source_path: str, name: str, version: str, source: bool = False
     ) -> None:
+        if self.buildroot is None:
+            raise PoolError(
+                "Cannot build a package in a pool without a buildroot"
+                " configured"
+            )
         build_outputdir = tempfile.mkdtemp(
             dir=self.path_tmp, prefix=f"{name}-{version}."
         )
@@ -1032,7 +1042,9 @@ class PoolKernel:
         if source:
             args.append("--build-source")
         # read DECKDEBUILD_ENV if it exists, but existing env takes precidence
-        build_env = set_deckdebuild_env(join(source_path, "DECKDEBUILD_ENV"))
+        build_env = read_pkg_deckdebuild_env(
+            join(source_path, "DECKDEBUILD_ENV")
+        )
         with in_dir(source_path):
             command = [
                 "/usr/bin/deckdebuild",
@@ -1259,7 +1271,9 @@ class Pool:
 
     @classmethod
     def init_create(
-        cls: type["Pool"], buildroot: AnyPath, path: AnyPath | None = None
+        cls: type["Pool"],
+        buildroot: AnyPath | None,
+        path: AnyPath | None = None,
     ) -> "Pool":
         if path is None:
             cwd = os.getcwd()
@@ -1280,7 +1294,7 @@ class Pool:
         if isdir(spath):
             raise PoolError("pool already initialized")
 
-        if not isdir(buildroot):
+        if buildroot is not None and not isdir(buildroot):
             raise PoolError(f"buildroot `{buildroot}' is not a directory")
 
         mkdir(path_stocks)
@@ -1311,12 +1325,18 @@ class Pool:
 
         Git.set_gitignore(spath, ["tmp"])
 
-        os.symlink(buildroot, path_build_root)
+        # if set, symlink path_build_root -> buildroot, otherwise touch
+        if buildroot is not None:
+            os.symlink(abspath(buildroot), path_build_root)
+        else:
+            open(path_build_root, "w").close()
 
         return cls(path)
 
     def __init__(
-        self, path: AnyPath | None = None, preserve_buildroot: str = "on-error"
+        self,
+        path: AnyPath | None = None,
+        preserve_buildroot: str | None = "on-error",
     ) -> None:
         kernel = PoolKernel(path, preserve_buildroot=preserve_buildroot)
         if kernel.drop_privileges(pretend=True):
