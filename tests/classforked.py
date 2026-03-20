@@ -25,10 +25,10 @@ class Error(Exception):
 class Pipe:
     def __init__(self):
         r, w = os.pipe()
-        self.r = os.fdopen(r, "r", 0)
-        self.w = os.fdopen(w, "w", 0)
+        self.r = os.fdopen(r, "rb", 0)
+        self.w = os.fdopen(w, "wb", 0)
 
-import new
+import types
 class ProxyInstance:
     """This proxy class only proxies method invocations - no attributes"""
     def __init__(self, r, w):
@@ -39,6 +39,7 @@ class ProxyInstance:
     def _proxy(attrname):
         def method(self, *args, **kws):
             pickle.dump((attrname, args, kws), self.w)
+            self.w.flush()
             error, val = pickle.load(self.r)
             if error:
                 raise val
@@ -46,10 +47,9 @@ class ProxyInstance:
         return method
 
     def __getattr__(self, name):
-        print "GETATTR"
+        print("GETATTR")
         unbound_method = self._proxy(name)
-        method = new.instancemethod(unbound_method,
-                                    self, self.__class__)
+        method = types.MethodType(unbound_method, self)
         setattr(self, name, method)
         return method
 
@@ -87,20 +87,20 @@ def Foo():
 
                 ret = attr(*args, **kws)
                 pickle.dump((False, ret), w)
-            except Exception, e:
+                w.flush()
+            except Exception as e:
                 pickle.dump((True, e), w)
+                w.flush()
 
         sys.exit(0)
 
     return ProxyInstance(r, w)
         
-print "caller pid: %d" % os.getpid()
+print("caller pid: %d" % os.getpid())
 foo = Foo()
-print "1 + 1 = %d" % foo.add(1, 1)
-print "dict: " + `foo.makedict("liraz", age=26)`
+print("1 + 1 = %d" % foo.add(1, 1))
+print("dict: " + repr(foo.makedict("liraz", age=26)))
 
-print "foo pid: %d" % foo.getpid()
-print "foo pid: %d" % foo.getpid()
-print "foo uid: %d" % foo.getuid()
-
-    
+print("foo pid: %d" % foo.getpid())
+print("foo pid: %d" % foo.getpid())
+print("foo uid: %d" % foo.getuid())

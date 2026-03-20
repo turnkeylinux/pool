@@ -17,13 +17,7 @@ def main():
 if __name__=="__main__":
     try:
         main()
-    except Exception, e:
+    except Exception as e:
         traceback.print_exc(file=sys.stderr)
         
 #        raise e.__class__, e, sys.exc_traceback
-
-
-
-        
-        
-        

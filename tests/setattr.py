@@ -9,10 +9,8 @@ class A(object):
             object.__setattr__(self, attrname, val)
             return
         
-        print "__setattr__(%s, %s)" % (`attrname`, `val`)
+        print("__setattr__(%s, %s)" % (repr(attrname), repr(val)))
 
 a = A(111)
-print a.a
-print a.b
-
-
+print(a.a)
+print(a.b)
