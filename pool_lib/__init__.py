@@ -149,7 +149,7 @@ def hardlink_or_copy(src: AnyPath, dst: AnyPath) -> None:
 
 
 @contextmanager
-def in_dir(path: AnyPath) -> Generator[None, None, None]:
+def in_dir(path: AnyPath) -> Generator[None]:
     """context manager to perform an operation within a specified directory"""
     cwd = os.getcwd()
     try:
@@ -162,7 +162,7 @@ def in_dir(path: AnyPath) -> Generator[None, None, None]:
 class PackageCache:
     """Class representing the pool's package cache"""
 
-    def _list_binaries(self) -> Generator[str, None, None]:
+    def _list_binaries(self) -> Generator[str]:
         """List binaries in package cache -> list of package filenames"""
         for filename in os.listdir(self.path):
             filepath = join(self.path, filename)
@@ -431,7 +431,7 @@ class Stock(StockBase):
                 v = orig.rev_parse(tag)
                 assert v is not None
                 checkout.update_ref(f"refs/tags/{tag}", v)
-            except:  # TODO don't use bare except!
+            except BaseException:  # TODO don't use bare except!
                 continue
 
         return checkout_path
@@ -729,14 +729,12 @@ class Stocks:
             blacklist: set[tuple[str, str]] = set()
             for path, versions in stock.sources:
                 name = basename(path)
-                blacklist |= set([(name, version) for version in versions])
+                blacklist |= {(name, version) for version in versions}
 
-            blacklist |= set(
-                [
-                    parse_package_filename(basename(path))
-                    for path in stock.binaries
-                ]
-            )
+            blacklist |= {
+                parse_package_filename(basename(path))
+                for path in stock.binaries
+            }
 
             removelist = set(self.pkgcache.list()) & blacklist
             for name, version in removelist:
@@ -936,7 +934,7 @@ class PoolKernel:
         for stock in self.stocks:
             for path, versions in stock.sources:
                 package = basename(path)
-                packages |= set([(package, version) for version in versions])
+                packages |= {(package, version) for version in versions}
 
         if all_versions:
             return list(packages)
@@ -1189,7 +1187,7 @@ class PoolKernel:
         for stock in self.stocks:
             for path, versions in stock.sources:
                 name = basename(path)
-                whitelist |= set([(name, version) for version in versions])
+                whitelist |= {(name, version) for version in versions}
 
             whitelist |= {
                 parse_package_filename(basename(path))
