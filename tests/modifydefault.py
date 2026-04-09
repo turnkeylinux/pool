@@ -3,6 +3,5 @@ def func(var, arr=[]):
 
     return arr
 
-print `func(1)`
-print `func(2)`
-
+print(repr(func(1)))
+print(repr(func(2)))
