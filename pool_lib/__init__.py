@@ -566,6 +566,28 @@ class Stock(StockBase):
         if self.branch:
             self.sync_head = Git(self.path_checkout).rev_parse("HEAD")
 
+    def __repr__(self) -> str:
+
+        def _abbreviate_src_versions() -> str:
+            return_str = "{"
+            for k, v in self.source_versions.items():
+                return_str += f"\n\t\t'{basename(k)}': ['{v[0]}', ...]"
+            return_str += "\n\t}"
+            return return_str
+
+        return (
+            f"Stock(\n\tpath_index_sources={self.path_index_sources},"
+            f"\n\tpath_index_binaries={self.path_index_binaries},"
+            f"\n\tpath_sync_head={self.path_sync_head},"
+            f"\n\tpath_checkout={self.path_checkout},"
+            f"\n\tpath_pool={self.path_pool},"
+            f"\n\tbranch={self.branch},"
+            f"\n\tsource_versions={_abbreviate_src_versions()},"
+            f"\n\tworkdir={self.workdir},"
+            f"\n\tpkgcache={self.pkgcache},"
+            "\n)"
+        )
+
 
 class Stocks:
     """Class for managing and quering Pool Stocks in aggregate.
