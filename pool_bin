@@ -12,7 +12,7 @@ import argparse
 import os
 import sys
 from collections.abc import Callable
-from os.path import basename, dirname, isdir
+from os.path import basename, dirname, isdir, islink, join, normpath, realpath
 from os.path import exists as path_exists
 from typing import IO, NoReturn
 
@@ -752,6 +752,18 @@ def main() -> None:
     parser_refresh.set_defaults(func=pool_refresh)
 
     args = parser.parse_args()
+    if subcommand != "init":
+        # check if configured buildroot is actually a buildroot
+        _pool_path = normpath(os.getenv("POOL_DIR", os.getcwd()))
+        _pool_buildroot = join(realpath(_pool_path), ".pool/build/root")
+        if islink(_pool_buildroot):
+            if not path_exists(join(_pool_buildroot, "bin/bash")):
+                fatal(
+                    f"buildroot ('{os.readlink(_pool_buildroot)}) does not"
+                    "appear to be a legitimate buildroot. Please see:"
+                    " https://github.com/turnkeylinux/buildroot"
+                )
+
     logger.debug(f"{args=}")
     if args.cmd:
         func = args.func

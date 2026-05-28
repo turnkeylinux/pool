@@ -566,6 +566,28 @@ class Stock(StockBase):
         if self.branch:
             self.sync_head = Git(self.path_checkout).rev_parse("HEAD")
 
+    def __repr__(self) -> str:
+
+        def _abbreviate_src_versions() -> str:
+            return_str = "{"
+            for k, v in self.source_versions.items():
+                return_str += f"\n\t\t'{basename(k)}': ['{v[0]}', ...]"
+            return_str += "\n\t}"
+            return return_str
+
+        return (
+            f"Stock(\n\tpath_index_sources={self.path_index_sources},"
+            f"\n\tpath_index_binaries={self.path_index_binaries},"
+            f"\n\tpath_sync_head={self.path_sync_head},"
+            f"\n\tpath_checkout={self.path_checkout},"
+            f"\n\tpath_pool={self.path_pool},"
+            f"\n\tbranch={self.branch},"
+            f"\n\tsource_versions={_abbreviate_src_versions()},"
+            f"\n\tworkdir={self.workdir},"
+            f"\n\tpkgcache={self.pkgcache},"
+            "\n)"
+        )
+
 
 class Stocks:
     """Class for managing and quering Pool Stocks in aggregate.
@@ -653,14 +675,16 @@ class Stocks:
 
     def register(self, stock_ref: str) -> None:
         logger.debug("Stocks.register")
-        _dir, branch = self._parse_stock(stock_ref)
-        logger.debug(f"parsed '{stock_ref}' -> _dir={_dir}, branch={branch}")
-        if not isdir(_dir):
-            raise PoolError(f"not a directory `{_dir}'")
+        src_dir, branch = self._parse_stock(stock_ref)
+        logger.debug(
+            f"parsed '{stock_ref}' -> src_dir={src_dir}, branch={branch}",
+        )
+        if not isdir(src_dir):
+            raise PoolError(f"not a directory `{src_dir}'")
 
         git: Git | None
         try:
-            git = Git(_dir)
+            git = Git(src_dir)
         except GitError:
             git = None
 
@@ -669,14 +693,14 @@ class Stocks:
         if (not git and branch) or (
             git and branch and not git.show_ref(branch.replace("%2F", "/"))
         ):
-            raise PoolError(f"no such branch `{branch}' at `{_dir}'")
+            raise PoolError(f"no such branch `{branch}' at `{src_dir}'")
 
         if git and not branch:
             ref_path = git.symbolic_ref("HEAD")
             branch = relpath(ref_path, "refs/heads").replace("/", "%2F")
             logger.info(f"chose branch {branch}")
 
-        stock_name = basename(abspath(_dir))
+        stock_name = basename(abspath(src_dir))
         if branch:
             stock_name += f"#{branch}"
 
@@ -686,29 +710,33 @@ class Stocks:
             )
 
         stock_path = join(self.path, stock_name)
-        Stock.create(stock_path, _dir)
+        Stock.create(stock_path, src_dir)
         self._load_stock(stock_path)
-        print(f"registered stock: {stock_path}")
+        stock_src = "#".join([src_dir, branch]) if branch else src_dir
+        print(f"registered stock: {stock_src}")
 
     def unregister(self, stock_ref: str) -> None:
-        dir, branch = self._parse_stock(stock_ref)
-        stock_name = basename(dir)
+        src_dir, branch = self._parse_stock(stock_ref)
+        stock_name = basename(src_dir)
         if branch:
             stock_name += f"#{branch}"
 
         matches: list[Stock] = []
         for stock in self.stocks.values():
-            if realpath(stock.link) == realpath(dir):
+            if realpath(stock.link) == realpath(src_dir):
                 if not isinstance(stock, Stock):
                     logger.warning(f"stock {stock!r} incorrect type!")
                 elif not branch or stock.branch == branch:
                     matches.append(stock)
 
         if not matches:
-            raise PoolError("no matches for unregister")
+            raise PoolError(f"no matches for 'unregister {stock_ref}'")
 
         if len(matches) > 1:
-            raise PoolError("multiple implicit matches for unregister")
+            raise PoolError(
+                f"multiple implicit matches for 'unregister {stock_ref}' -"
+                " specify stock with a '#<branch>' suffix",
+            )
 
         stock = matches[0]
 
@@ -741,7 +769,10 @@ class Stocks:
                 self.pkgcache.remove(name, version)
 
         shutil.rmtree(stock.path_root)
-        print(f"unregistered stock: {stock.name}")
+
+        branch = stock.branch if branch is None else branch
+        stock_src = "#".join([src_dir, branch]) if branch else src_dir
+        print(f"unregistered stock: {stock_src}")
 
     def sync(self) -> None:
         """sync all non-subpool stocks"""
