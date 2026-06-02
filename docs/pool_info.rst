@@ -1,165 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet ekr_test?>
-<leo_file>
-<leo_header file_format="2" tnodes="0" max_tnode_index="2" clone_windows="0"/>
-<globals body_outline_ratio="0.227743271222">
-	<global_window_position top="0" left="647" height="966" width="623"/>
-	<global_log_window_position top="0" left="0" height="0" width="0"/>
-</globals>
-<preferences/>
-<find_panel_settings/>
-<vnodes>
-<v t="loni.20100827184947" a="E"><vh>Project</vh>
-<v t="loni.20100827184947.1" a="E"><vh>design</vh>
-<v t="loni.20100827184947.2"><vh>brainstorming</vh>
-<v t="zaril.20100828060043"><vh>first draft</vh></v>
-</v>
-<v t="zaril.20100828055849"><vh>terminology</vh></v>
-<v t="loni.20100827184947.4"><vh>file/data structure</vh></v>
-<v t="loni.20100827184947.5"><vh>cli syntax</vh></v>
-<v t="loni.20100827184947.6"><vh>usage examples</vh></v>
-</v>
-<v t="loni.20100827184947.7" a="E"><vh>implementation</vh>
-<v t="zaril.20101018013654"><vh>v0.9</vh>
-<v t="zaril.20100906050211" a="E"><vh>implement full command set for binaries in regular directories</vh></v>
-<v t="zaril.20100906050211.1"><vh>init /path/to/build-chroot</vh></v>
-<v t="zaril.20100906050211.2"><vh>register / unregister # regular directories</vh></v>
-<v t="zaril.20100906230204"><vh>info</vh></v>
-<v t="zaril.20100906050211.4"><vh>exists</vh>
-<v t="zaril.20100907030232"><vh>refactor away stock</vh></v>
-</v>
-<v t="zaril.20100906050211.5"><vh>list</vh></v>
-<v t="zaril.20100906050211.6"><vh>get</vh></v>
-<v t="zaril.20100909033533"><vh>pool contains pool</vh></v>
-<v t="zaril.20100910205006"><vh>BUG: sync not importing binaries?</vh></v>
-<v t="zaril.20100909050527"><vh>support regular sources in regular directories</vh>
-<v t="zaril.20100911052023" a="M"><vh>setup a local caching proxy</vh>
-<v t="zaril.20100912044439" a="M"><vh>fix squid</vh></v>
-<v t="zaril.20100912052909"><vh>configure jaunty to use apt-proxy</vh></v>
-<v t="zaril.20100912065617"><vh>apt-proxy README</vh></v>
-<v t="zaril.20100912052439"><vh>test debootstrap with caching proxy</vh></v>
-</v>
-<v t="zaril.20100910021430" a="M"><vh>research existing solutions</vh>
-<v t="zaril.20100910040422.2" a="M"><vh>explore cowdancer</vh></v>
-<v t="zaril.20100911012707" a="M"><vh>explore fl-cow</vh></v>
-<v t="zaril.20100912055420" a="M"><vh>exlore apt-move</vh></v>
-<v t="zaril.20100911004946" a="E"><vh>explore pbuilder</vh>
-<v t="zaril.20100918092126"><vh>alternatives</vh></v>
-</v>
-<v t="zaril.20100923230802" a="M"><vh>explore sbuild</vh></v>
-<v t="zaril.20100916032546" a="M"><vh>explore build dependencies</vh></v>
-<v t="zaril.20100911091317"><vh>research suid</vh></v>
-</v>
-<v t="zaril.20100923043734" a="EM"><vh>exists</vh></v>
-<v t="zaril.20100923071058"><vh>list</vh></v>
-<v t="zaril.20100923072629"><vh>get</vh></v>
-</v>
-<v t="zaril.20100930001758"><vh>sort debian packages according to dpkg algorithm</vh></v>
-<v t="zaril.20100930010726"><vh>fix getpath to get newest packages?</vh>
-<v t="zaril.20100930021923"><vh>pool.Pool().list() can not be invoked twice</vh></v>
-</v>
-<v t="zaril.20100923143609"><vh>support complex stock types</vh>
-<v t="zaril.20100929193931" a="E"><vh>test/develop lightweight branch cloning</vh></v>
-<v t="zaril.20101003042126"><vh>support Git branches</vh>
-<v t="zaril.20101003051253" a="M"><vh>register git branches</vh></v>
-<v t="zaril.20101003051313" a="M"><vh>fix info</vh></v>
-<v t="zaril.20101003051253.1" a="EM"><vh>unregister git branches</vh></v>
-<v t="zaril.20101003054139" a="M"><vh>exists</vh>
-<v t="zaril.20101003091746"><vh>Stock.sync</vh>
-<v t="zaril.20101005045129" a="E"><vh>light update of light clone</vh></v>
-<v t="zaril.20101005065057"><vh>copy all tags</vh></v>
-</v>
-</v>
-<v t="zaril.20101003054139.1" a="M"><vh>list</vh></v>
-<v t="zaril.20101003054139.2"><vh>get</vh></v>
-</v>
-<v t="zaril.20101006063626"><vh>fix subpools</vh></v>
-<v t="zaril.20101006073117" a="M"><vh>optimize Stock attributes</vh></v>
-<v t="zaril.20101005094458"><vh>support Sumo branches</vh></v>
-</v>
-<v t="zaril.20101005221943" a="EM"><vh>extend pool-info</vh></v>
-<v t="zaril.20101007060755"><vh>pool-info-build package</vh>
-<v t="zaril.20101007101419"><vh>add build logs to pool-info</vh></v>
-<v t="zaril.20101007100036"><vh>support binary names</vh></v>
-</v>
-<v t="zaril.20101006120036"><vh>fix pool-info handling of --stocks and --subpools?</vh></v>
-<v t="zaril.20101011042720"><vh>bug: debversion.compare mis-calculating integers</vh>
-<v t="zaril.20101011052050"><vh>optimize</vh></v>
-<v t="zaril.20101011074222"><vh>normalize bug</vh></v>
-</v>
-</v>
-<v t="zaril.20101018013654.1" a="E"><vh>unreleased</vh>
-<v t="zaril.20101011023841" a="EM"><vh>bug: deb_cmp_versions doesn't work correctly</vh></v>
-<v t="zaril.20101014093949" a="M"><vh>bug: lexical comparison in debversion is wrong</vh></v>
-<v t="zaril.20101018013654.3" a="EM"><vh>pool-gc</vh></v>
-<v t="zaril.20101018204912" a="M"><vh>remove cached packages when we unregister a stock</vh></v>
-<v t="zaril.20101018013654.2" a="M"><vh>optimize pool-get'ing a cached binary</vh>
-<v t="zaril.20101019010153"><vh>add internal cache to PackageCache</vh></v>
-<v t="zaril.20101019010223"><vh>make syncing optional</vh></v>
-</v>
-<v t="zaril.20101021175833" a="EM"><vh>bug: pool-info-build broken</vh></v>
-<v t="zaril.20101025111704" a="M"><vh>bug: pool doesn't reproduce thin branch</vh></v>
-<v t="zaril.20101105195018" a="M"><vh>setup regression testing suite</vh>
-<v t="zaril.20101112071603"><vh>setup pyhello</vh></v>
-</v>
-<v t="zaril.20101111222506" a="M"><vh>clean up pool code?</vh></v>
-<v t="zaril.20101101154405"><vh>bug: permission problems when root runs the pool</vh>
-<v t="zaril.20101114125827"><vh>bug: pool-list delayed</vh></v>
-</v>
-<v t="zaril.20101120011327" a="E"><vh>bug: pool ignores epoch in versions</vh></v>
-<v t="zaril.20101121151810"><vh>optimize extraction of control file from Debian package</vh>
-<v t="zaril.20101121190053"><vh>optimize parse_control</vh></v>
-<v t="zaril.20101121170651" a="E"><vh>implement a generic key/value filesystem cache</vh></v>
-<v t="zaril.20101121182502"><vh>profile optimization</vh></v>
-<v t="zaril.20101121203823"><vh>use md5sum instead of sha1?</vh></v>
-<v t="zaril.20101121195130" a="E"><vh>calculate key just by the hash of the control</vh>
-<v t="zaril.20101121210322"><vh>extract control.tar.gz from python</vh>
-<v t="zaril.20101122221539"><vh>optimize?</vh></v>
-</v>
-</v>
-<v t="zaril.20101122225546"><vh>optimization: implement extraction of control file fully in Python</vh></v>
-</v>
-<v t="zaril.20101120203018"><vh>bug: mishandling udebs?</vh></v>
-<v t="zaril.20101118214921" a="E"><vh>add pool-info command that shows the source of binary packages</vh>
-<v t="zaril.20101123043551"><vh>add --binary-versions option to pool-info command</vh></v>
-</v>
-<v t="zaril.20101123051529"><vh>patch unregister and gc to take advantage of binary-versions</vh></v>
-<v t="zaril.20101125202956"><vh>optimize pool privilege dropping</vh>
-<v t="zaril.20101126004951"><vh>implement POC master/slave RPC</vh></v>
-<v t="zaril.20101126225101"><vh>benchmark forked_constructor vs forked_func</vh></v>
-<v t="zaril.20101126233132"><vh>hack pool</vh></v>
-<v t="zaril.20101127211846"><vh>control initialization of Pool with __new__</vh></v>
-<v t="zaril.20101126092908"><vh>develop attribute access</vh></v>
-<v t="zaril.20101128183305"><vh>work out bugs</vh></v>
-<v t="zaril.20101128185308"><vh>stress test</vh></v>
-<v t="zaril.20101126092948"><vh>communicate exception backtrace?</vh></v>
-<v t="zaril.20101128223512" a="E"><vh>bug: some operations are executed as root</vh></v>
-</v>
-<v t="zaril.20110213045733" a="ETV"><vh>refactor cli interface into Pool</vh>
-<v t="zaril.20110213074424" a="M"><vh>list</vh></v>
-<v t="zaril.20110213212432" a="M"><vh>get</vh></v>
-</v>
-</v>
-</v>
-<v t="zaril.20101007151726" a="E"><vh>bugs/wishlist</vh>
-<v t="zaril.20110109153840"><vh>pool info command that shows the source of a package</vh></v>
-<v t="zaril.20110105152053"><vh>adapter that allows pool to be accessed by apt-get</vh></v>
-<v t="zaril.20101022061317"><vh>bug: pool assumes that packages have always existed in all versions</vh></v>
-<v t="zaril.20101009193905"><vh>accept multi-arguments in register/unregister?</vh></v>
-<v t="zaril.20101007101547"><vh>auto less output in pool-info? / pool-info-build</vh></v>
-</v>
-</v>
-</vnodes>
-<tnodes>
-<t tx="loni.20100827184947">@nocolor
-</t>
-<t tx="loni.20100827184947.1">The pool is a system thats maintains a pool of binary packages which may be either imported as-is from a registered collection of binaries, or built on-demand from a registered source or collection of sources.
+@nocolor
+
+The pool is a system thats maintains a pool of binary packages which may be either imported as-is from a registered collection of binaries, or built on-demand from a registered source or collection of sources.
 
 The dominant abstraction for the pool is a virtual filesystem 
 folder that you can get get specific versions of specific packages from. Behind the scenes, the pool will build those binary packages for from source if required and cache the built binaries for future access.
 
-In this sense calling it a pool is in line with software terminology conventions [http://en.wikipedia.org/wiki/Object_pool].</t>
-<t tx="loni.20100827184947.2">* IDEAS
+In this sense calling it a pool is in line with software terminology conventions [http://en.wikipedia.org/wiki/Object_pool].
+* IDEAS
 change untagged auto-versioning to always be smaller than tagged autoversioning
 
 auto-versioning a separate program?
@@ -168,7 +15,7 @@ auto-versioning a separate program?
 leave failed builds in temporary directory
     so we can diagnose problem manually
 
-    $TMPDIR/pool/&lt;poolname&gt;/&lt;package&gt;
+    $TMPDIR/pool/<poolname>/<package>
 
 figure out how to allow packages to be built manually
     unversioned - for testing?
@@ -236,32 +83,32 @@ Q: do we support different versioning for single-debian package and multi-debian
 Q: can we support object caching safely?
 A:
     if its content addressable then yes
-</t>
-<t tx="loni.20100827184947.4">Notes: 
+
+Notes: 
 * The pools tucks away all of its internals neatly out of site in a `hidden' directory. The reason for doing this was to make it easy to treat the pool as a `special' directory, which may contain registered stocks or subpools as sub-directories.
 
 * The pool has no data formats/configuration files. All of its `data' is stored directly as filesystem constructs.
 
 .pool/
     build/
-        root -&gt; /path/to/buildroot # symbolic link
+        root -> /path/to/buildroot # symbolic link
         logs/
-            &lt;package&gt;-&lt;version&gt;.build
+            <package>-<version>.build
                 log of the build process
        
     pkgcache/
-        &lt;package&gt;-&lt;version&gt;.&lt;arch&gt;.deb # maybe in a pool-like tree
+        <package>-<version>.<arch>.deb # maybe in a pool-like tree
     
     stock/
-        &lt;name&gt;#&lt;branch&gt;/
-            link -&gt; /path/to/stock # symbolic link to the stock
+        <name>#<branch>/
+            link -> /path/to/stock # symbolic link to the stock
     
             index-sources/
-                &lt;relative-path&gt;/&lt;package&gt;
+                <relative-path>/<package>
                     contains cached list of versions
 
             index-binaries/
-                &lt;relative-path&gt;/&lt;package-filename&gt;
+                <relative-path>/<package-filename>
                     zero size
 
             SYNC_HEAD # contains the last checkout/.git/HEAD we synced against
@@ -274,8 +121,8 @@ A:
 
 
 
-    </t>
-<t tx="loni.20100827184947.5">=== ENVIRONMENT
+    
+=== ENVIRONMENT
 
     POOL_DIR        defaults to cwd
 
@@ -313,22 +160,22 @@ A:
         or no information if it wasn't built
         or an error that the package doesn't exist
 
-* get [-options] &lt;output-dir&gt; [ package[=version] ... ]
+* get [-options] <output-dir> [ package[=version] ... ]
 Get packages from pool
 
   If a package is specified without a version, get the newest package.
   If no packages are specified as arguments, get all the newest packages.
 
 Options:
-  -i --input &lt;file&gt;     file from which we read package list (- for stdin)
+  -i --input <file>     file from which we read package list (- for stdin)
 
   -s --strict           fatal error on missing packages
   -q --quiet            suppress warnings about missing packages
 
   -t --tree             output dir is in a package tree format (like a repository)
   
-* list [ &lt;package-glob&gt; ]
-    if &lt;package-glob&gt; is provided, print only those packages whose names match the glob
+* list [ <package-glob> ]
+    if <package-glob> is provided, print only those packages whose names match the glob
     otherwise, by default, print a list of the newest packages
 
     -a --all-versions
@@ -341,7 +188,7 @@ Options:
 * exists package[=version]
 Check if package exists in pool
 
-Prints true/false if &lt;package&gt; exists in the pool.
+Prints true/false if <package> exists in the pool.
 If true exitcode = 0, else exitcode = 1
 
 === FUTURE CLI?
@@ -357,8 +204,8 @@ open
     open the FUSE-based filesystem representation of the pool
 
 close
-    close the FUSE-based filesystem representation of the pool</t>
-<t tx="loni.20100827184947.6">cd pools
+    close the FUSE-based filesystem representation of the pool
+cd pools
 
 mkdir private
 cd private
@@ -422,11 +269,11 @@ for package in $(cat /path/to/versioned-product-manifest); do
     if pool-exists -q $package; then
         pool-get /tmp/product-repo --tree -s $package
     fi
-done</t>
-<t tx="loni.20100827184947.7">ROADMAP
+done
+ROADMAP
 support Sumo arenas
-</t>
-<t tx="zaril.20100828055849">pool
+
+pool
     a system for which maintains a pool of binary packages built on-demand from registered stock
 
 stock
@@ -462,8 +309,8 @@ build log
 
 package cache
     a cache of binary packages either built from source or imported as-is
-</t>
-<t tx="zaril.20100828060043">Q: how do i name this project?
+
+Q: how do i name this project?
 
 alternatives
     pms (package management system), and you know what else...
@@ -521,10 +368,10 @@ latest?
     current
 
 
-A: the action is to generate, the outcome is an instance.</t>
-<t tx="zaril.20100906050211">
-</t>
-<t tx="zaril.20100906050211.1">initialize a new pool
+A: the action is to generate, the outcome is an instance.
+
+
+initialize a new pool
 
 * init /path/to/build-chroot
     initialize a new pool
@@ -534,8 +381,8 @@ A: the action is to generate, the outcome is an instance.</t>
     mkdir .pool/build/logs
     link .pool/build to buildroot
 
-</t>
-<t tx="zaril.20100906050211.2">* register /path/to/stock
+
+* register /path/to/stock
     register a package stock with the pool
     stock type can be:
         another pool
@@ -552,15 +399,15 @@ no auto-versioning
 * register logic
     raise exception if stock is already registered
     if it isn't, register stock by
-        creating stock/&lt;stock_name&gt;
+        creating stock/<stock_name>
         creating symbolic link
-            ln -s &lt;dir&gt; stock/&lt;stock_name&gt;/path
+            ln -s <dir> stock/<stock_name>/path
 
 * unregister logic
     raise "stock not registered" exception if  dir doesn't match stock/path
     rmdir .pool/stock/name
-    </t>
-<t tx="zaril.20100906050211.4">TESTS: 
+    
+TESTS: 
     register a directory with one binary package
     register another directory with two more packages
 
@@ -579,9 +426,9 @@ sync logic
         hardlink/copy into cache
     
 
-    </t>
-<t tx="zaril.20100906050211.5">* list [ &lt;package-glob&gt; ]
-    if &lt;package-glob&gt; is provided, print only those packages whose names match the glob
+    
+* list [ <package-glob> ]
+    if <package-glob> is provided, print only those packages whose names match the glob
     otherwise, by default, print a list of the newest packages
 
     -a --all-versions
@@ -589,8 +436,8 @@ sync logic
 
     -n --name-only
         print only the names of packages in the pool (without the version)
-            incompatible with -a option</t>
-<t tx="zaril.20100906050211.6">logic
+            incompatible with -a option
+logic
     if no arguments, list the newest packages
 
     check if package exists
@@ -605,18 +452,18 @@ sync logic
         ask the pool to output that package to the outputdir
 
 
-    </t>
-<t tx="zaril.20100906230204">* logic
+    
+* logic
     list .pool/stock subdirectories
     for each stock:
         print its path
-</t>
-<t tx="zaril.20100907030232">class PoolStocks:
+
+class PoolStocks:
     def __init__(self):
         pass
 
-</t>
-<t tx="zaril.20100909033533">ROADMAP
+
+ROADMAP
     solve typing issue
     proxy all pool functions
     handle circular dependencies
@@ -629,8 +476,8 @@ A:
 Q: how do I prevent cyclic subpools?
 A:
     track recursed_paths. Prevent 
-</t>
-<t tx="zaril.20100909050527">* ROADMAP
+
+* ROADMAP
 exists
 list
 get
@@ -641,7 +488,7 @@ get
 
 * IDEAS
 get_sources
-    path/to/dir/package-name: &lt;version&gt;
+    path/to/dir/package-name: <version>
 
 add all legally listed binary packages files we build to cache
     (so we don't have to rebuild the same package multiple times)
@@ -650,16 +497,16 @@ extract package to package build directory
     
 we need to install build dependencies to the buildroot  
     with apt-get
-   </t>
-<t tx="zaril.20100910021430">
+   
+
 * TODO
 explore building packages with pbuilder
     Q: does pbuilder need root privileges?
     Q: can we use fakeroot?
     Q: how does pbuilder work?
 
-</t>
-<t tx="zaril.20100910040422.2">SUMMARY
+
+SUMMARY
 
 how it works
     LD_PRELOAD trick
@@ -669,7 +516,7 @@ how it works
 
 usage
     cp -al src dst
-    cd dst &amp;&amp; cow-shell
+    cd dst && cow-shell
         file hardlinked - wil be copied to a new file before write
 
 usage with chroot
@@ -685,9 +532,8 @@ cowdancer is copy-on-write upon directory trees copied with cp -la
 pdebuild --pbuilder cowbuilder 
 
 
-    </t>
-<t tx="zaril.20100910205006"></t>
-<t tx="zaril.20100911004946">Q: does the pbuilder environment setup mounts?
+    
+Q: does the pbuilder environment setup mounts?
 
 TODO
     read manual
@@ -742,7 +588,7 @@ INSIGHT: cowdancer is not secure for isolation purposes
     hardlinks could be modified
 
 
-RESOURE: http://apsy.gse.uni-magdeburg.de/main/index.psp?page=hanke/pbuilder-ssh&amp;lang=en
+RESOURE: http://apsy.gse.uni-magdeburg.de/main/index.psp?page=hanke/pbuilder-ssh&lang=en
 
 pbuilder-ssh: remote front-end for pbuilder
     not part of the distribution
@@ -756,13 +602,13 @@ pbuilder doesn't try to guess what the package needs
 pbuilder create
     create base chroot image with debootstrap
     --distribution 
-</t>
-<t tx="zaril.20100911012707">same principle as cowdancer, slightly different implementation
+
+same principle as cowdancer, slightly different implementation
 
 fl-cow will apply to any directory inside FLCOW_PATH
 
-</t>
-<t tx="zaril.20100911052023">* SUMMARY
+
+* SUMMARY
 what is this good for?
     we don't want to retrieve build dependencies over the network over and over again
         IDEA: patch apt-proxy so it doesn't hang if it can't retrieve a new Packages/Sources
@@ -961,15 +807,15 @@ adjust refresh patterns with
 
 * RESOURCE: http://apt-proxy.sourceforge.net/
 
-    </t>
-<t tx="zaril.20100911091317">SUMMARY
+    
+SUMMARY
     to do chroot we need suid privileges
     how do we do this correctly?
 
 RESOURCE: http://www.cs.berkeley.edu/~daw/papers/setuid-usenix02.pdf
 
-</t>
-<t tx="zaril.20100912044439">* SUMMARY:
+
+* SUMMARY:
     giving up on squid for now - Gentoo package is broken
 
 * GOTCHA:
@@ -1006,10 +852,10 @@ recommended configuration
     
     http_access allow my_network			#allow access for our network
     http_access deny all				#and deny from all others
-</t>
-<t tx="zaril.20100912052439">debootstrap jaunty jaunty http://apt:9999/ubuntu
-</t>
-<t tx="zaril.20100912052909">emacs /etc/hosts
+
+debootstrap jaunty jaunty http://apt:9999/ubuntu
+
+emacs /etc/hosts
     127.0.0.1   apt
 
 ping apt
@@ -1023,13 +869,13 @@ import packages from apt-cache?
     no it doesn't work - broken on ubuntu
 
 
-</t>
-<t tx="zaril.20100912055420">maintains a local mirror from various sources
+
+maintains a local mirror from various sources
 
 configured by default to create a mirror from apt's cache
 
 caches the control file of packages
-    .index/&lt;package&gt;
+    .index/<package>
 
 configuration file
     LOCALDIR        absolute path to your mirror
@@ -1054,8 +900,8 @@ apt-move packages
 
 GOTCHA:
     apt-move packages aren't authenticated
-        http://wiki.debian.org/SecureApt</t>
-<t tx="zaril.20100912065617">A2: debootstrap, which uses wget.  This means you can easily install new
+        http://wiki.debian.org/SecureApt
+A2: debootstrap, which uses wget.  This means you can easily install new
     machine using the packages out of your apt-proxy cache.  In boot floppies,
     specify http://APTPROXY:9999/main as your debian mirror (replacing APTPROXY
     with the name or IP address of the machine where apt-proxy is running).
@@ -1075,8 +921,8 @@ A4: pbuilder, which also uses debootstrap.  Add this to /etc/pbuilderrc:
 
         MIRRORSITE=http://APTPROXT:9999/main
         NONUSMIRRORSITE=http://APTPROXT:9999/non-US
-</t>
-<t tx="zaril.20100916032546">SUMMARY
+
+SUMMARY
     location of Packages/Sources
         /var/lib/apt/lists
 
@@ -1101,10 +947,10 @@ INSIGHT: the lack of build dependencies is a QA feature
 
 * analysis of build-dependencies in Ubuntu
 
-cat /var/lib/apt/lists/*Sources | grep-dctrl -n -s Build-Depends  ""|sed 's/, /\n/g'|sort -u &gt; build-depends
+cat /var/lib/apt/lists/*Sources | grep-dctrl -n -s Build-Depends  ""|sed 's/, /\n/g'|sort -u > build-depends
     7238 different packages with different versions
 
-cat build-depends | perl -pe 's/\s*[,\|]\s*/\n/g' | perl -pe 's/\s*\(.*//; s/^\s*//; s/\[.*//' | sort -u &gt; build-depends-pkgs
+cat build-depends | perl -pe 's/\s*[,\|]\s*/\n/g' | perl -pe 's/\s*\(.*//; s/^\s*//; s/\[.*//' | sort -u > build-depends-pkgs
     3078 different packages (multiple versions counted)
 
 apt-cache show $(cat build-depends-pkgs) | grep-dctrl -n -s Installed-Size "" | awk '{ sum += $1 } END { print sum }' 
@@ -1113,29 +959,29 @@ apt-cache show $(cat build-depends-pkgs) | grep-dctrl -n -s Installed-Size "" | 
 
 IDEA: extract build dependencies for the packages in world
 
-cat /turnkey/repository/*/*/Packages &gt; sphinx
-apt-cache showsrc $(cat sphinx | grep-dctrl -n -s Package "" |sort -u) &gt; sphinx-sources
+cat /turnkey/repository/*/*/Packages > sphinx
+apt-cache showsrc $(cat sphinx | grep-dctrl -n -s Package "" |sort -u) > sphinx-sources
     567 binaries
     546 sources
 
-cat sphinx-sources |grep-dctrl -n -s Build-Depends "" | perl -pe 's/\s*[,\|]\s*/\n/g' |sort -u &gt; sphinx-sources-builddeps 
+cat sphinx-sources |grep-dctrl -n -s Build-Depends "" | perl -pe 's/\s*[,\|]\s*/\n/g' |sort -u > sphinx-sources-builddeps 
     742 build depends (with different versions)
 
-cat sphinx-sources-builddeps |  perl -pe 's/\s*\(.*//; s/^\s*//; s/\[.*//' |sort -u &gt; sphinx-sources-builddeps-pkgs
+cat sphinx-sources-builddeps |  perl -pe 's/\s*\(.*//; s/^\s*//; s/\[.*//' |sort -u > sphinx-sources-builddeps-pkgs
     438 build depends (different versions counted once)
 
 apt-cache show $(cat sphinx-sources-builddeps-pkgs) | grep-dctrl -n -s Installed-Size "" | awk '{ sum += $1 } END { print sum }'
     771MB
 
-</t>
-<t tx="zaril.20100918092126">apt-build
+
+apt-build
 debian-builder
 
 
 
 
-</t>
-<t tx="zaril.20100923043734">assume get_sources returns:
+
+assume get_sources returns:
     /path/to/package: version
 
 get_sources logic
@@ -1153,9 +999,8 @@ parse output from dpkg-parsechangelog
         
                 ^(\w[-+0-9a-z.]*) \(([^\(\) \t]+)\)((\s+[-+0-9a-z.]+)+)\;/i
 parse the changelog ourselves
-</t>
-<t tx="zaril.20100923071058"></t>
-<t tx="zaril.20100923072629">getpath logic
+
+getpath logic
     try to get the package from the cache, but if we can't:
         search stocks to find source path matching package/version
         deckdebuild the package with the provided build root
@@ -1166,8 +1011,8 @@ parse the changelog ourselves
 
 POOL_TMPDIR     defaults to TMPDIR or /var/tmp
 
-$POOL_TMPDIR/&lt;package&gt;-&lt;version&gt;/
-    &lt;package&gt;-&lt;version&gt;
+$POOL_TMPDIR/<package>-<version>/
+    <package>-<version>
     *.debs
 
 
@@ -1189,8 +1034,8 @@ A: not really the source is a full filesystem path (unless we want to report an 
 * TODO:
 debsrc.get_name
 pool.tmpdir
-</t>
-<t tx="zaril.20100923143609">TODO: fixed untagged auto-versioning
+
+TODO: fixed untagged auto-versioning
 
 features
     support branches in Git repositories
@@ -1227,8 +1072,8 @@ tests/milestones
             get that stable versions built
 
    register a Sumo repository
-</t>
-<t tx="zaril.20100923230802">SUMMARY
+
+SUMMARY
     sbuild mails build logs to maintainer
 
     builds from dsc
@@ -1236,8 +1081,8 @@ tests/milestones
 Q: how is sbuild different from pbuilder?
 A: doesn't build the package directly from source (pdebuild)
 (though generating source package is not a problem)
-</t>
-<t tx="zaril.20100929193931">SUMMARY
+
+SUMMARY
     goal: checkout a specific branch to a separate working directory as efficiently as possible
     insight: we may to modify this script somewhat to work with Sumo arenas
         use sumo-checkout instead of git-checkout
@@ -1265,36 +1110,36 @@ logic
     rm -f .git/refs/remotes/origin/HEAD
     mv .git/refs/remotes/origin/* .git/refs/heads
 
-    git-checkout -q &lt;branch&gt;
+    git-checkout -q <branch>
 
 test
     cd /turnkey/tmp/testgit
     rm -rf test
     git-clone-branch ../pyproject/ master test
 
-</t>
-<t tx="zaril.20100930001758">trailing zeros not considered
+
+trailing zeros not considered
     -2010 == 0-2010
     
-    \d-2010 &gt; 0-2010
+    \d-2010 > 0-2010
 
     2010 == 2010-0000
 
     1.01 == 1.1
 
-    1.02 &gt; 1.1  
+    1.02 > 1.1  
 
-    2010.1 &gt; 2010-1
+    2010.1 > 2010-1
 
-    2010:1 &gt; 2010.1
+    2010:1 > 2010.1
 
 logic
     remove trailing zeros after any non-number
 
 IDEA: translate sort algorithm directly to python?
     just remove trailing zeros?
-</t>
-<t tx="zaril.20100930010726">TEST
+
+TEST
     get pool to give you an older package than is available
         put newer package in subpool
         older package in cache will be returned
@@ -1320,10 +1165,9 @@ cli level solution
 
 
         
-</t>
-<t tx="zaril.20100930021923">problem: modification of default array value</t>
-<t tx="zaril.20101003042126"></t>
-<t tx="zaril.20101003051253">
+
+problem: modification of default array value
+
 test: 
     register /turnkey/tmp/verseek/git-single    
         should register checked out branch (e.g., master)
@@ -1341,8 +1185,8 @@ register logic
     check that the directory exists
     try to create a git instance at that directory
         if stock is a git repo and branch is none:
-            branch = currently checked out branch</t>
-<t tx="zaril.20101003051253.1">roadmap
+            branch = currently checked out branch
+roadmap
     specific branches unregistered
         require explicit branch specification
 
@@ -1356,9 +1200,8 @@ implicit branch unregistration
 
 
 
-</t>
-<t tx="zaril.20101003051313"></t>
-<t tx="zaril.20101003054139">test
+
+test
     pool-register /turnkey/tmp/verseek/git-single#devel
     pool-exists pyproject=1.0
 
@@ -1423,17 +1266,16 @@ Stock interface
 
     versions
         (relative/path, versions)
-</t>
-<t tx="zaril.20101003054139.1"></t>
-<t tx="zaril.20101003054139.2">logic
+
+logic
     verseek to desired version
-    chdir to &lt;workdir&gt;/relative_path
+    chdir to <workdir>/relative_path
     deckdebuild
     import built package into cache
     return the path to the built package
 
-</t>
-<t tx="zaril.20101003091746">psuedo-logic
+
+psuedo-logic
 
 HEAD is a special file
 
@@ -1460,14 +1302,14 @@ checkout logic
         set atlernates to point to original repo
 
     update/create the desired branch on checkout
-        git-update-ref refs/heads/&lt;branch&gt; &lt;commit&gt;
+        git-update-ref refs/heads/<branch> <commit>
     
     checkout the desired branch    
-        git-checkout -q -f &lt;branch&gt;
+        git-checkout -q -f <branch>
 
     create HEAD
-</t>
-<t tx="zaril.20101005045129">IDEA: 
+
+IDEA: 
 
 
 IDEAS: 
@@ -1495,7 +1337,7 @@ TODO
 
 * test direct alternates creation
 git-init
-echo /path/to/orig/.git/objects &gt; .git/objects/info/alternates
+echo /path/to/orig/.git/objects > .git/objects/info/alternates
 
 git-update-ref refs/heads/devel 0fb016541ae7608a137c9bdf1d047e87e7a6991b
 git-checkout -q -f devel
@@ -1505,11 +1347,11 @@ git-checkout -q -f devel
 
 
 
-    </t>
-<t tx="zaril.20101005065057">GOTCHA: rev-parse tag^0 != rev-parse tag
+    
+GOTCHA: rev-parse tag^0 != rev-parse tag
     the first returns the commit pointed to by the tag, the second returns the tag object
-</t>
-<t tx="zaril.20101005094458">detect logic
+
+detect logic
     arena.internals?
     sumo-base
         would work anywhere in the arena (union, internals, etc)
@@ -1518,8 +1360,8 @@ logic
     we need to open the arena in the checkout directory
     we to adjust the directory we scan
 
-</t>
-<t tx="zaril.20101005221943">Q: how do we handle subpools?
+
+Q: how do we handle subpools?
 A:
     we'll need to show the full stock path, not just the name
         package=version stock_path[#branch] relative_path
@@ -1537,27 +1379,27 @@ extend pool-info
     --subpools              show sub-poolsl
     --buildroot             show buildroot
     --pkgcache              show package cache
-    --source-versions       show source versions</t>
-<t tx="zaril.20101006063626">StockSubpool should detect circular dependencies
+    --source-versions       show source versions
+StockSubpool should detect circular dependencies
     if its link is in the recursed_paths
 
 register/unregister
 
 Q: can a new-class object inherit from an old-style object?
-</t>
-<t tx="zaril.20101006073117">slowing everything down (even pool-info)
+
+slowing everything down (even pool-info)
 magical object with cache
 
 or set it to None on initialisation and init on demand
-</t>
-<t tx="zaril.20101006120036">--registered (default)
+
+--registered (default)
     shows stocks and subpools
 
 --stocks
     only shows stocks
 --subpools
-    only shows subpools</t>
-<t tx="zaril.20101007060755">cli syntax
+    only shows subpools
+cli syntax
     pool-info-build source[=version]
 
 will return info on built package
@@ -1601,30 +1443,26 @@ A:
 
     E: try changing the Package: to be different from Source: in hello-debhelper
         dpkg -f package.deb
-    R: Source </t>
-<t tx="zaril.20101007100036">logic
+    R: Source 
+logic
     lookup the binary
     if the binary has a source, lookup the source
     else the source is the binary name
 
-TEST: with hello-debhelper -&gt;  foo
-</t>
-<t tx="zaril.20101007101419"></t>
-<t tx="zaril.20101007101547"></t>
-<t tx="zaril.20101007151726"></t>
-<t tx="zaril.20101009193905"></t>
-<t tx="zaril.20101011023841">SUMMARY:
+TEST: with hello-debhelper ->  foo
+
+SUMMARY:
     version format
         [epoch:]upstream_version[-debian_revision
             
             convention to start deban_revision at 1 each time upstream version increases
 
     the following don't work
-        0turnkey-&lt;revision&gt;
-        0-turnkey-&lt;revision&gt;
+        0turnkey-<revision>
+        0-turnkey-<revision>
 
     only the ubuntu way works
-        0turnkey&lt;revision&gt;
+        0turnkey<revision>
 
 
     examples
@@ -1651,21 +1489,21 @@ TEST: with hello-debhelper -&gt;  foo
         dpkg --compare-versions 1-1- lt 1-2; echo $?
         1
             explanation
-                1-1 &gt; 1
+                1-1 > 1
 
 IDEA: recreate comparison algorithm
 
 
 
 
-        </t>
-<t tx="zaril.20101011042720">dpkg --compare-versions 0-2010.10.5-d6cbb928 lt 0-2010.10.10-a9ee521c; echo $?
+        
+dpkg --compare-versions 0-2010.10.5-d6cbb928 lt 0-2010.10.10-a9ee521c; echo $?
 
 isolated bug:
-    "10" &lt; "5"
+    "10" < "5"
 
-compare("10", 5") == -1</t>
-<t tx="zaril.20101011052050">IDEAS:
+compare("10", 5") == -1
+IDEAS:
     compare with dpkg --compare-versions based implementation
         272 per/sec with subprocess.call
         227 per/sec with os.system
@@ -1707,17 +1545,15 @@ optimization bottom line
     before: 3K/sec
     after: 44K/sec (x14 improvement)
 
-python /usr/lib/python2.4/profile.py -s cumulative ./debversion.py</t>
-<t tx="zaril.20101011074222">INSIGHT: we don't need normalize at all!
+python /usr/lib/python2.4/profile.py -s cumulative ./debversion.py
+INSIGHT: we don't need normalize at all!
 
-</t>
-<t tx="zaril.20101014093949">. &gt; ~
+
+. > ~
 non-letters should sort earlier than letters
-    'a' &lt; '@'
-</t>
-<t tx="zaril.20101018013654"></t>
-<t tx="zaril.20101018013654.1"></t>
-<t tx="zaril.20101018013654.2">IDEAS
+    'a' < '@'
+
+IDEAS
     PackageCache should precache contents of .pool/pkgcache
         PackageCache.getpath is where most of the time is being spent
 
@@ -1728,8 +1564,8 @@ non-letters should sort earlier than letters
 Q: why is providing a list so much slower?
 A: because the list is verified through pool.exists
 
-</t>
-<t tx="zaril.20101018013654.3">logic
+
+logic
     clear everything out of the cache except binary packages/versions that we have sources for
         create a whitelist of package versions, delete from the cache everything not on the whitelist
 
@@ -1753,12 +1589,12 @@ alternative names
 
 
 
-</t>
-<t tx="zaril.20101018204912">auto-cleaning
+
+auto-cleaning
     won't work for binary imports
         you'll need to invoke pool-gc to clean up those
-</t>
-<t tx="zaril.20101019010153">logic
+
+logic
     create cache at init
     append cache on add
     remove from cache on remove
@@ -1766,10 +1602,10 @@ alternative names
 
 data structure
     map_filenames
-        (name, version) =&gt; filename
+        (name, version) => filename
 
     map_versions
-        name =&gt; [version1, version2...]
+        name => [version1, version2...]
 
 * before
 
@@ -1802,9 +1638,8 @@ data structure
     real    0m0.156s
     user    0m0.112s
     sys     0m0.008s
-    </t>
-<t tx="zaril.20101019010223"></t>
-<t tx="zaril.20101021175833">test cases
+    
+test cases
     pool-info-build source
     pool-info-build source=1.2.3
 
@@ -1837,8 +1672,8 @@ rewritten logic
 
 
 
-        </t>
-<t tx="zaril.20101022061317">if you add a package to the control file:
+        
+if you add a package to the control file:
     pool-list will show versions of the package that never existed
 
 if you remove a package from the control file:
@@ -1847,9 +1682,8 @@ if you remove a package from the control file:
 workaround: don't add/remove packages in an existing project - change the name?
 
 so it shows autoversions for packages that never existed
-and if you change the packag</t>
-<t tx="zaril.20101025111704"></t>
-<t tx="zaril.20101101154405">logic
+and if you change the packag
+logic
     if running as root
         drop privileges to user that owns the pool directory
 
@@ -1891,8 +1725,8 @@ to drop privileges permanently
     os.setreuid(1000, 1000)
 
 to reset effective uid = 0, real uid != 0 (simulate suid): 
-    os.setreuid(1000, 0)</t>
-<t tx="zaril.20101105195018">IDEAS
+    os.setreuid(1000, 0)
+IDEAS
     perform all operations via subpool
     test stock sources should be part of the suite
     buildroot should also be part of the test suite
@@ -1921,7 +1755,7 @@ unregister
 info
     all options
 
-exists package &amp;&amp; exists package=version
+exists package && exists package=version
     binary that exists
     source version
     source version that doesn't exist
@@ -1952,8 +1786,8 @@ garblage collection
 
     commit to all stocks and see if the new version is registered
 
-    </t>
-<t tx="zaril.20101111222506">SUMMARY
+    
+SUMMARY
     not important enough to warrant the extra complexity
 
 IDEAS
@@ -1979,18 +1813,18 @@ Stock.unregister
 
 
 
-</t>
-<t tx="zaril.20101112071603">maybe start with plain test and move up?
-</t>
-<t tx="zaril.20101114125827">PROBLEM: the data structures aren't being updated by sync because they're in a subprocess
+
+maybe start with plain test and move up?
+
+PROBLEM: the data structures aren't being updated by sync because they're in a subprocess
 
 SOLUTION: we need to reload them in the parent process
 
 test
     pool-unregister /turnkey/projects/pyproject/; pool-register /turnkey/projects/pyproject/; pool-info --source-versions
 
-</t>
-<t tx="zaril.20101118214921">INSIGHT: implementing this would allow us to eliminate a use case for garbage collection
+
+INSIGHT: implementing this would allow us to eliminate a use case for garbage collection
 
     when we unregister a stock it would clear any binaries from that stock
         don't need to run gc
@@ -2004,8 +1838,8 @@ A: yes they are
 IDEAS:
     same principle as source versions but only for binaries?
 
-</t>
-<t tx="zaril.20101120011327">* IDEAS
+
+* IDEAS
 experiment with a package that has a version in its epoch
 
 when we import a package into the cache, set the filename to includes epoch appropriately
@@ -2050,8 +1884,8 @@ TEST:
 
 
 
-</t>
-<t tx="zaril.20101120203018">SOLUTION: 
+
+SOLUTION: 
     import them as udeb into the pool
         when we export them, export them as udeb
 
@@ -2066,8 +1900,8 @@ they have exactly the same structure as regular debs
 TEST:
     pool-get . lsb-release-udeb
 
-</t>
-<t tx="zaril.20101121151810">SUMMARY:
+
+SUMMARY:
     previously
     using debinfo, the first time is more expensive
 
@@ -2189,8 +2023,8 @@ R:
             sys     0m3.224s
     
 
-                </t>
-<t tx="zaril.20101121170651">* SCRATCH
+                
+* SCRATCH
 support generic keys
 identify when the key is already a hash
 
@@ -2217,10 +2051,10 @@ file structure
         contians value
 
     
-with </t>
-<t tx="zaril.20101121182502">   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+with 
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
         1    0.000    0.000    5.670    5.670 profile:0(command.module.main())
-        1    0.000    0.000    5.670    5.670 &lt;string&gt;:1(?)
+        1    0.000    0.000    5.670    5.670 <string>:1(?)
         1    0.040    0.040    5.670    5.670 cmd_list.py:51(main)
         1    0.000    0.000    5.550    5.550 cmd_list.py:44(list_packages)
         1    0.000    0.000    5.350    5.350 pool.py:529(wrapper)
@@ -2244,12 +2078,12 @@ with </t>
      9101    0.130    0.000    0.130    0.000 :0(split)
 
 
-</t>
-<t tx="zaril.20101121190053">before optimization: 3.5K/sec
+
+before optimization: 3.5K/sec
 after: 23K/sec
 
-</t>
-<t tx="zaril.20101121195130">should save us quite a bit of IO time
+
+should save us quite a bit of IO time
 
 but we need to extract it from Python
 
@@ -2264,13 +2098,13 @@ firefox
 E: does extracting the control file from a large deb take longer than extracting it from a small deb?
 R: no
 
-ar -p linux-hardened-image-2.6.19-7-grsec-386_2.6.19-7.10.2_i386.deb control.tar.gz &gt; control.tar.gz
+ar -p linux-hardened-image-2.6.19-7-grsec-386_2.6.19-7.10.2_i386.deb control.tar.gz > control.tar.gz
 
 RESOURCE: ar(5)
 
-</t>
-<t tx="zaril.20101121203823">md5 is much faster</t>
-<t tx="zaril.20101121210322">SUMMARY
+
+md5 is much faster
+SUMMARY
     Python implementation of extraction: 4257 per/sec (non-optimized)
         20X faster than executing ar
 
@@ -2279,9 +2113,9 @@ RESOURCE: ar(5)
 
 starts with 
 
-    !&lt;arch&gt;\n
+    !<arch>\n
 
-    filename/ &lt;space&gt; &lt;space&gt; &lt;space&gt; timestamp &lt;space&gt; &lt;space&gt;
+    filename/ <space> <space> <space> timestamp <space> <space>
     
 Field Offset from 	Field Offset to 	Field Name 	Field Format
 0 	15 	File name 	ASCII
@@ -2337,21 +2171,21 @@ A: 0x8 0x44
 Q: is extracting the control file from a large deb file any slower than extracting the control file from a small deb file?
 A: no
 
-</t>
-<t tx="zaril.20101122221539">IDEAS
+
+IDEAS
     do everything as a function instead of a class
     inline
     no error checking
     only parse the fields we need
 
 
-</t>
-<t tx="zaril.20101122225546">Python implementation shorter than command execution
+
+Python implementation shorter than command execution
     4 lines of code after writing ar.py module
 
 performance improvement, depends on size of extracted control.tar.gz: 
     with a 22K control.tar.gz: 2X improvement
-    with a &gt;1K control.tar.gz: 7X improvement
+    with a >1K control.tar.gz: 7X improvement
 
 DISCOVERY: tarfile is implemented in Python!
     may be implemented in C in the future
@@ -2364,14 +2198,14 @@ E: how much of an improvement if we turn on psyco?
 
 
     
-</t>
-<t tx="zaril.20101123043551">use case: Alon wants to figure out from which stock the aufs-modules package came from, how does he do this?
 
-</t>
-<t tx="zaril.20101123051529">SUMMARY:
+use case: Alon wants to figure out from which stock the aufs-modules package came from, how does he do this?
+
+
+SUMMARY:
     on unregister, add binaries to package list
-    on gc, add binaries in stocks in whitelist</t>
-<t tx="zaril.20101125202956">SUMMARY
+    on gc, add binaries in stocks in whitelist
+SUMMARY
     the overhead is due to extensive forking
         process creation overhead for each method invocation
 
@@ -2420,8 +2254,8 @@ Q: what dropped pool methods does cmd_get call?
         shouldn't be because it doesn't sync
 
     getpath_deb
-        forked each time</t>
-<t tx="zaril.20101126004951">Q: should we use XMLRPC?
+        forked each time
+Q: should we use XMLRPC?
 
 protocol:
     
@@ -2487,8 +2321,8 @@ forks
     child process creates instance, runs server
     parent process return dummy proxy instance
     
-    </t>
-<t tx="zaril.20101126092908">LOGIC
+    
+LOGIC
     add get/set calls
     if we get a method back, then bind a proxy attribute
         otherwise pass the value back 
@@ -2509,12 +2343,12 @@ protocol
 
 op, args
     (attr, val)
-</t>
-<t tx="zaril.20101126092948">rational: would make it much easier to debug issues inside forked code if we had a full backtrace
+
+rational: would make it much easier to debug issues inside forked code if we had a full backtrace
 
 GOTCHA: tracebacks can not be serialized. damn
-    we can print them out though</t>
-<t tx="zaril.20101126225101">optimize if needed
+    we can print them out though
+optimize if needed
     cpickle instead of pickle
 
 benchmarks for forked_constructor
@@ -2527,8 +2361,8 @@ benchmarks for forked_func
     runs 236/sec (33X slower than forked_constructor)
 
 IDEA:
-    add examples</t>
-<t tx="zaril.20101126233132">LOGIC
+    add examples
+LOGIC
     create a pool instance
     if we're running as root and the pool instance is not owned by root
     wrap a dummy constructor which:
@@ -2546,11 +2380,11 @@ ROADMAP
     fix cmd_get, then fix cmd_info
 
 at the end, pool has to pass regression tests
-</t>
-<t tx="zaril.20101127211846">LOGIC
+
+LOGIC
     create paths
 
-RESOURCE: Python reference-&gt;index-&gt;__new__
+RESOURCE: Python reference->index->__new__
 
 __new__(  	cls[, ...])
     Called to create a new instance of class cls. __new__() is a static method (special-cased so you need not declare it as such) that takes the class of which an instance was requested as its first argument. The remaining arguments are those passed to the object constructor expression (the call to the class). The return value of __new__() should be the new object instance (usually an instance of cls).
@@ -2561,15 +2395,15 @@ __new__(  	cls[, ...])
 
     If __new__() does not return an instance of cls, then the new instance's __init__() method will not be invoked.
 
-    __new__() is intended mainly to allow subclasses of immutable types (like int, str, or tuple) to customize instance creation. </t>
-<t tx="zaril.20101128183305">GOTCHA: yield doesn't work
+    __new__() is intended mainly to allow subclasses of immutable types (like int, str, or tuple) to customize instance creation. 
+GOTCHA: yield doesn't work
 
 pool-info --build-logs
-</t>
-<t tx="zaril.20101128185308">hack regression suite to support a pre-setup test pool
 
-</t>
-<t tx="zaril.20101128223512">PROBLEM:
+hack regression suite to support a pre-setup test pool
+
+
+PROBLEM:
     pool.subpools is returning live Pool objects from the forked process to the root process
 	so when we sync a subpool, its being synced with root privileges
 
@@ -2595,21 +2429,21 @@ IDEAS
 
     how?
         wrap proxy client's subpools?
-</t>
-<t tx="zaril.20110105152053">usage scenario
+
+usage scenario
     I want to resolve build dependencies from a pool
 
     I want to install packages live during development from the pool
-</t>
-<t tx="zaril.20110109153840">IDEA: instead of using info --stock-sources and --stock-binaries to list all sources,
+
+IDEA: instead of using info --stock-sources and --stock-binaries to list all sources,
 have a command that shows the stock for a specific package 
     (latest version if no version is specified)
 
 pool-info-origin package[=version]
 
 
-</t>
-<t tx="zaril.20110213045733">PoolKernel
+
+PoolKernel
 Pool
     register
     unregister
@@ -2628,8 +2462,8 @@ get
 
 * IDEAS
 
-cmd_info.py: pool -&gt; kernel
-drop_privileges -&gt; os_drop_privileges
+cmd_info.py: pool -> kernel
+drop_privileges -> os_drop_privileges
 
 create option NOT to retain privileges
     so we can drop privileges globally
@@ -2642,8 +2476,8 @@ makerelative from Paths
 
 
 
-</t>
-<t tx="zaril.20110213074424">GOTCHA: how do we support non-match warnings?
+
+GOTCHA: how do we support non-match warnings?
     we could just print the warning from filter_packages
 
 
@@ -2656,7 +2490,4 @@ returns a data structure inherited from list
 
     with .missing attribute
 
-raises</t>
-<t tx="zaril.20110213212432"></t>
-</tnodes>
-</leo_file>
+raises

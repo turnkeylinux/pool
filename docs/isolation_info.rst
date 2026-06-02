@@ -1,42 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet ekr_test?>
-<leo_file>
-<leo_header file_format="2" tnodes="0" max_tnode_index="21" clone_windows="0"/>
-<globals body_outline_ratio="0.5">
-	<global_window_position top="0" left="138" height="933" width="800"/>
-	<global_log_window_position top="0" left="0" height="0" width="0"/>
-</globals>
-<preferences/>
-<find_panel_settings/>
-<vnodes>
-<v t="zaril.20100923035154" a="E"><vh>Isolation research</vh>
-<v t="zaril.20100923035154.1" a="EM"><vh>explore fakechroot</vh></v>
-<v t="zaril.20100923035154.2" a="M"><vh>research chroot (why only root?)</vh>
-<v t="zaril.20100923035154.3"><vh>break out of chroot exploit</vh></v>
-<v t="zaril.20100923035154.4"><vh>break out of chroot exploit #2</vh></v>
-</v>
-<v t="zaril.20100923035316"><vh>security analysis of debian buildd infrastructure</vh></v>
-<v t="zaril.20100923035316.1" a="M"><vh>explore openvz</vh></v>
-<v t="zaril.20100923035316.2" a="M"><vh>explore vmware</vh></v>
-<v t="zaril.20100923035316.3" a="M"><vh>explore xen</vh>
-<v t="zaril.20100923035316.4"><vh>explore ubuntu support for xen</vh></v>
-</v>
-<v t="zaril.20100923035316.5" a="MTV"><vh>explore uml</vh>
-<v t="zaril.20100923035316.6"><vh>explore rootstrap</vh></v>
-<v t="zaril.20100923035316.7"><vh>explore pbuilder-uml</vh></v>
-<v t="zaril.20100923035316.8" a="M"><vh>explore tun/tap</vh></v>
-</v>
-<v t="zaril.20100923035316.10" a="M"><vh>explore virtualbox</vh></v>
-<v t="zaril.20100923035316.11" a="M"><vh>explore dchroot / schroot</vh>
-<v t="zaril.20100923035316.12"><vh>time chroot tarball extraction</vh></v>
-</v>
-<v t="zaril.20100923035316.13" a="E"><vh>explore vserver</vh></v>
-<v t="zaril.20100923035316.14"><vh>explore linux capabilities</vh></v>
-<v t="zaril.20100923035316.15" a="EM"><vh>explore grsecurity chroot security</vh></v>
-</v>
-</vnodes>
-<tnodes>
-<t tx="zaril.20100923035154">@nocolor
+@nocolor
 
 * SUMMARY
 roadmap
@@ -166,7 +128,7 @@ use UML to create fake root-like environment
 
     keep offshoot of UML builder around like a daemon
     invocation of UML transparent?
-        uml &lt;uml&gt; [ command ] 
+        uml <uml> [ command ] 
             first boots uml if it doesn't exist
         
     rsync result back to fakeroot system
@@ -193,7 +155,7 @@ pbuilder in fakeroot / fakechroot environment?
 use uml?
     thats what rootstrap does
 
-RESOURCE: http://slashdot.org/comments.pl?threshold=5&amp;mode=thread&amp;commentsort=0&amp;op=Change&amp;sid=234745
+RESOURCE: http://slashdot.org/comments.pl?threshold=5&mode=thread&commentsort=0&op=Change&sid=234745
 
 performance evaluation of xen vs openVZ
 
@@ -215,8 +177,8 @@ openstandard proposed describing the protocol that guest OSes communicates with 
 paravirtualization - doesn't simulate hardware - offers a pecial API
 
     hypervisor / hypercalls
-</t>
-<t tx="zaril.20100923035154.1">SUMMARY
+
+SUMMARY
     won't work with statiatically linked programs (neither does fakeroot)
 
     it allows chroot() to work without root privileges
@@ -362,8 +324,8 @@ LIMITATIONS
    o   Your real uid should exist in /etc/passwd. Create it with adduser --uid realuid
        realuser.
 
-   o   debuild(1) cleans environment. Use --preserve-env option to prevent this behaviour.</t>
-<t tx="zaril.20100923035154.2">SUMMARY
+   o   debuild(1) cleans environment. Use --preserve-env option to prevent this behaviour.
+SUMMARY
     chroot is a dangerous privilege to grant normal users
 
     chroot wasn't designed as a security mechanism but as a software testing tool
@@ -378,7 +340,7 @@ A:
 1) supposedly to prevent users from changing the contents of trusted files and tricking suid programs into giving permissions
 
 
-    I.e., after chroot /tmp, /etc/passwd -&gt; /tmp/etc/passwd
+    I.e., after chroot /tmp, /etc/passwd -> /tmp/etc/passwd
     Q: how do you sneak the suid program into the chroot?
     A: with a hardlink
         DISCOVERY: its possible for a regular user to create hardlinks to root suid programs
@@ -389,7 +351,7 @@ A:
   mkdir("testdir");
   chroot("testdir");                   // make nested jail -- key to escape!
   fchdir(fd);                          // back to first jail's /
-  for (int i=0; i&lt;10; i++) {
+  for (int i=0; i<10; i++) {
     chdir("..");                       // successively higher ("/../"=="/")
   }
   chroot(".");                         // final "jail" is real /
@@ -429,14 +391,14 @@ chroot(2) has no effect on process's current directory
     you could hide a hardlink to the setuid program there
 
 RESOURCE: http://lists.debian.org/debian-security/2001/10/msg00033.html
-            </t>
-<t tx="zaril.20100923035154.3">001    #include &lt;stdio.h&gt;  
-002  	 #include &lt;errno.h&gt;  
-003  	 #include &lt;fcntl.h&gt;  
-004  	 #include &lt;string.h&gt;  
-005  	 #include &lt;unistd.h&gt;  
-006  	 #include &lt;sys/stat.h&gt;  
-007  	 #include &lt;sys/types.h&gt;  
+            
+001    #include <stdio.h>  
+002  	 #include <errno.h>  
+003  	 #include <fcntl.h>  
+004  	 #include <string.h>  
+005  	 #include <unistd.h>  
+006  	 #include <sys/stat.h>  
+007  	 #include <sys/types.h>  
 008  	    
 009  	 /*  
 010  	 ** You should set NEED_FCHDIR to 1 if the chroot() on your  
@@ -465,9 +427,9 @@ RESOURCE: http://lists.debian.org/debian-security/2001/10/msg00033.html
 033  	 /*  
 034  	 ** First we create the temporary directory if it doesn't exist  
 035  	 */  
-036  	   if (stat(TEMP_DIR,&amp;sbuf)&lt;0) {  
+036  	   if (stat(TEMP_DIR,&sbuf)<0) {  
 037  	     if (errno==ENOENT) {  
-038  	       if (mkdir(TEMP_DIR,0755)&lt;0) {  
+038  	       if (mkdir(TEMP_DIR,0755)<0) {  
 039  	         fprintf(stderr,"Failed to create %s - %s\n", TEMP_DIR,  
 040  	                 strerror(errno));  
 041  	         exit(1);  
@@ -490,7 +452,7 @@ RESOURCE: http://lists.debian.org/debian-security/2001/10/msg00033.html
 058  	 **       working directory to the directory given to chroot().  
 059  	 **  
 060  	 */  
-061  	   if ((dir_fd=open(".",O_RDONLY))&lt;0) {  
+061  	   if ((dir_fd=open(".",O_RDONLY))<0) {  
 062  	     fprintf(stderr,"Failed to open "." for reading - %s\n",  
 063  	             strerror(errno));  
 064  	     exit(1);  
@@ -500,7 +462,7 @@ RESOURCE: http://lists.debian.org/debian-security/2001/10/msg00033.html
 068  	 /*  
 069  	 ** Next we chroot() to the temporary directory  
 070  	 */  
-071  	   if (chroot(TEMP_DIR)&lt;0) {  
+071  	   if (chroot(TEMP_DIR)<0) {  
 072  	     fprintf(stderr,"Failed to chroot to %s - %s\n",TEMP_DIR,  
 073  	             strerror(errno));  
 074  	     exit(1);  
@@ -519,7 +481,7 @@ RESOURCE: http://lists.debian.org/debian-security/2001/10/msg00033.html
 087  	 **       working directory to the directory given to chroot().  
 088  	 **  
 089  	 */  
-090  	   if (fchdir(dir_fd)&lt;0) {  
+090  	   if (fchdir(dir_fd)<0) {  
 091  	     fprintf(stderr,"Failed to fchdir - %s\n",  
 092  	             strerror(errno));  
 093  	     exit(1);  
@@ -539,7 +501,7 @@ RESOURCE: http://lists.debian.org/debian-security/2001/10/msg00033.html
 107  	 ** directory to the current working directory - at this point the real  
 108  	 ** root directory.  
 109  	 */  
-110  	   for(x=0;x&lt;1024;x++) {  
+110  	   for(x=0;x<1024;x++) {  
 111  	     chdir("..");  
 112  	   }  
 113  	   chroot(".");  
@@ -547,30 +509,30 @@ RESOURCE: http://lists.debian.org/debian-security/2001/10/msg00033.html
 115  	 /*  
 116  	 ** We're finally out - so exec a shell in interactive mode  
 117  	 */  
-118  	   if (execl("/bin/sh","-i",NULL)&lt;0) {  
+118  	   if (execl("/bin/sh","-i",NULL)<0) {  
 119  	     fprintf(stderr,"Failed to exec - %s\n",strerror(errno));  
 120  	     exit(1);  
 121  	   }  
-122  	 }  </t>
-<t tx="zaril.20100923035154.4">#include &lt;stdlib.h&gt;
-#include &lt;stdio.h&gt;
-#include &lt;errno.h&gt;
-#include &lt;unistd.h&gt;
-#include &lt;sys/stat.h&gt;
-#include &lt;sys/types.h&gt;
+122  	 }  
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 int main(void)
 {
     int i;
     
     mkdir("breakout", 0777);
-    if (chroot("breakout") &lt; 0)
+    if (chroot("breakout") < 0)
         perror("chroot failed");
 
-    for (i = 0; i &lt; 100; i++)
-        if (chdir("..") &lt; 0)
+    for (i = 0; i < 100; i++)
+        if (chdir("..") < 0)
             perror("chdir failed");
-    if (chroot(".") &lt; 0)
+    if (chroot(".") < 0)
         perror("chroot2 failed");
 
     execl("/bin/bash", "/bin/bash", (char *)NULL);
@@ -578,8 +540,8 @@ int main(void)
     
     exit(0);
 }
-    </t>
-<t tx="zaril.20100923035316">buildd uses sbuild
+    
+buildd uses sbuild
     sbuild installs build-depends as source?
 
 some of the buildds are run by non-DDs that can not be trusted
@@ -614,8 +576,8 @@ chroots designed to produce clean builds
 
 
 
-</t>
-<t tx="zaril.20100923035316.1">advantage
+
+advantage
     files can be seen (not in an image)
 
 RESOURCE: http://kerneltrap.org/node/6492
@@ -643,8 +605,8 @@ git.openviz.org
 RESOURCE: http://community.livejournal.com/openvz/tag/openvz
 
 has been merged into SLES
-</t>
-<t tx="zaril.20100923035316.2">RESOURCE: http://en.wikipedia.org/wiki/VMware
+
+RESOURCE: http://en.wikipedia.org/wiki/VMware
 
 virtual processing based on dynamic recompilation
 
@@ -660,7 +622,7 @@ how good is the quality of the isolation?
 
 NSA considers vm isolation almost as good as air gap?
 
-RESOURCE: http://www.thisishull.net/showthread.php?t=271743&amp;page=2
+RESOURCE: http://www.thisishull.net/showthread.php?t=271743&page=2
 
 vmware guests broken into from the outside
 
@@ -668,8 +630,8 @@ RESOURCE: http://www.eweek.com/article2/0,1759,1904647,00.asp
 
 at least one known exploit - nat code in vmware
 
-    </t>
-<t tx="zaril.20100923035316.3">RESOURCE: http://www.cl.cam.ac.uk/research/srg/netos/xen/
+    
+RESOURCE: http://www.cl.cam.ac.uk/research/srg/netos/xen/
 
 official site of the research group that created xen
 
@@ -719,8 +681,8 @@ RESOURCE: http://wiki.xensource.com/xenwiki/XenFaq#head-0a539c0b540b1e563d5b0f39
 no support for ACPI/APM
     reduced battery support and no suspend/resume
 
-</t>
-<t tx="zaril.20100923035316.4">RESOURCE: https://wiki.ubuntu.com/Xen
+
+RESOURCE: https://wiki.ubuntu.com/Xen
 
 ideal goal - ship with xen enabled kernel by default
 
@@ -776,8 +738,8 @@ same kernel for dom0 and the other domains
 
 
 
-    </t>
-<t tx="zaril.20100923035316.5">TODO:
+    
+TODO:
     run debian inside UML?
         there's a tutorial on running debian inside UML
     setup networking so that uml has access to my apt-proxy
@@ -941,8 +903,8 @@ is skas running on my Gentoo
 
 
 
-</t>
-<t tx="zaril.20100923035316.6">* SUMMARY
+
+* SUMMARY
 create a filesystem image 
 available as a Gentoo ebuild
     depends on vanilla sources
@@ -965,20 +927,20 @@ doesn't need root access?
 * RESOURCE: rootstrap(1)
 
 * RESOURCE: http://people.debian.org/~torsten/rootstrap.html
-    using rootstrap for package checking</t>
-<t tx="zaril.20100923035316.7">uses rootstrap to create UML image
+    using rootstrap for package checking
+uses rootstrap to create UML image
 
 IDEAS:
     keep UML environment around
-</t>
-<t tx="zaril.20100923035316.8">http://en.wikipedia.org/wiki/TUN/TAP
+
+http://en.wikipedia.org/wiki/TUN/TAP
 
 In computer networking, TUN and TAP are virtual network kernel drivers. They implement network devices that are supported entirely in software, which is different from ordinary network devices that are backed up by hardware network adapters.
 
 TAP (as in network TAP) simulates an Ethernet device and it operates with Layer 2 packets such as Ethernet frames. TUN (as in network TUNnel) simulates a network layer device and it operates with Layer 3 packets such as IP packets. TAP is used to create a Network bridge, while TUN is used with Routing.
 
-Packets sent by an operating system via a TUN/TAP device are delivered to a user-space program that attaches itself to the device. A user-space program may also pass packets into a TUN/TAP device. In this case TUN/TAP device delivers (or "injects") these packets to the operating system network stack thus emulating their reception from an external source.</t>
-<t tx="zaril.20100923035316.10">/etc/init.d/vboxdrv
+Packets sent by an operating system via a TUN/TAP device are delivered to a user-space program that attaches itself to the device. A user-space program may also pass packets into a TUN/TAP device. In this case TUN/TAP device delivers (or "injects") these packets to the operating system network stack thus emulating their reception from an external source.
+/etc/init.d/vboxdrv
 /etc/init.d/vboxnet
 
 Q: does it run without root privileges?
@@ -1048,7 +1010,7 @@ SUMMARY
 
     write-through disks state not saved in suspension
 
-    vboxmanage convertdd &lt;thefile&gt;.img &lt;thefile&gt;.vdi    
+    vboxmanage convertdd <thefile>.img <thefile>.vdi    
 
 IDEAS
     we could just install debian/ubuntu to the system (normal way via ISO)
@@ -1080,9 +1042,9 @@ default debian settings
     debconf-set-selections vboxconf
 
 NAT port forwarding
-    VBoxManage setextradata "Guest" VBoxInternal/Devices/pcnet/0/LUN#0/Config/&lt;service&gt;/Protocol TCP
-    VBoxManage setextradata "Guest" VBoxInternal/Devices/pcnet/0/LUN#0/Config/&lt;service&gt;/GuestPort 22
-    VBoxManage setextradata "Guest" VBoxInternal/Devices/pcnet/0/LUN#0/Config/&lt;service&gt;/HostPort 2222
+    VBoxManage setextradata "Guest" VBoxInternal/Devices/pcnet/0/LUN#0/Config/<service>/Protocol TCP
+    VBoxManage setextradata "Guest" VBoxInternal/Devices/pcnet/0/LUN#0/Config/<service>/GuestPort 22
+    VBoxManage setextradata "Guest" VBoxInternal/Devices/pcnet/0/LUN#0/Config/<service>/HostPort 2222
 
 HIF (Host Interface Networking)
     setup a new network card (e.g., vbox0) on host, to which guests are connected
@@ -1136,11 +1098,11 @@ VBoxSDL -vm "ubuntu edgy"
 
 extended RDP (graphics and audio)
 
-modifyvm &lt;vmname&gt; 
+modifyvm <vmname> 
     -vrdp on
     -vrdpport -vrdpauthtype
 
-VBoxVRDP -startvm &lt;uuid|name&gt;
+VBoxVRDP -startvm <uuid|name>
 
 
 8.17 VBoxManage getextradata/setextradata
@@ -1155,7 +1117,7 @@ labeling is a bit tricky due to adjustment of non-standard resolutions
 
 9.6 multiple monitors for guest
 
-modifyvm &lt;vmname&gt; -monitor 3
+modifyvm <vmname> -monitor 3
 
 specify which screen you want to conect to with @1, @2 in domain logon
 
@@ -1226,8 +1188,8 @@ partners
         co-developing security infrastructure for government use
 
 
-    </t>
-<t tx="zaril.20100923035316.11">IDEAS
+    
+IDEAS
     hack schroot to support VM chroots?
     hack schroot to support deck?
     just use LVM snapshot type schroot instead of deck?
@@ -1274,7 +1236,7 @@ USAGE SUMMARY
         tar -C jaunty/ -zcvf jaunty.tar.gz .
 
     example session
-        SESSION_ID=$(schroot -b -c &lt;session-chroot&gt;)
+        SESSION_ID=$(schroot -b -c <session-chroot>)
         schroot -r -c $SESSION_ID
         schroot -e -c $SESSION_ID
 
@@ -1337,8 +1299,8 @@ RESOURCE: schroot.conf man page
 
 RESOURCE: schroot-setup(5)
     describes schroot setup.d scripts
-        sets up mounts, networking</t>
-<t tx="zaril.20100923035316.12">after caching
+        sets up mounts, networking
+after caching
 
 create
         2 seconds (uncompressed)
@@ -1346,8 +1308,8 @@ create
 
 extract
     6 seconds compressed
-    4-6 seconds uncompressed</t>
-<t tx="zaril.20100923035316.13">SUMMARY
+    4-6 seconds uncompressed
+SUMMARY
     very mature project, under active development
         first public release 2001
     more efficient than virtualization
@@ -1363,7 +1325,7 @@ Q: does chroot work inside the vserver?
 RESOURCE: https://lists.linux-foundation.org/pipermail/containers/
     containers are under very active development
 
-RESOURCE: http://forums.grsecurity.net/viewtopic.php?t=1801&amp;highlight=&amp;sid=a31a551220aac5586ddae62d55836973
+RESOURCE: http://forums.grsecurity.net/viewtopic.php?t=1801&highlight=&sid=a31a551220aac5586ddae62d55836973
 
 report that grsecurity and vserver apply together
 
@@ -1407,15 +1369,15 @@ other appraoches
     paravirtualization
     native virtualization
     operating system-leve virtualization
-</t>
-<t tx="zaril.20100923035316.14">Q: can block devices be accessed without capabilities?
+
+Q: can block devices be accessed without capabilities?
 
 SUMMARY:
     POSIX capabilities exist per process?    
     inheritable (I), permitted (P), effective(E)
 
     see the capabilities of a process
-        cat /proc/&lt;pid&gt;/status
+        cat /proc/<pid>/status
             CapInh
             CapPrm
             CapEff
@@ -1473,8 +1435,8 @@ RESOURCE: http://lwn.net/Articles/179361/
     containers and lightweight virtualization
 
 
-</t>
-<t tx="zaril.20100923035316.15">SUMMARY
+
+SUMMARY
     we can't mknod without preventing some packages which need to create device nodes
         this is also a problem with vserver
 
@@ -1559,7 +1521,7 @@ IDEAS
     run experiments with grsec chroot restrictions
         is breakout prevented?
 
-RESOURCE: kernel sec options-&gt;grsec-&gt;filesystem protections-&gt;chroot jail restrictions
+RESOURCE: kernel sec options->grsec->filesystem protections->chroot jail restrictions
     deny mounts
 
 Q: what are the chroot hardening mechanisms?
@@ -1612,6 +1574,4 @@ R: operation not permitted
 IDEA: we could restrict privileges in the chroot using an inheritable policy
 
 
-</t>
-</tnodes>
-</leo_file>
+
