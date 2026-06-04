@@ -4,93 +4,88 @@ Maintain a pool of packages from source and binary stocks
 Introduction
 ------------
 
-Pool is a system that maintains a pool of binary Debian packages which may
-be either imported as-is from a registered collection of binaries, or
-built on-demand from a registered source or collection of sources.
+Pool is a system that maintains a pool of binary Debian packages which may be
+either imported as-is from a registered collection of binaries, or built
+on-demand from a registered source or collection of sources.
 
-The dominant abstraction for the pool is a virtual filesystem folder
-that you can get get specific versions of specific packages from. Behind
-the scenes, the pool will build those binary packages from source if
-required and cache the built binaries for future access.
+The dominant abstraction for the pool is a virtual filesystem folder that
+supports getting specific versions of specific packages. Behind the scenes, the
+pool will build those binary packages from source if required (and source is
+registered) and cache the built binaries for future access.
 
 Terminology / architecture
 --------------------------
 
-pool
-   A pool of packages from source and binary "stocks".
+Pool:
+    A pool of packages from source and binary "stocks".
 
-stock
-    a container for packages in binary or source form
+Stock:
+    A directory containing the source of package/s (not necessarily package
+    source code).
 
-stock types
-    git single
-        git repository containing one single package
+Stock types:
+    Git single:
+        Git repository containing one single package.
+    Git:
+        Git repository containing multiple packages.
+    Plain:
+        Regular directory containing multiple packages.
+    Sub-pool:
+        Another pool.
 
-    git
-        git repository containing multiple packages
+Binary:
+    A pre-built binary Debian package (aka deb file) inside a stock.
 
-    plain
-        regular directory containing multiple packages
+Source:
+    Debian package source code - i.e. directory containing source code and a
+    debian/ subdirectory - inside a stock.
 
-    subpool
-        another pool
-
-binary
-    a binary Debian package inside a stock
-
-source
-    Debian package source code - inside a stock
-
-build root
-    a chroot environment with an suitable tool-chain setup for building
+Buildroot:
+    A chroot environment with an suitable tool-chain set up for building
     packages; e.g. https://github.com/turnkeylinux/buildroot
 
-build logs
-    the output from the build process for a package built from source
+Build logs:
+    The output from the build process for a package built from source.
 
-package cache
-    a cache of binary packages either built from source or imported as-is
+Package cache:
+    A cache of binary packages either built from source or imported as-is.
 
 File/data structure
 -------------------
 
-All of pool's internals are neatly tucked out of sight in a special "hidden"
-directory. The pool has no data formats/configuration files. All of its "data"
-is stored directly as filesystem constructs::
+The pool has no data formats/configuration files. All of its "data" is stored
+directly as filesystem constructs within a "hidden" directory::
 
     .pool/
-        build/
-            buildinfo/
-                <binary_package_name>_<version>_<arch>.buildinfo
-                    # info about the build env
-            root -> /path/to/buildroot
-                # symbolic link
-            logs/
-                <binary_package_name>_<version>.build
-                    # log of the build process
-           
-        pkgcache/
-            <binary_package_name>_<version>_<arch>.deb
-                # maybe in a pool-like tree
-        
-        srcpkgcache/
-            <binary_package_name>_<version>_<arch>.tar.gz
-                # package source archive; requires --source switch
-
-        stocks/
-            <name>#<branch>/
-                # if stock is git repo of package source
-                link -> /path/to/stock
-                    # symbolic link to the stock
-                CHECKOUT
-                    # local clone of git source branch
-                SYNC_HEAD
-                    # text file containing commit id of HEAD (full SHA)
-                index-sources
-                    <binary-package-name>
-                        # text file containing available package version/s (one
-                        # version per line) - version/s calculated using
-                        # 'autoversion'
+    |-- build/
+    |   |-- buildinfo/
+    |   |   `-- <binary_package_name>_<version>_<arch>.buildinfo
+    |   |       # info about the build env
+    |   |-- root -> /path/to/buildroot
+    |   |   # symbolic link
+    |   `-- logs/
+    |       `-- <binary_package_name>_<version>.build
+    |           # log of the build process
+    |-- pkgcache/
+    |   `-- <binary_package_name>_<version>_<arch>.deb
+    |       # maybe in a pool-like tree
+    |-- srcpkgcache/
+    |   `-- <binary_package_name>_<version>_<arch>.tar.gz
+    |       # package source archive; requires --source switch
+    `-- stocks/
+        `-- <name>#<branch>/
+            |   # if stock is git repo of package source
+            |-- link -> /path/to/stock
+            |   # symbolic link to the stock
+            |-- CHECKOUT
+            |   # local clone of git source branch
+            |-- SYNC_HEAD
+            |   # text file containing commit id of HEAD (full SHA)
+            `-- index-sources
+                `-- <binary-package-name>
+                    # text file containing available package version/s (one
+                    # version per line) - version/s calculated using
+                    # 'autoversion'
 
 Usage
 -----
@@ -99,11 +94,7 @@ Syntax: pool <command> [options]
 
 Maintain a pool of Debian packages from source
 
-Commands:
-    see below
-
-    note: commands can be either separated with a space or a dash (as shown
-          below)
+Note that commands can be either separated with a space or a dash.
 
 Global options:
     -h, --help      show global/general help message and exit
@@ -118,32 +109,43 @@ Environment variables::
 Initialize a new pool
 '''''''''''''''''''''
 
-pool-init /path/to/buildroot
+Create a pool capable of building packages from source::
+
+    pool-init /path/to/buildroot
+
+Create a pool that only supports plain and sub-pool stocks::
+
+    pool-init --no-buildroot
 
 Register a package stock into the pool
 ''''''''''''''''''''''''''''''''''''''
 
-pool-register /path/to/stock[#branch]
+Make package stocks available::
 
-Stock type can be:
+    pool-register /path/to/stock[#branch]
 
-* another pool (warning - watch out for circular dependencies)
-* /path/to/git_repository[#branch]
-* /path/to/regular_directory
+A stock type can be:
+- /path/to/git_repository[#branch]
+- /path/to/regular_directory
+- another pool (warning - watch out for circular dependencies)
 
 Unregister a package stock from the pool
 ''''''''''''''''''''''''''''''''''''''''
 
-pool-unregister /path/to/stock[#branch]
+Remove stock::
 
-* only relevant content of .pool/stock is removed; cached packages in
-  .pool/pkgcache are NOT removed
-* cached packages can be removed by running a garbage collect - see 'pool-gc'
+    pool-unregister /path/to/stock[#branch]
+
+Note: Only the relevant content of .pool/stock is removed; cached packages in
+      .pool/pkgcache are NOT removed. Cached packages can be removed by running
+      a garbage collect - see 'pool-gc'
 
 Print pool info
 '''''''''''''''
 
-pool-info [options]
+Get info about package stocks and other pool config::
+
+    pool-info [options]
 
 Options::
 
@@ -163,27 +165,31 @@ Options::
 Print binary package build log
 ''''''''''''''''''''''''''''''
 
-pool-info-get <package-name>
+Get build log of specific package::
 
-* no info if package hasn't been built
-* error if package doesn't exist
+    pool-info-get <package-name>
+
+No info if package hasn't been built. Error if package doesn't exist.
 
 Check if package exists in pool
 '''''''''''''''''''''''''''''''
 
-pool-exists package[=version]
+Simple check of package availability::
 
-Prints true/false if <package> exists in the pool.
-If true exitcode = 0, else exitcode = 1
+    pool-exists package[=version]
+
+Prints true/false if <package> exists in the pool. The exitcode matches the
+status; 0 if True, else 1.
   
 List packages in pool
 '''''''''''''''''''''
 
-pool-list [ "<package-glob>" ]
+List some/all packages - and their versions::
 
-If <package-glob> is provided, print only those packages whose names
-match the glob otherwise, by default, print a list of the newest
-packages.
+    pool-list [ "<package-glob>" ]
+
+By default all packages and their latest version are displayed. If
+<package-glob> is provided, only the matching packages are returned.
 
 Options::
 
@@ -194,17 +200,22 @@ Options::
         print only the names of packages in the pool (without the list)
             incompatible with -a option
 
-* quoting <package-glob> is important to ensure that it is not expanded by the
-  shell
+Quoting <package-glob> is important to ensure that it is not expanded by the
+shell.
+
+Use --all-versions with caution when numerous git stocks are registered. Pool
+considered every commit as a virtual version so the output may be very large.
 
 Get packages from pool
 ''''''''''''''''''''''
 
-pool-get [-options] <output-dir> [ package[=version] ... ]
+Get package/s from registered stock/s::
 
-If a package is specified without a version, get the newest package.
-If no packages are specified as arguments, get all the newest packages.
-Summary of success/failure of package/s is shown on completion.
+    pool-get [-options] <output-dir> [ package[=version] ... ]
+
+If a package is specified without a version, get the newest package. If no
+packages are specified as arguments, get all the newest packages. Summary of
+success/failure of package/s is shown on completion.
 
 Options::
 
@@ -227,12 +238,14 @@ Options::
 Garbage collect stale cached data
 '''''''''''''''''''''''''''''''''
 
-pool-gc [ -options ]
+Clean pool's package cache::
+
+    pool-gc [ -options ]
 
 Stale data includes:
 
-A) A binary in the package cache that does not belong in any of the
-   registered stocks.
+A) A binary in the package cache that does not belong in any of the registered
+   stocks.
 
    This includes binary packages which have since been removed from a
    registered stock.
@@ -254,19 +267,19 @@ Example usage session
     cd private
 
     # initialize a new pool
-    pool-init /chroots/rocky-build
+    pool-init /chroots/my_buildroot
 
-    for p in /turnkey/projects/*; do
+    for pkg in /turnkey/projects/*; do
         # auto identifies the type of the stock we register
-        pool-register $p
+        pool-register $pkg
     done
-        
+    
+    # show pool information including registered stocks, etc.
     pool-info
-        show pool information (registered containers, etc.)
 
-    # woops, noticed I registered the wrong branch
-    #  added #devel branch for emphasis - unregister would work without it
-    #  since there is only one branch registered for that path
+    # woops, acidentally registered the wrong branch - added #devel branch for
+    # emphasis - unregister would work without it since there is only one
+    # branch registered for that path
     pool-unregister /turnkey/projects/pool#devel
 
     # print a list of all packages in the pool (by name only)
@@ -276,29 +289,26 @@ Example usage session
     pool-list
 
     # print a list of all packagse that match this glob
-    pool-list turnkey-*
+    pool-list "turnkey-*"
 
-    # print a list of all package versions for neverland
+    # print a list of all package versions for package named neverland
     pool-list --all neverland
 
     # print a loooong list of all package versions, old and new, for all
     # packages
-    #  watch out, every git commit in an autoversioned project is a new virtual
-    #  version!
     pool-list --all
 
     for name in $(pool-list -n); do
-        if ! exists -q $name; then
+        if ! pool-exists -q "$name"; then
             echo "insane: package $name was just here a second ago"
         fi
     done
 
-    mkdir /tmp/newest
-
     # get all the newest packages in the pool to /tmp/newest
+    mkdir /tmp/newest
     pool-get /tmp/newest 
 
-    # get the newest neverland to /tmp/newest
+    # get the latest neverland package into /tmp/newest
     pool-get /tmp/newest neverland
 
     # get neverland 1.2.3 specifically to /tmp/newest
@@ -309,10 +319,10 @@ Example usage session
     # (unsafe)
     pool-get /tmp/newest -q -i /path/to/product-manifest
 
-    # creates a Debian apt repository like filesystem tree
+    # create a Debian apt repository like filesystem tree
     mkdir /tmp/product-repo
     for package in $(cat /path/to/versioned-product-manifest); do
-        if pool-exists -q $package; then
+        if pool-exists -q "$package"; then
             pool-get /tmp/product-repo --tree -s $package
         fi
     done
