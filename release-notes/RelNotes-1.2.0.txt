@@ -1,21 +1,52 @@
 v1.2.0 Release Notes
 ====================
 
-* new options for improved "preserve buildroot" behavior:
+* Bugfixes:
+    - pool-get:
+    - Fix building multiple packages; continue with other packages on
+    failure.
+    - Ensure always non-zero exit if errors and '--strict'.
+    - Bugfix stock sub-path regression.
+    - Various minor bugfixes.
 
-    --preserve-buildroot-on-error (default)
-    --preserve-buildroot-always
-    --preserve-buildroot-never
+* Features:
+    - Support for a pool without a buildroot (e.g. if only using stocks of
+      pre-built packages and/or other pools).
+    - Integrate pool-refresh into the main pool app.
+    - pool-get:
+      - New options for improved "preserve buildroot" behavior:
+        '--preserve-buildroot-on-error' (default)
+        '--preserve-buildroot-always'
+        '--preserve-buildroot-never'
+      - Exit with build summary noting success/failure and cause i.e.
+        either "missing stock" or "build failure".
+    - pool-register/pool-unregister/pool-refresh
+      - Show path to stock source dir (with #<branch_name> suffix if relevant) when
+        working with stocks.
+    - "Pretty" error messages - instead of stacktrace.
+    - Provide useful error message if a buildroot is regitered and it's not
+      actually a buildroot (default behavior on initial install of pool).
+    - Logging/debugging output.
+    - Build summary output.
 
-* display build summary on exit
-    - show package status - success or failure
-    - if failure; note cause (failed build or missing stock)
+* Code quality & cleanup:
+    - Update readme - remove redundant/outdated info & document new/updated
+      features.
+    - Linting fixes.
+    - Typing increased coverage, updates & improvements.
+        - Special thanks to Marcos for your input! :)
+          https://github.com/marcos-mendez
+    - Standardised formatting.
+    - Update tests to python3 - Special thanks to Marcos! :)
+      https://github.com/marcos-mendez
+    - Updated gitignore to ignore common build artifacts.
+    - Add Stock.__repr__() dunder method (useful for debugging).
+    - Replace c style string formating with f-strings.
 
-* 'pool-get' bugfix when "getting" multiple packages:
-    - if package fails, continue with other packages
-        - was exiting immediately if a package failed
-
-* code tidying and improvement:
-    - linting: fixes
-    - formatting: improved consistency and better readability
-    - typing: fixes, modernization and additional coverage
+* Packaging:
+    - Update package arch to 'all'.
+    - Update package dependencies.
+    - Linting debian package scripts.
+    - Migrate from 'setup.py' to 'pyproject.toml' install.
+    - Include 'py.typed' in package.
+    - Support reproducable builds.
