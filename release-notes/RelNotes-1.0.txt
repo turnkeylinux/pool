@@ -27,7 +27,7 @@ v1.0 Release Notes
                  (e.g., initialize a pool with --notests --nodelete)
   
     --notests    turn off tests
-    --nodelete   dont delete test pool at the end
+    --nodelete   don't delete test pool at the end
                  (default if test fails)
   
     --info       test pool-info
@@ -44,4 +44,4 @@ v1.0 Release Notes
   Pool.resolve calls _list without all_versions argument and this broke pool-get
   sumo-close on unregister + dup thin branch into stock/checkout
   registering a subpool breaks package building
-  subpool unregistration broken because Sumo arena in checkout/ wasn't closed
+  subpool unregister broken because Sumo arena in checkout/ wasn't closed

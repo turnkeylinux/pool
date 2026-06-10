@@ -24,7 +24,7 @@ v1.2.0 Release Notes
       - Show path to stock source dir (with #<branch_name> suffix if relevant) when
         working with stocks.
     - "Pretty" error messages - instead of stacktrace.
-    - Provide useful error message if a buildroot is regitered and it's not
+    - Provide useful error message if a buildroot is registered and it's not
       actually a buildroot (default behavior on initial install of pool).
     - Logging/debugging output.
     - Build summary output.
@@ -41,7 +41,7 @@ v1.2.0 Release Notes
       https://github.com/marcos-mendez
     - Updated gitignore to ignore common build artifacts.
     - Add Stock.__repr__() dunder method (useful for debugging).
-    - Replace c style string formating with f-strings.
+    - Replace c style string formatting with f-strings.
 
 * Packaging:
     - Update package arch to 'all'.
@@ -49,4 +49,4 @@ v1.2.0 Release Notes
     - Linting debian package scripts.
     - Migrate from 'setup.py' to 'pyproject.toml' install.
     - Include 'py.typed' in package.
-    - Support reproducable builds.
+    - Support reproducible builds.

@@ -277,7 +277,7 @@ Example usage session
     # show pool information including registered stocks, etc.
     pool-info
 
-    # woops, acidentally registered the wrong branch - added #devel branch for
+    # woops, accidentally registered the wrong branch - added #devel branch for
     # emphasis - unregister would work without it since there is only one
     # branch registered for that path
     pool-unregister /turnkey/projects/pool#devel
@@ -288,7 +288,7 @@ Example usage session
     # print a list of all packages + newest versions
     pool-list
 
-    # print a list of all packagse that match this glob
+    # print a list of all packages that match this glob
     pool-list "turnkey-*"
 
     # print a list of all package versions for package named neverland
